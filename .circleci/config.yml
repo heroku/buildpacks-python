@@ -1,0 +1,122 @@
+# Note: This was a WIP to test performance of both different Circle CI job types
+# and Circle CI vs GitHub Actions. Was only tested with the procfile-cnb so may
+# need changes to work with this repo + general cleanup.
+
+version: 2.1
+orbs:
+  pack: buildpacks/pack@0.2.4
+
+executors:
+  machine:
+    machine:
+      image: ubuntu-2004:202201-02
+    resource_class: 2xlarge
+    environment:
+      CARGO_INCREMENTAL: 0
+      CARGO_PROFILE_DEV_STRIP: true
+  docker:
+    docker:
+      - image: cimg/rust:1.60
+    resource_class: xlarge
+    working_directory: /mnt/ramdisk/project
+    environment:
+      CARGO_INCREMENTAL: 0
+      CARGO_PROFILE_DEV_STRIP: true
+      TMPDIR: /mnt/ramdisk
+
+commands:
+  restore-cargo-cache:
+    steps:
+      - restore_cache:
+          keys:
+            # CIRCLE_JOB is the job name, eg 'lint', ensuring caches are job-specific.
+            - cargo-{{ .Environment.CIRCLE_JOB }}-{{ checksum "Cargo.lock" }}-{{ checksum ".circleci/config.yml" }}
+  save-cargo-cache:
+    steps:
+      - save_cache:
+          key: cargo-{{ .Environment.CIRCLE_JOB }}-{{ checksum "Cargo.lock" }}-{{ checksum ".circleci/config.yml" }}
+          paths:
+            - ~/.cargo/registry/index
+            - ~/.cargo/registry/cache
+            - ~/.cargo/git
+            - ./target
+  install-rust-minimal:
+    steps:
+      - run:
+          name: Install Rust (minimal profile)
+          command: curl https://sh.rustup.rs -sSf | sh -s --  --profile=minimal -y
+  install-cross-compile:
+    steps:
+      - run:
+          name: Remove slow third-party APT sources
+          command: sudo rm -f /etc/apt/sources.list.d/*
+      - run:
+          name: Install musl tools
+          command: sudo apt-get update && sudo apt-get install musl-tools --no-install-recommends
+      - run:
+          name: Install musl target
+          command: rustup target add x86_64-unknown-linux-musl
+  install-pack:
+    steps:
+      - pack/install-pack:
+          version: 0.24.1
+
+jobs:
+  lint:
+    executor: docker
+    steps:
+      - checkout
+      - restore-cargo-cache
+      - run:
+          name: Clippy
+          # Using --all-targets so tests are checked and --deny to fail on warnings.
+          command: cargo clippy --all-targets --all-features --locked -- --deny warnings
+      - run:
+          name: rustfmt
+          command: cargo fmt -- --check --verbose
+      - save-cargo-cache
+
+  unit-test:
+    executor: docker
+    steps:
+      - checkout
+      - restore-cargo-cache
+      - run:
+          name: Run unit tests
+          command: cargo test --all-features --locked
+      - save-cargo-cache
+
+  integration-test-docker:
+    executor: docker
+    steps:
+      - checkout
+      - restore-cargo-cache
+      - setup_remote_docker:
+          version: 20.10.11
+      - install-cross-compile
+      - install-pack
+      - run:
+          name: Run integration tests
+          command: cargo test --all-features --locked -- --ignored
+      - save-cargo-cache
+
+  integration-test-machine:
+    executor: machine
+    steps:
+      - checkout
+      - restore-cargo-cache
+      - install-rust-minimal
+      - install-cross-compile
+      - install-pack
+      - run:
+          name: Run integration tests
+          command: cargo test --all-features --locked -- --ignored
+      - save-cargo-cache
+
+workflows:
+  ci:
+    jobs:
+      - lint
+      - unit-test
+      - integration-test-docker
+      - integration-test-machine

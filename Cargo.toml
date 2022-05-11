@@ -1,0 +1,32 @@
+[package]
+name = "python-buildpack"
+version = "0.0.0"
+publish = false
+edition = "2021"
+rust-version = "1.59"
+
+[dependencies]
+# Using an alternate backend due to:
+# https://github.com/rust-lang/flate2-rs/issues/297
+# Not able to use the fastest `zlib-ng-compat` backend due to:
+# https://github.com/rust-lang/libz-sys/issues/93
+flate2 = { version = "1.0.23", default-features = false, features = ["zlib"] }
+# indoc = "1.0.4"
+libcnb = "0.7.0"
+libherokubuildpack = "0.7.0"
+serde = "1.0.137"
+tar = "0.4.38"
+ureq = { version = "2.4.0", default-features = false, features = ["tls"] }
+
+[dev-dependencies]
+libcnb-test = "0.3.1"
+
+[profile.release]
+# Until libcnb-package enables this by default:
+# https://github.com/Malax/libcnb.rs/issues/319
+strip = true
+incremental = true
+
+[profile.release.build-override]
+# Work around: https://github.com/rust-lang/rust/issues/93988
+strip = false
