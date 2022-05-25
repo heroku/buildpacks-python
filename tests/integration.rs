@@ -8,7 +8,7 @@
 use libcnb_test::IntegrationTest;
 
 #[test]
-#[ignore]
+#[ignore = "integration test"]
 #[should_panic(expected = "pack command failed with exit-code 1!
 pack stdout:
 pack stderr:

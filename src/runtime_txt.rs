@@ -25,7 +25,7 @@ pub(crate) fn get_version(app_dir: &Path) -> Result<Option<PythonVersion>, Runti
 // TODO:
 // - Decide whether to handle empty contents specifically.
 // - Should `RuntimeTxtParseError::NotAscii` escape contents or leave to error handling?
-pub(crate) fn parse(contents: &str) -> Result<PythonVersion, RuntimeTxtParseError> {
+fn parse(contents: &str) -> Result<PythonVersion, RuntimeTxtParseError> {
     let trimmed_contents = contents.trim();
 
     // Ease debugging when non-ascii characters have inadvertently been used,

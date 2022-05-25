@@ -17,6 +17,7 @@ use libcnb::data::build_plan::{BuildPlan, BuildPlanBuilder};
 use libcnb::data::layer_name;
 use libcnb::detect::{DetectContext, DetectResult, DetectResultBuilder};
 use libcnb::generic::{GenericMetadata, GenericPlatform};
+use libcnb::layer_env::Scope;
 use libcnb::{buildpack_main, Buildpack};
 use libherokubuildpack::log_header;
 use std::path::Path;
@@ -64,7 +65,7 @@ impl Buildpack for PythonBuildpack {
             PipLayer {
                 pip_cache_dir: pip_cache_layer.path,
                 python_env: python_layer.env.apply_to_empty(Scope::Build),
-                python_version,
+                python_version: &python_version,
             },
         )?;
 
@@ -102,6 +103,5 @@ fn dir_is_python_app(app_dir: &Path) -> bool {
 buildpack_main!(PythonBuildpack);
 
 // Suppress warnings due to the `unused_crate_dependencies` lint not handling integration tests well.
-use libcnb::layer_env::Scope;
 #[cfg(test)]
 use libcnb_test as _;
