@@ -6,7 +6,7 @@ use std::path::Path;
 pub(crate) const DEFAULT_PYTHON_VERSION: PythonVersion = PythonVersion {
     major: 3,
     minor: 10,
-    patch: 4,
+    patch: 5,
 };
 
 #[derive(Clone, Debug, PartialEq)]

@@ -15,9 +15,8 @@ use std::path::{Path, PathBuf};
 use std::process::Command;
 use std::{fs, io};
 
-// TODO: Bump to 22.1.1
-const PIP_VERSION: &str = "22.1";
-const SETUPTOOLS_VERSION: &str = "62.3.2";
+const PIP_VERSION: &str = "22.2";
+const SETUPTOOLS_VERSION: &str = "63.2.0";
 const WHEEL_VERSION: &str = "0.37.1";
 
 pub(crate) struct PythonLayer<'a> {
@@ -40,8 +39,8 @@ impl Layer for PythonLayer<'_> {
     fn types(&self) -> LayerTypes {
         LayerTypes {
             build: true,
-            launch: true,
             cache: true,
+            launch: true,
         }
     }
 
@@ -54,7 +53,7 @@ impl Layer for PythonLayer<'_> {
 
         // TODO: Move this URL generation somewhere else (ie manifest etc).
         let archive_url = format!(
-            "https://heroku-buildpack-python.s3.amazonaws.com/{}/runtimes/python-{}.tar.gz",
+            "https://heroku-buildpack-python.s3.us-east-1.amazonaws.com/{}/runtimes/python-{}.tar.gz",
             context.stack_id, self.python_version
         );
 
@@ -63,6 +62,7 @@ impl Layer for PythonLayer<'_> {
             .map_err(PythonLayerError::DownloadUnpack)?;
         log_info("Python installation successful");
 
+        // TODO: Decide whether to move env vars to their own layers, so invalidation can occur separately (check perf of additional layers?)
         let layer_env = LayerEnv::new()
             // Ensure Python uses a Unicode locate, to prevent the issues described in:
             // https://github.com/docker-library/python/pull/570
@@ -235,3 +235,5 @@ impl From<PythonLayerError> for PythonBuildpackError {
         Self::PythonLayer(error)
     }
 }
+
+// TODO: Unit and/or integration tests

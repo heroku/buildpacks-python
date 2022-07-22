@@ -9,19 +9,17 @@ orbs:
 executors:
   machine:
     machine:
-      image: ubuntu-2004:202201-02
+      image: ubuntu-2204:current
     resource_class: 2xlarge
     environment:
       CARGO_INCREMENTAL: 0
-      CARGO_PROFILE_DEV_STRIP: true
   docker:
     docker:
-      - image: cimg/rust:1.60
+      - image: cimg/rust:1.62
     resource_class: xlarge
     working_directory: /mnt/ramdisk/project
     environment:
       CARGO_INCREMENTAL: 0
-      CARGO_PROFILE_DEV_STRIP: true
       TMPDIR: /mnt/ramdisk
 
 commands:
@@ -40,26 +38,6 @@ commands:
             - ~/.cargo/registry/cache
             - ~/.cargo/git
             - ./target
-  install-rust-minimal:
-    steps:
-      - run:
-          name: Install Rust (minimal profile)
-          command: curl https://sh.rustup.rs -sSf | sh -s --  --profile=minimal -y
-  install-cross-compile:
-    steps:
-      - run:
-          name: Remove slow third-party APT sources
-          command: sudo rm -f /etc/apt/sources.list.d/*
-      - run:
-          name: Install musl tools
-          command: sudo apt-get update && sudo apt-get install musl-tools --no-install-recommends
-      - run:
-          name: Install musl target
-          command: rustup target add x86_64-unknown-linux-musl
-  install-pack:
-    steps:
-      - pack/install-pack:
-          version: 0.24.1
 
 jobs:
   lint:
@@ -70,7 +48,7 @@ jobs:
       - run:
           name: Clippy
           # Using --all-targets so tests are checked and --deny to fail on warnings.
-          command: cargo clippy --all-targets --all-features --locked -- --deny warnings
+          command: cargo clippy --all-targets --locked -- --deny warnings
       - run:
           name: rustfmt
           command: cargo fmt -- --check --verbose
@@ -83,34 +61,32 @@ jobs:
       - restore-cargo-cache
       - run:
           name: Run unit tests
-          command: cargo test --all-features --locked
+          command: cargo test --locked
       - save-cargo-cache
 
-  integration-test-docker:
-    executor: docker
-    steps:
-      - checkout
-      - restore-cargo-cache
-      - setup_remote_docker:
-          version: 20.10.11
-      - install-cross-compile
-      - install-pack
-      - run:
-          name: Run integration tests
-          command: cargo test --all-features --locked -- --ignored
-      - save-cargo-cache
-
-  integration-test-machine:
+  integration-test:
     executor: machine
     steps:
       - checkout
       - restore-cargo-cache
-      - install-rust-minimal
-      - install-cross-compile
-      - install-pack
+      - run:
+          name: Install Rust (minimal profile)
+          command: curl https://sh.rustup.rs -sSf | sh -s --  --profile=minimal -y
+      - run:
+          name: Remove slow third-party APT sources
+          command: sudo rm -f /etc/apt/sources.list.d/*
+      - run:
+          name: Install musl tools
+          command: sudo apt-get update && sudo apt-get install musl-tools --no-install-recommends
+      - run:
+          name: Install musl target
+          command: rustup target add x86_64-unknown-linux-musl
+      - pack/install-pack:
+          version: 0.27.0
       - run:
           name: Run integration tests
-          command: cargo test --all-features --locked -- --ignored
+          # Runs any tests annotated with the `#[ignore]` attribute (which in this repo, are all of the integration tests).
+          command: cargo test --locked -- --ignored
       - save-cargo-cache
 
 workflows:
@@ -118,5 +94,4 @@ workflows:
     jobs:
       - lint
       - unit-test
-      - integration-test-docker
-      - integration-test-machine
+      - integration-test

@@ -1,6 +1,5 @@
 #![warn(clippy::pedantic)]
 #![warn(unused_crate_dependencies)]
-#![allow(clippy::module_name_repetitions)]
 
 mod errors;
 mod layers;
@@ -50,15 +49,13 @@ impl Buildpack for PythonBuildpack {
         )?;
 
         // TODO: Move these inside a conditional for whether using pip or another package manager to install packages
-        log_header("Configuring pip cache");
+        log_header("Installing dependencies using Pip");
         let pip_cache_layer = context.handle_layer(
             layer_name!("pip-cache"),
             PipCacheLayer {
                 python_version: &python_version,
             },
         )?;
-
-        log_header("Installing dependencies using Pip");
         context.handle_layer(
             // TODO: Should this layer be called `site-packages` instead?
             layer_name!("pip"),
@@ -70,9 +67,9 @@ impl Buildpack for PythonBuildpack {
         )?;
 
         // Temporary hack: Fail the build early to speed up iteration time.
-        println!("{}", "\n".repeat(10));
-        unimplemented!();
-        #[allow(unreachable_code)]
+        // println!("{}", "\n".repeat(10));
+        // unimplemented!();
+        // #[allow(unreachable_code)]
         BuildResultBuilder::new().build()
     }
 

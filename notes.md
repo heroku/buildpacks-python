@@ -198,6 +198,7 @@ rm -rf venv /root/.cache/pip/ && python -m venv --symlink venv && time venv/bin/
 - What logic lives in the layer vs outside?
 - Need to make Procfile mandatory given no default entrypoint. Although don't want to fail detect?
 - Should set User Agent on outbound network requests
+- Should we use https://docs.gunicorn.org/en/stable/settings.html#preload-app by default?
 
 ## Unit tests
 - What things do/don't need a unit test?

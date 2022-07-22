@@ -3,7 +3,7 @@ use crate::utils;
 use std::io;
 use std::path::Path;
 
-// TODO: Add tests for `get_version`? Or test caller?
+// TODO: Add tests for `get_version`? Or test caller? Or integration test?
 //
 // Possible tests:
 // - some IO error -> Err(RuntimeTxtError::Io)
@@ -22,9 +22,6 @@ pub(crate) fn get_version(app_dir: &Path) -> Result<Option<PythonVersion>, Runti
 /// Parse the contents of a `runtime.txt` file into a [`PythonVersion`].
 ///
 /// The file is expected to contain a string of form `python-X.Y.Z`.
-// TODO:
-// - Decide whether to handle empty contents specifically.
-// - Should `RuntimeTxtParseError::NotAscii` escape contents or leave to error handling?
 fn parse(contents: &str) -> Result<PythonVersion, RuntimeTxtParseError> {
     let trimmed_contents = contents.trim();
 

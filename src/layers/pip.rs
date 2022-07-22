@@ -20,8 +20,8 @@ pub(crate) struct PipLayer<'a> {
 
 #[derive(Clone, Deserialize, PartialEq, Serialize)]
 pub(crate) struct PipLayerMetadata {
-    stack: StackId,
     python_version: String,
+    stack: StackId,
 }
 
 impl Layer for PipLayer<'_> {
@@ -31,8 +31,8 @@ impl Layer for PipLayer<'_> {
     fn types(&self) -> LayerTypes {
         LayerTypes {
             build: true,
-            launch: true,
             cache: true,
+            launch: true,
         }
     }
 
@@ -47,7 +47,7 @@ impl Layer for PipLayer<'_> {
             "PYTHONUSERBASE",
             layer_path,
         );
-        let env = layer_env.apply_to_empty(Scope::Build);
+        let env = layer_env.apply(Scope::Build, &self.python_env);
 
         // TODO: Explain why we're using user install
         // TODO: Refactor this out so it can be shared with `update()`
@@ -55,23 +55,21 @@ impl Layer for PipLayer<'_> {
             Command::new("pip")
                 .args([
                     "install",
-                    "--compile",
+                    "--cache-dir",
+                    &self.pip_cache_dir.to_string_lossy(),
+                    // TODO: Remove this if not using compileall
+                    // "--no-compile",
                     "--no-input",
-                    // Prevent warning about the `bin/` directory not being on `PATH`, since it will be later.
+                    // Prevent warning about the `bin/` directory not being on `PATH`, since it
+                    // will be added automatically by libcnb/lifecycle later.
                     "--no-warn-script-location",
                     "--progress",
                     "off",
-                    // TODO: Should cache dir be set via env var instead?
-                    // Do we want other buildpacks using the pip cache?
-                    "--cache-dir",
-                    &self.pip_cache_dir.to_string_lossy(),
                     "--user",
                     "-r",
                     "requirements.txt",
                 ])
                 .env_clear()
-                // TODO: Combine these envs?
-                .envs(&self.python_env)
                 .envs(&env)
                 // TODO: Decide whether to use this or compileall.
                 // If using compileall will need different strategy for `update()`.
@@ -91,6 +89,7 @@ impl Layer for PipLayer<'_> {
         _context: &BuildContext<Self::Buildpack>,
         _layer_data: &LayerData<Self::Metadata>,
     ) -> Result<LayerResult<Self::Metadata>, <Self::Buildpack as Buildpack>::Error> {
+        // TODO
         unimplemented!()
     }
 
@@ -121,8 +120,8 @@ fn generate_layer_metadata(stack_id: &StackId, python_version: &PythonVersion) -
     // TODO: Add requirements.txt SHA256 or similar
     // TODO: Add timestamp field or similar
     PipLayerMetadata {
-        stack: stack_id.clone(),
         python_version: python_version.to_string(),
+        stack: stack_id.clone(),
     }
 }
 
@@ -136,3 +135,5 @@ impl From<PipLayerError> for PythonBuildpackError {
         Self::PipLayer(error)
     }
 }
+
+// TODO: Unit and/or integration tests

@@ -4,7 +4,6 @@ use libcnb::build::BuildContext;
 use libcnb::data::buildpack::StackId;
 use libcnb::data::layer_content_metadata::LayerTypes;
 use libcnb::layer::{ExistingLayerStrategy, Layer, LayerData, LayerResult, LayerResultBuilder};
-use libcnb::layer_env::{LayerEnv, ModificationBehavior, Scope};
 use libcnb::Buildpack;
 use libherokubuildpack::log_info;
 use serde::{Deserialize, Serialize};
@@ -16,8 +15,8 @@ pub(crate) struct PipCacheLayer<'a> {
 
 #[derive(Clone, Deserialize, PartialEq, Serialize)]
 pub(crate) struct PipCacheLayerMetadata {
-    stack: StackId,
     python_version: String,
+    stack: StackId,
 }
 
 impl Layer for PipCacheLayer<'_> {
@@ -26,31 +25,23 @@ impl Layer for PipCacheLayer<'_> {
 
     fn types(&self) -> LayerTypes {
         LayerTypes {
-            // TODO: Decide whether pip cache should be shared with other buildpacks
             build: false,
-            launch: false,
             cache: true,
+            launch: false,
         }
     }
 
     fn create(
         &self,
         context: &BuildContext<Self::Buildpack>,
-        layer_path: &Path,
+        _layer_path: &Path,
     ) -> Result<LayerResult<Self::Metadata>, <Self::Buildpack as Buildpack>::Error> {
-        let layer_env = LayerEnv::new().chainable_insert(
-            Scope::All,
-            // TODO: Should this be override?
-            ModificationBehavior::Default,
-            "PIP_CACHE_DIR",
-            layer_path,
-        );
+        log_info("Pip cache created");
 
-        log_info("Pip cache configured");
+        // TODO: Decide if cache needs to be nested in a dir, given other files will live there.
 
-        LayerResultBuilder::new(self.generate_layer_metadata(context))
-            .env(layer_env)
-            .build()
+        let layer_metadata = generate_layer_metadata(&context.stack_id, self.python_version);
+        LayerResultBuilder::new(layer_metadata).build()
     }
 
     fn existing_layer_strategy(
@@ -60,7 +51,9 @@ impl Layer for PipCacheLayer<'_> {
     ) -> Result<ExistingLayerStrategy, <Self::Buildpack as Buildpack>::Error> {
         // TODO: Also invalidate based on time since layer creation?
         // TODO: Decide what should be logged
-        if layer_data.content_metadata.metadata == self.generate_layer_metadata(context) {
+        if layer_data.content_metadata.metadata
+            == generate_layer_metadata(&context.stack_id, self.python_version)
+        {
             log_info("Re-using cached pip-cache");
             Ok(ExistingLayerStrategy::Keep)
         } else {
@@ -70,15 +63,13 @@ impl Layer for PipCacheLayer<'_> {
     }
 }
 
-impl PipCacheLayer<'_> {
-    fn generate_layer_metadata(
-        &self,
-        context: &BuildContext<PythonBuildpack>,
-    ) -> PipCacheLayerMetadata {
-        // TODO: Add timestamp field or similar
-        PipCacheLayerMetadata {
-            stack: context.stack_id.clone(),
-            python_version: self.python_version.to_string(),
-        }
+fn generate_layer_metadata(
+    stack_id: &StackId,
+    python_version: &PythonVersion,
+) -> PipCacheLayerMetadata {
+    // TODO: Add timestamp field or similar
+    PipCacheLayerMetadata {
+        python_version: python_version.to_string(),
+        stack: stack_id.clone(),
     }
 }

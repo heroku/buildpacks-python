@@ -4,6 +4,7 @@ use std::process::{Command, ExitStatus};
 use std::{fs, io};
 use tar::Archive;
 
+// TODO: Unit test?
 pub(crate) fn read_optional_file(path: &Path) -> io::Result<Option<String>> {
     fs::read_to_string(path)
         .map(Some)
@@ -17,6 +18,7 @@ pub(crate) fn download_and_unpack_gzip(
     uri: &str,
     destination: &Path,
 ) -> Result<(), DownloadUnpackError> {
+    // TODO: Timeouts: https://docs.rs/ureq/latest/ureq/struct.AgentBuilder.html?search=timeout
     let response = ureq::get(uri)
         .call()
         .map_err(|err| DownloadUnpackError::Request(Box::new(err)))?;

@@ -1,7 +1,8 @@
 use crate::layers::pip::PipLayerError;
 use crate::layers::python::PythonLayerError;
 use crate::python_version::PythonVersionError;
-// use indoc::formatdoc;
+#[allow(unused_imports)]
+use indoc::formatdoc;
 // use libherokubuildpack::log_error;
 
 #[derive(Debug)]

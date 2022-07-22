@@ -6,9 +6,6 @@ name: CI
 
 on: push
 
-env:
-  CARGO_PROFILE_DEV_STRIP: true
-
 jobs:
   lint:
     runs-on: ubuntu-latest
@@ -18,10 +15,10 @@ jobs:
       - name: Update Rust toolchain
         run: rustup update
       - name: Rust Cache
-        uses: Swatinem/rust-cache@v1.4.0
+        uses: Swatinem/rust-cache@v2.0.0
       - name: Clippy
         # Using --all-targets so tests are checked and --deny to fail on warnings.
-        run: cargo clippy --all-targets --all-features --locked -- --deny warnings
+        run: cargo clippy --all-targets --locked -- --deny warnings
       - name: rustfmt
         run: cargo fmt -- --check --verbose
 
@@ -33,9 +30,9 @@ jobs:
       - name: Update Rust toolchain
         run: rustup update
       - name: Rust Cache
-        uses: Swatinem/rust-cache@v1.4.0
+        uses: Swatinem/rust-cache@v2.0.0
       - name: Run tests
-        run: cargo test --all-features --locked
+        run: cargo test --locked
 
   integration-test:
     runs-on: ubuntu-latest
@@ -49,9 +46,9 @@ jobs:
       - name: Install Rust linux-musl target
         run: rustup target add x86_64-unknown-linux-musl
       - name: Rust Cache
-        uses: Swatinem/rust-cache@v1.4.0
+        uses: Swatinem/rust-cache@v2.0.0
       - name: Install Pack CLI
-        uses: buildpacks/github-actions/setup-pack@v4.6.0
+        uses: buildpacks/github-actions/setup-pack@v4.8.0
       - name: Run integration tests
         # Runs any tests annotated with the `#[ignore]` attribute (which in this repo, are all of the integration tests).
-        run: cargo test --all-features --locked -- --ignored
+        run: cargo test --locked -- --ignored

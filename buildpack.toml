@@ -13,9 +13,6 @@ clear-env = true
 type = "BSD-3-Clause"
 
 [[stacks]]
-id = "heroku-18"
-
-[[stacks]]
 id = "heroku-20"
 
 [[stacks]]
