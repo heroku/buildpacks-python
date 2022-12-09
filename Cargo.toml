@@ -1,0 +1,30 @@
+[package]
+name = "python-buildpack"
+version = "0.0.0"
+edition = "2021"
+rust-version = "1.65"
+publish = false
+
+[dependencies]
+# The default `miniz_oxide` flate2 backend has poor performance in debug/under QEMU:
+# https://github.com/rust-lang/flate2-rs/issues/297
+# Ideally we'd use the fastest `zlib-ng` backend, however it fails to cross-compile:
+# https://github.com/rust-lang/libz-sys/issues/93
+# As such we have to use the next best alternate backend, which is `zlib`.
+flate2 = { version = "1.0.25", default-features = false, features = ["zlib"] }
+indoc = "1.0.7"
+libcnb = "0.11.1"
+libherokubuildpack = { version = "0.11.1", default-features = false, features = ["log"] }
+serde = "1.0.149"
+tar = "0.4.38"
+toml = "0.5.9"
+ureq = { version = "2.5.0", default-features = false, features = ["tls"] }
+
+[dev-dependencies]
+libcnb-test = "0.11.1"
+
+# [profile.dev]
+# Speed up downloading/extraction of Python during integration tests.
+# TODO: Test again to see if it's still worth it, now that the Python archives are smaller + using alternate flate2 backend.
+# (now only seems to change the E2E pack build time of an app using urllib3 from 23.4s to 21.8s on M1?)
+# opt-level = 1

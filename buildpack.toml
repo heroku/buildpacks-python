@@ -1,0 +1,21 @@
+api = "0.8"
+
+[buildpack]
+# The buildpack ID here is temporary, for the Python functions alpha/beta.
+# TODO: Change it back to `heroku/python` once the buildpack is ready for non-functions use.
+id = "heroku/python-functions-experimental"
+version = "0.1.0"
+name = "Python"
+homepage = "https://github.com/heroku/buildpacks-python"
+description = "Heroku's official Python Cloud Native Buildpack."
+keywords = ["python", "heroku"]
+clear-env = true
+
+[[buildpack.licenses]]
+type = "BSD-3-Clause"
+
+[[stacks]]
+id = "heroku-20"
+
+[[stacks]]
+id = "heroku-22"
