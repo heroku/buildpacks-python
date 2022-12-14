@@ -61,7 +61,7 @@ fn function_template() {
                     [Installing dependencies using Pip]
                     Pip cache created
                     Running pip install
-                    Collecting salesforce-functions@ git+https://github.com/heroku/sf-functions-python.git
+                    Collecting salesforce-functions
                 "}
             );
 
@@ -132,7 +132,7 @@ fn function_repeat_build() {
                         [Installing dependencies using Pip]
                         Re-using cached pip-cache
                         Running pip install
-                        Collecting salesforce-functions@ git+https://github.com/heroku/sf-functions-python.git
+                        Collecting salesforce-functions
                     "}
                 );
             });
@@ -214,7 +214,9 @@ fn function_python_version_too_old() {
             assert_contains!(
                 context.pack_stderr,
                 indoc! {"
-                    ERROR: Package 'salesforce-functions' requires a different Python: 3.9.16 not in '>=3.10'
+                    ERROR: Ignored the following versions that require a different python version: 0.1.0 Requires-Python >=3.10
+                    ERROR: Could not find a version that satisfies the requirement salesforce-functions (from versions: none)
+                    ERROR: No matching distribution found for salesforce-functions
                     
                     [Error: Unable to install dependencies using pip]
                     The 'pip install' command to install the application's dependencies from
