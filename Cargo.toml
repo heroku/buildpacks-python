@@ -11,17 +11,17 @@ publish = false
 # Ideally we'd use the fastest `zlib-ng` backend, however it fails to cross-compile:
 # https://github.com/rust-lang/libz-sys/issues/93
 # As such we have to use the next best alternate backend, which is `zlib`.
-flate2 = { version = "1.0.25", default-features = false, features = ["zlib"] }
-indoc = "1.0.7"
-libcnb = "0.11.1"
-libherokubuildpack = { version = "0.11.1", default-features = false, features = ["log"] }
-serde = "1.0.149"
-tar = "0.4.38"
-toml = "0.5.9"
-ureq = { version = "2.5.0", default-features = false, features = ["tls"] }
+flate2 = { version = "1", default-features = false, features = ["zlib"] }
+indoc = "1"
+libcnb = "0.11"
+libherokubuildpack = { version = "0.11", default-features = false, features = ["log"] }
+serde = "1"
+tar = "0.4"
+toml = "0.5"
+ureq = { version = "2", default-features = false, features = ["tls"] }
 
 [dev-dependencies]
-libcnb-test = "0.11.1"
+libcnb-test = "0.11"
 
 # [profile.dev]
 # Speed up downloading/extraction of Python during integration tests.
