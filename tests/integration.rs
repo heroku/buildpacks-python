@@ -214,7 +214,7 @@ fn function_python_version_too_old() {
             assert_contains!(
                 context.pack_stderr,
                 indoc! {"
-                    ERROR: Ignored the following versions that require a different python version: 0.1.0 Requires-Python >=3.10
+                    ERROR: Ignored the following versions that require a different python version: 0.1.0 Requires-Python >=3.10; 0.2.0 Requires-Python >=3.10
                     ERROR: Could not find a version that satisfies the requirement salesforce-functions (from versions: none)
                     ERROR: No matching distribution found for salesforce-functions
                     
@@ -326,7 +326,7 @@ fn function_fails_self_check() {
     TestRunner::default().build(
         BuildConfig::new(
             "heroku/builder:22",
-            "test-fixtures/function_invalid_not_async",
+            "test-fixtures/function_fails_self_check",
         )
         .expected_pack_result(PackResult::Failure),
         |context| {
@@ -338,7 +338,7 @@ fn function_fails_self_check() {
                     there is a problem with the Python Salesforce Function in this project.
                     
                     Details:
-                    Error: Function failed validation! The function named 'function' must be an async function. Change the function definition from 'def function' to 'async def function'.
+                    Function failed validation: 'invalid' is not a valid Salesforce REST API version. Update 'salesforce-api-version' in project.toml to a version of form 'X.Y'.
                 "}
             );
         },

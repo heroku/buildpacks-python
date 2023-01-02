@@ -262,7 +262,6 @@ fn on_check_function_error(check_function_error: CheckFunctionError) {
             &format!("running the '{FUNCTION_RUNTIME_PROGRAM_NAME} check' command"),
             &io_error,
         ),
-        // TOOO: Clean up the error message from the check command.
         CheckFunctionError::NonZeroExitStatus(output) => log_error(
             "The Salesforce Functions self-check failed",
             formatdoc! {"
