@@ -83,9 +83,7 @@ impl Layer for PipDependenciesLayer<'_> {
                     &src_dir.to_string_lossy(),
                 ])
                 .envs(&env)
-                // TODO: Decide whether to use this or `--no-compile` + `compileall`.
-                // If using compileall will need different strategy for `update()`.
-                // See also: https://github.com/pypa/pip/blob/3820b0e52c7fed2b2c43ba731b718f316e6816d1/src/pip/_internal/operations/install/wheel.py#L616
+                // TODO: Explain why we're setting this
                 // Using 1980-01-01T00:00:01Z to avoid:
                 // ValueError: ZIP does not support timestamps before 1980
                 .env("SOURCE_DATE_EPOCH", "315532800"),

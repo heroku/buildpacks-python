@@ -22,9 +22,3 @@ ureq = { version = "2", default-features = false, features = ["tls"] }
 
 [dev-dependencies]
 libcnb-test = "0.11"
-
-# [profile.dev]
-# Speed up downloading/extraction of Python during integration tests.
-# TODO: Test again to see if it's still worth it, now that the Python archives are smaller + using alternate flate2 backend.
-# (now only seems to change the E2E pack build time of an app using urllib3 from 23.4s to 21.8s on M1?)
-# opt-level = 1

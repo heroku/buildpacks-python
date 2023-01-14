@@ -150,41 +150,24 @@ impl Layer for PythonLayer<'_> {
         let bundled_pip_module =
             bundled_pip_module(&python_stdlib_dir).map_err(PythonLayerError::LocateBundledPipIo)?;
         utils::run_command(
-            Command::new(&python_binary)
+            Command::new(python_binary)
                 .args([
                     &bundled_pip_module.to_string_lossy(),
                     "install",
                     "--no-cache-dir",
-                    "--no-compile",
                     "--no-input",
                     "--quiet",
                     format!("pip=={PIP_VERSION}").as_str(),
                     format!("setuptools=={SETUPTOOLS_VERSION}").as_str(),
                     format!("wheel=={WHEEL_VERSION}").as_str(),
                 ])
-                .envs(&env),
+                .envs(&env)
+                // TODO: Explain why we're setting this
+                // Using 1980-01-01T00:00:01Z to avoid:
+                // ValueError: ZIP does not support timestamps before 1980
+                .env("SOURCE_DATE_EPOCH", "315532800"),
         )
         .map_err(PythonLayerError::BootstrapPipCommand)?;
-
-        // TODO: Add comment explaining why we're doing this vs pip default compile.
-        // (on M1 this reduces the time taken for the pip bootstrap from 17.6s to 13.4s)
-        // TODO: Test performance difference when not running under QEMU
-        utils::run_command(
-            Command::new(python_binary)
-                .args([
-                    "-m",
-                    "compileall",
-                    "-f",
-                    "-q",
-                    "--invalidation-mode",
-                    "unchecked-hash",
-                    "--workers",
-                    "0",
-                    &site_packages_dir.to_string_lossy(),
-                ])
-                .envs(&env),
-        )
-        .map_err(PythonLayerError::CompileByteCodeCommand)?;
 
         // By default Pip will install into the system site-packages directory if it is writeable
         // by the current user. Whilst the buildpack's own `pip install` invocations always use
@@ -193,7 +176,7 @@ impl Layer for PythonLayer<'_> {
         // By making the system site-packages directory read-only, Pip will automatically use
         // user installs in such cases:
         // https://github.com/pypa/pip/blob/22.3.1/src/pip/_internal/commands/install.py#L706-L764
-        fs::set_permissions(&site_packages_dir, Permissions::from_mode(0o555))
+        fs::set_permissions(site_packages_dir, Permissions::from_mode(0o555))
             .map_err(PythonLayerError::MakeSitePackagesReadOnlyIo)?;
 
         log_info("Installation completed");
@@ -287,7 +270,6 @@ fn generate_layer_metadata(
 #[derive(Debug)]
 pub(crate) enum PythonLayerError {
     BootstrapPipCommand(CommandError),
-    CompileByteCodeCommand(CommandError),
     DownloadUnpackArchive(DownloadUnpackArchiveError),
     LocateBundledPipIo(io::Error),
     MakeSitePackagesReadOnlyIo(io::Error),

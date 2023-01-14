@@ -163,22 +163,6 @@ fn on_python_layer_error(python_layer_error: PythonLayerError) {
                 "},
             ),
         },
-        PythonLayerError::CompileByteCodeCommand(error) => match error {
-            CommandError::Io(io_error) => log_io_error(
-                "Unable to compile Python byte-code",
-                "running the 'python -m compileall' command",
-                &io_error,
-            ),
-            CommandError::NonZeroExitStatus(exit_status) => log_error(
-                "Unable to compile Python byte-code",
-                formatdoc! {"
-                    The 'python -m compileall' command used to compile Python byte-code
-                    for the system 'site-packages' directory failed ({exit_status}).
-                    
-                    See the log output above for more information.
-                "},
-            ),
-        },
         PythonLayerError::DownloadUnpackArchive(error) => match error {
             DownloadUnpackArchiveError::Io(io_error) => log_io_error(
                 "Unable to unpack the Python archive",
