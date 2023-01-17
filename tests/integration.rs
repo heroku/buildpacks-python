@@ -214,7 +214,7 @@ fn function_python_version_too_old() {
             assert_contains!(
                 context.pack_stderr,
                 indoc! {"
-                    ERROR: Ignored the following versions that require a different python version: 0.1.0 Requires-Python >=3.10; 0.2.0 Requires-Python >=3.10
+                    ERROR: Ignored the following versions that require a different python version: 0.1.0 Requires-Python >=3.10; 0.2.0 Requires-Python >=3.10; 0.3.0 Requires-Python >=3.10
                     ERROR: Could not find a version that satisfies the requirement salesforce-functions (from versions: none)
                     ERROR: No matching distribution found for salesforce-functions
                     
