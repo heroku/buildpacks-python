@@ -101,7 +101,6 @@ impl Buildpack for PythonBuildpack {
                     PipDependenciesLayer {
                         env: &env,
                         pip_cache_dir: pip_cache_layer.path,
-                        python_version: &python_version,
                     },
                 )?;
                 pip_layer.env
