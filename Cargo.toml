@@ -2,7 +2,7 @@
 name = "python-buildpack"
 version = "0.0.0"
 edition = "2021"
-rust-version = "1.66"
+rust-version = "1.67"
 publish = false
 
 [dependencies]
