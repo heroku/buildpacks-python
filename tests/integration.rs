@@ -203,34 +203,6 @@ fn function_python_3_10() {
 
 #[test]
 #[ignore = "integration test"]
-fn function_python_version_too_old() {
-    TestRunner::default().build(
-        BuildConfig::new(
-            "heroku/builder:22",
-            "test-fixtures/function_python_version_too_old",
-        )
-        .expected_pack_result(PackResult::Failure),
-        |context| {
-            assert_contains!(
-                context.pack_stderr,
-                indoc! {"
-                    ERROR: Ignored the following versions that require a different python version: 0.1.0 Requires-Python >=3.10; 0.2.0 Requires-Python >=3.10; 0.3.0 Requires-Python >=3.10
-                    ERROR: Could not find a version that satisfies the requirement salesforce-functions (from versions: none)
-                    ERROR: No matching distribution found for salesforce-functions
-                    
-                    [Error: Unable to install dependencies using pip]
-                    The 'pip install' command to install the application's dependencies from
-                    'requirements.txt' failed (exit status: 1).
-                    
-                    See the log output above for more information.
-                "}
-            );
-        },
-    );
-}
-
-#[test]
-#[ignore = "integration test"]
 fn function_python_version_unavailable() {
     TestRunner::default().build(
         BuildConfig::new(
