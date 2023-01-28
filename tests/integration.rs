@@ -10,20 +10,15 @@ use std::time::Duration;
 
 const TEST_PORT: u16 = 12345;
 
-// For now, these integration tests only cover functions, since:
-// - that's what needs to ship first
-// - the buildpack's detect by design rejects anything but a function, so for now
-//   all tests here need to actually be a function to get past detect
-
 #[test]
 #[ignore = "integration test"]
-fn detect_rejects_non_functions() {
+fn detect_rejects_non_python_projects() {
     TestRunner::default().build(
-        BuildConfig::new("heroku/builder:22", "test-fixtures/default")
+        BuildConfig::new("heroku/builder:22", "test-fixtures/empty")
             .expected_pack_result(PackResult::Failure),
         |context| {
-            // We can't test the detect failure reason, since by default pack CLI only shows output for
-            // non-zero, non-100 exit codes, and `libcnb-test` support enabling pack build's verbose mode:
+            // We can't test the detect failure reason, since by default pack CLI only shows output for non-zero,
+            // non-100 exit codes, and `libcnb-test` does not support enabling pack build's verbose mode:
             // https://github.com/heroku/libcnb.rs/issues/383
             assert_contains!(
                 context.pack_stdout,

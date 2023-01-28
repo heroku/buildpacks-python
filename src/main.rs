@@ -38,17 +38,6 @@ impl Buildpack for PythonBuildpack {
     type Error = BuildpackError;
 
     fn detect(&self, context: DetectContext<Self>) -> libcnb::Result<DetectResult, Self::Error> {
-        // For the functions alpha/beta, we need to release the CNB into the main builder image,
-        // however only want to make it available for functions for now, since the CNB is still
-        // experimental and not feature-complete for non-function use-cases.
-        // TODO: Remove this once the buildpack is ready for non-functions use.
-        if !functions::is_function_project(&context.app_dir)
-            .map_err(BuildpackError::ProjectDescriptor)?
-        {
-            log_info("A project.toml file containing a suitable Salesforce Function configuration was not found.");
-            return DetectResultBuilder::fail().build();
-        }
-
         // In the future we will add support for requiring this buildpack through the build plan,
         // but we first need a better understanding of real-world use-cases, so that we can work
         // out how best to support them without sacrificing existing error handling UX (such as
