@@ -15,9 +15,9 @@ use std::path::{Path, PathBuf};
 use std::process::Command;
 use std::{fs, io};
 
-const PIP_VERSION: &str = "22.3.1";
-const SETUPTOOLS_VERSION: &str = "65.6.3";
-const WHEEL_VERSION: &str = "0.38.3";
+const PIP_VERSION: &str = "23.0";
+const SETUPTOOLS_VERSION: &str = "67.0.0";
+const WHEEL_VERSION: &str = "0.38.4";
 
 pub(crate) struct PythonLayer<'a> {
     pub env: &'a Env,
