@@ -46,9 +46,9 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        builder: ["heroku/buildpacks:20", "heroku/builder:22"]
+        builder: ["builder:22", "buildpacks:20"]
     env:
-      INTEGRATION_TEST_CNB_BUILDER: ${{ matrix.builder }}
+      INTEGRATION_TEST_CNB_BUILDER: heroku/${{ matrix.builder }}
     steps:
       - name: Checkout
         uses: actions/checkout@v3
