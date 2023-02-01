@@ -43,6 +43,12 @@ jobs:
 
   integration-test:
     runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        builder: ["heroku/buildpacks:20", "heroku/builder:22"]
+    env:
+      INTEGRATION_TEST_CNB_BUILDER: ${{ matrix.builder }}
     steps:
       - name: Checkout
         uses: actions/checkout@v3

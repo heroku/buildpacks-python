@@ -3,18 +3,23 @@
 
 #![warn(clippy::pedantic)]
 
-use indoc::indoc;
+use indoc::{formatdoc, indoc};
 use libcnb_test::{assert_contains, BuildConfig, ContainerConfig, PackResult, TestRunner};
-use std::thread;
 use std::time::Duration;
+use std::{env, thread};
 
+const DEFAULT_BUILDER: &str = "heroku/builder:22";
 const TEST_PORT: u16 = 12345;
+
+fn builder() -> String {
+    env::var("INTEGRATION_TEST_CNB_BUILDER").unwrap_or(DEFAULT_BUILDER.to_string())
+}
 
 #[test]
 #[ignore = "integration test"]
 fn detect_rejects_non_python_projects() {
     TestRunner::default().build(
-        BuildConfig::new("heroku/builder:22", "test-fixtures/empty")
+        BuildConfig::new(builder(), "test-fixtures/empty")
             .expected_pack_result(PackResult::Failure),
         |context| {
             // We can't test the detect failure reason, since by default pack CLI only shows output for non-zero,
@@ -32,7 +37,7 @@ fn detect_rejects_non_python_projects() {
 #[ignore = "integration test"]
 fn function_template() {
     TestRunner::default().build(
-        BuildConfig::new("heroku/builder:22", "test-fixtures/function_template"),
+        BuildConfig::new(builder(), "test-fixtures/function_template"),
         |context| {
             // Pip outputs git clone output to stderr for some reason, so stderr isn't empty.
             // TODO: Decide whether this is a bug in pip and/or if we should work around it.
@@ -107,7 +112,7 @@ fn function_template() {
 #[ignore = "integration test"]
 fn function_repeat_build() {
     TestRunner::default().build(
-        BuildConfig::new("heroku/builder:22", "test-fixtures/function_template"),
+        BuildConfig::new(builder(), "test-fixtures/function_template"),
         |context| {
             let config = context.config.clone();
             context.rebuild(config, |rebuild_context| {
@@ -138,18 +143,26 @@ fn function_repeat_build() {
 #[test]
 #[ignore = "integration test"]
 fn runtime_txt_python_version_unavailable() {
+    let builder = builder();
+
     TestRunner::default().build(
         BuildConfig::new(
-            "heroku/builder:22",
+            &builder,
             "test-fixtures/runtime_txt_python_version_unavailable",
         )
         .expected_pack_result(PackResult::Failure),
         |context| {
+            let expected_stack = match builder.as_str() {
+                "heroku/buildpacks:20" => "heroku-20",
+                "heroku/builder:22" => "heroku-22",
+                _ => unimplemented!("Unknown builder!"),
+            };
+
             assert_contains!(
                 context.pack_stderr,
-                indoc! {"
+                &formatdoc! {"
                     [Error: Requested Python version is not available]
-                    The requested Python version (999.999.999) is not available for this stack (heroku-22).
+                    The requested Python version (999.999.999) is not available for this stack ({expected_stack}).
                     
                     Please update the version in 'runtime.txt' to a supported Python version, or else
                     remove the file to instead use the default version (currently Python 3.11.1).
@@ -167,7 +180,7 @@ fn runtime_txt_python_version_unavailable() {
 fn runtime_txt_python_version_invalid() {
     TestRunner::default().build(
         BuildConfig::new(
-            "heroku/builder:22",
+            builder(),
             "test-fixtures/runtime_txt_python_version_invalid",
         )
         .expected_pack_result(PackResult::Failure),
@@ -203,7 +216,7 @@ fn runtime_txt_python_version_invalid() {
 fn function_missing_functions_package() {
     TestRunner::default().build(
         BuildConfig::new(
-            "heroku/builder:22",
+            builder(),
             "test-fixtures/function_missing_functions_package",
         )
         .expected_pack_result(PackResult::Failure),
@@ -231,7 +244,7 @@ fn function_missing_functions_package() {
 fn function_fails_self_check() {
     TestRunner::default().build(
         BuildConfig::new(
-            "heroku/builder:22",
+            builder(),
             "test-fixtures/function_fails_self_check",
         )
         .expected_pack_result(PackResult::Failure),
