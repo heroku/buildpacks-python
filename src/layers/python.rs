@@ -267,6 +267,7 @@ fn generate_layer_metadata(
     }
 }
 
+/// Errors that can occur when installing Python and required packaging tools into a layer.
 #[derive(Debug)]
 pub(crate) enum PythonLayerError {
     BootstrapPipCommand(CommandError),

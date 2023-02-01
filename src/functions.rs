@@ -6,7 +6,8 @@ use std::io;
 use std::path::Path;
 use std::process::{Command, Output};
 
-pub const FUNCTION_RUNTIME_PROGRAM_NAME: &str = "sf-functions-python";
+/// The program/script name of the Python Functions runtime's CLI.
+pub(crate) const FUNCTION_RUNTIME_PROGRAM_NAME: &str = "sf-functions-python";
 
 /// Detect whether the specified project directory is that of a Salesforce Function.
 ///
@@ -91,31 +92,25 @@ mod tests {
 
     #[test]
     fn is_function_project_no_project_toml() {
-        let app_dir = Path::new("test-fixtures/empty");
-
-        assert!(!is_function_project(app_dir).unwrap());
+        assert!(!is_function_project(Path::new("test-fixtures/empty")).unwrap());
     }
 
     #[test]
     fn is_function_project_non_salesforce_project_toml() {
-        let app_dir = Path::new("test-fixtures/project_toml_non_salesforce");
-
-        assert!(!is_function_project(app_dir).unwrap());
+        assert!(
+            !is_function_project(Path::new("test-fixtures/project_toml_non_salesforce")).unwrap()
+        );
     }
 
     #[test]
     fn is_function_project_valid_function_project_toml() {
-        let app_dir = Path::new("test-fixtures/function_template");
-
-        assert!(is_function_project(app_dir).unwrap());
+        assert!(is_function_project(Path::new("test-fixtures/function_template")).unwrap());
     }
 
     #[test]
     fn is_function_project_invalid_project_toml() {
-        let app_dir = Path::new("test-fixtures/project_toml_invalid");
-
         assert!(matches!(
-            is_function_project(app_dir).unwrap_err(),
+            is_function_project(Path::new("test-fixtures/project_toml_invalid")).unwrap_err(),
             ReadProjectDescriptorError::Parse(_)
         ));
     }

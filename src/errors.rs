@@ -63,7 +63,6 @@ fn on_project_descriptor_error(project_descriptor_error: ReadProjectDescriptorEr
             "reading the (optional) project.toml file",
             &io_error,
         ),
-        // TODO: Add more detail here, like example file contents for functions?
         ReadProjectDescriptorError::Parse(toml_error) => log_error(
             "Invalid project.toml",
             formatdoc! {"

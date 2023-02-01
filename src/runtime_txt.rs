@@ -3,7 +3,11 @@ use crate::utils;
 use std::io;
 use std::path::Path;
 
-/// TODO
+/// Retrieve a parsed Python version from a `runtime.txt` file if it exists in the
+/// specified project directory.
+///
+/// Returns `Ok(None)` if the file does not exist, but returns the error for all other
+/// forms of IO or parsing errors.
 pub(crate) fn read_version(app_dir: &Path) -> Result<Option<PythonVersion>, ReadRuntimeTxtError> {
     let runtime_txt_path = app_dir.join("runtime.txt");
 
@@ -45,12 +49,14 @@ fn parse(contents: &str) -> Result<PythonVersion, ParseRuntimeTxtError> {
     }
 }
 
+/// Errors that can occur when reading and parsing a `runtime.txt` file.
 #[derive(Debug)]
 pub(crate) enum ReadRuntimeTxtError {
     Io(io::Error),
     Parse(ParseRuntimeTxtError),
 }
 
+/// Errors that can occur when parsing the contents of a `runtime.txt` file.
 #[derive(Debug, PartialEq)]
 pub(crate) struct ParseRuntimeTxtError {
     pub cleaned_contents: String,
@@ -184,5 +190,47 @@ mod tests {
                 cleaned_contents: "python-1.2.3+abc".to_string(),
             })
         );
+    }
+
+    #[test]
+    fn read_version_valid_runtime_txt() {
+        assert_eq!(
+            read_version(Path::new("test-fixtures/runtime_txt_python_3.10")).unwrap(),
+            Some(PythonVersion::new(3, 10, 9))
+        );
+        assert_eq!(
+            read_version(Path::new(
+                "test-fixtures/runtime_txt_python_version_unavailable"
+            ))
+            .unwrap(),
+            Some(PythonVersion::new(999, 999, 999))
+        );
+    }
+
+    #[test]
+    fn read_version_runtime_txt_not_present() {
+        assert_eq!(
+            read_version(Path::new("test-fixtures/empty")).unwrap(),
+            None
+        );
+    }
+
+    #[test]
+    fn read_version_io_error() {
+        assert!(matches!(
+            read_version(Path::new("test-fixtures/empty/.gitkeep")).unwrap_err(),
+            ReadRuntimeTxtError::Io(_)
+        ));
+    }
+
+    #[test]
+    fn read_version_parse_error() {
+        assert!(matches!(
+            read_version(Path::new(
+                "test-fixtures/runtime_txt_python_version_invalid"
+            ))
+            .unwrap_err(),
+            ReadRuntimeTxtError::Parse(_)
+        ));
     }
 }

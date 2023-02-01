@@ -88,6 +88,7 @@ impl Layer for PipDependenciesLayer<'_> {
     }
 }
 
+/// Errors that can occur when installing the project's dependencies into a layer using Pip.
 #[derive(Debug)]
 pub(crate) enum PipDependenciesLayerError {
     CreateSrcDirIo(io::Error),

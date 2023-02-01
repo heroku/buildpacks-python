@@ -67,6 +67,7 @@ impl Buildpack for PythonBuildpack {
         // env vars will still be excluded, due to the use of `clear-env` in `buildpack.toml`.
         let mut env = Env::from_current();
 
+        // Create the layer containing the Python runtime and required packaging tools.
         let python_layer = context.handle_layer(
             layer_name!("python"),
             PythonLayer {
@@ -76,6 +77,8 @@ impl Buildpack for PythonBuildpack {
         )?;
         env = python_layer.env.apply(Scope::Build, &env);
 
+        // Create the layers for the application dependencies and package manager cache.
+        // In the future support will be added for package managers other than pip.
         let dependencies_layer_env = match package_manager {
             PackageManager::Pip => {
                 log_header("Installing dependencies using Pip");

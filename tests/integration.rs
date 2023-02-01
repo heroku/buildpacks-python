@@ -137,72 +137,11 @@ fn function_repeat_build() {
 
 #[test]
 #[ignore = "integration test"]
-fn function_python_3_10() {
-    TestRunner::default().build(
-        BuildConfig::new("heroku/builder:22", "test-fixtures/function_python_3.10"),
-        |context| {
-            assert_contains!(
-                context.pack_stdout,
-                indoc! {"
-                    [Determining Python version]
-                    Using Python version 3.10.9 specified in runtime.txt
-                    
-                    [Installing Python]
-                    Downloading Python 3.10.9
-                    Python installation successful
-                "}
-            );
-
-            assert_contains!(
-                context.pack_stdout,
-                indoc! {"
-                    Pip install completed
-                    
-                    [Validating Salesforce Function]
-                    Function passed validation.
-                "}
-            );
-
-            context.start_container(
-                ContainerConfig::new()
-                    .env("PORT", TEST_PORT.to_string())
-                    .expose_port(TEST_PORT),
-                |container| {
-                    let address_on_host = container.address_for_port(TEST_PORT).unwrap();
-                    let url = format!("http://{}:{}", address_on_host.ip(), address_on_host.port());
-
-                    // Retries needed since the server takes a moment to start up.
-                    let mut attempts_remaining = 5;
-                    let response = loop {
-                        let response = ureq::post(&url).set("x-health-check", "true").call();
-                        if response.is_ok() || attempts_remaining == 0 {
-                            break response;
-                        }
-                        attempts_remaining -= 1;
-                        thread::sleep(Duration::from_secs(1));
-                    };
-
-                    let server_log_output = container.logs_now();
-                    assert_contains!(
-                        server_log_output.stderr,
-                        &format!("Uvicorn running on http://0.0.0.0:{TEST_PORT}")
-                    );
-
-                    let body = response.unwrap().into_string().unwrap();
-                    assert_eq!(body, r#""OK""#);
-                },
-            );
-        },
-    );
-}
-
-#[test]
-#[ignore = "integration test"]
-fn function_python_version_unavailable() {
+fn runtime_txt_python_version_unavailable() {
     TestRunner::default().build(
         BuildConfig::new(
             "heroku/builder:22",
-            "test-fixtures/function_python_version_unavailable",
+            "test-fixtures/runtime_txt_python_version_unavailable",
         )
         .expected_pack_result(PackResult::Failure),
         |context| {
@@ -225,11 +164,11 @@ fn function_python_version_unavailable() {
 
 #[test]
 #[ignore = "integration test"]
-fn function_python_version_invalid() {
+fn runtime_txt_python_version_invalid() {
     TestRunner::default().build(
         BuildConfig::new(
             "heroku/builder:22",
-            "test-fixtures/function_python_version_invalid",
+            "test-fixtures/runtime_txt_python_version_invalid",
         )
         .expected_pack_result(PackResult::Failure),
         |context| {

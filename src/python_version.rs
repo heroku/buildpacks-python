@@ -4,12 +4,14 @@ use libherokubuildpack::log::log_info;
 use std::fmt::{self, Display};
 use std::path::Path;
 
+/// The Python version that will be installed if the project does not specify an explicit version.
 pub(crate) const DEFAULT_PYTHON_VERSION: PythonVersion = PythonVersion {
     major: 3,
     minor: 11,
     patch: 1,
 };
 
+/// Representation of a specific Python `X.Y.Z` version.
 #[derive(Clone, Debug, PartialEq)]
 pub(crate) struct PythonVersion {
     pub major: u16,
@@ -33,35 +35,9 @@ impl Display for PythonVersion {
     }
 }
 
-// string -> requested python version -> exact python version -> python runtime (incl URL etc)
-
-// resolving python version:
-// failure modes: Nonsensical, unknown to buildpack, known but not supported, known and used to be supported but no longer
-// Does this occur inside each `get_version` / creation of `PythonVersion`?
-// But then each error type needs 3-4 additional enum variants
-// Depends on whether we want different error messages for each?
-// Though could still vary error message by using `PythonVersion.source` etc
-
-// Questions:
-// How should Python version detection precedence work?
-
-// TODO: Add tests for `get_version`? Or test caller? Or integration test?
-//
-// Possible tests:
-// - some IO error -> Err(RuntimeTxtError::Io)
-// - file present but invalid -> Err(RuntimeTxtError::Parse)
-// - file present and valid -> Ok(Some(python_version))
-// - file not present -> Ok(None)
-
-// warnings:
-// EOL major version, non-latest minor version, deprecated version specifier?
-// output warnings as found during build, or at end of the build log?
-// does EOL warnings use requested Python version or resolved version? I suppose resolved since needs EOL date etc, plus range version might still be outdated?
-
-// logging:
-// Do we log for version specifier files not found? Or only when found?
-// where do we log? In get_version, determine_python_version, or in the caller and have to store the version source in `PythonVersion`?
-
+/// Determine the Python version that should be installed for the project.
+///
+/// If no known version specifier file is found a default Python version will be used.
 pub(crate) fn determine_python_version(
     app_dir: &Path,
 ) -> Result<PythonVersion, PythonVersionError> {
@@ -84,21 +60,47 @@ pub(crate) fn determine_python_version(
     Ok(DEFAULT_PYTHON_VERSION)
 }
 
-pub(crate) fn _determine_python_version2(
-    app_dir: &Path,
-) -> Result<PythonVersion, PythonVersionError> {
-    runtime_txt::read_version(app_dir)
-        .map_err(PythonVersionError::RuntimeTxt)
-        .transpose()
-        .or_else(|| {
-            runtime_txt::read_version(app_dir)
-                .map_err(PythonVersionError::RuntimeTxt)
-                .transpose()
-        })
-        .unwrap_or(Ok(DEFAULT_PYTHON_VERSION))
-}
-
+/// Errors that can occur when determining which Python package manager to use for a project.
 #[derive(Debug)]
 pub(crate) enum PythonVersionError {
     RuntimeTxt(ReadRuntimeTxtError),
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn determine_python_version_runtime_txt_valid() {
+        assert_eq!(
+            determine_python_version(Path::new("test-fixtures/runtime_txt_python_3.10")).unwrap(),
+            PythonVersion::new(3, 10, 9)
+        );
+        assert_eq!(
+            determine_python_version(Path::new(
+                "test-fixtures/runtime_txt_python_version_unavailable"
+            ))
+            .unwrap(),
+            PythonVersion::new(999, 999, 999)
+        );
+    }
+
+    #[test]
+    fn determine_python_version_runtime_txt_error() {
+        assert!(matches!(
+            determine_python_version(Path::new(
+                "test-fixtures/runtime_txt_python_version_invalid"
+            ))
+            .unwrap_err(),
+            PythonVersionError::RuntimeTxt(ReadRuntimeTxtError::Parse(_))
+        ));
+    }
+
+    #[test]
+    fn determine_python_version_none_specified() {
+        assert_eq!(
+            determine_python_version(Path::new("test-fixtures/empty")).unwrap(),
+            DEFAULT_PYTHON_VERSION
+        );
+    }
 }
