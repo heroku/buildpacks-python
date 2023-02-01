@@ -8,9 +8,6 @@ use std::process::{Command, Output};
 
 pub const FUNCTION_RUNTIME_PROGRAM_NAME: &str = "sf-functions-python";
 
-// TODO: Decide default number of workers.
-const SERVE_SUBCOMMAND: &str = "serve --host 0.0.0.0 --port \"${PORT:-8080}\" --workers 4 .";
-
 /// Detect whether the specified project directory is that of a Salesforce Function.
 ///
 /// Returns `Ok(true)` if the specified project directory contains a `project.toml` file with a
@@ -27,11 +24,6 @@ pub(crate) fn is_function_project(app_dir: &Path) -> Result<bool, ReadProjectDes
 }
 
 /// Validate the function using the `sf-functions-python check` command.
-// TODO: Add support for checking the function meets a minimum version, like the CLI does:
-// - Explore pros/cons of version command vs looking up package version.
-// - Version command failure cases: Not found / io error / exit code / invalid version (unparsable) / too old version
-// TODO: Should we output the version of the salesforce-functions package in the CNB build, locally, at runtime etc?
-// TODO: Should we inform that a new version is available, as a less strict complement to the minimum version?
 pub(crate) fn check_function(env: &Env) -> Result<(), CheckFunctionError> {
     // Not using `utils::run_command` since we want to capture output and only
     // display it if the check command fails.
@@ -63,7 +55,20 @@ pub(crate) fn launch_config() -> Launch {
             ProcessBuilder::new(process_type!("web"), "bash")
                 .args([
                     "-c",
-                    &format!("exec {FUNCTION_RUNTIME_PROGRAM_NAME} {SERVE_SUBCOMMAND}"),
+                    &[
+                        "exec",
+                        FUNCTION_RUNTIME_PROGRAM_NAME,
+                        "serve",
+                        "--host",
+                        "0.0.0.0",
+                        "--port",
+                        "\"${PORT:-8080}\"",
+                        // TODO: Determine optimal number of workers.
+                        "--workers",
+                        "4",
+                        ".",
+                    ]
+                    .join(" "),
                 ])
                 .default(true)
                 .direct(true)
@@ -99,7 +104,7 @@ mod tests {
     }
 
     #[test]
-    fn is_function_project_function_project_toml() {
+    fn is_function_project_valid_function_project_toml() {
         let app_dir = Path::new("test-fixtures/function_template");
 
         assert!(is_function_project(app_dir).unwrap());
