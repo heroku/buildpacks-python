@@ -9,7 +9,7 @@ permissions:
 
 jobs:
   check-changelog:
-    runs-on: ubuntu-22.04
+    runs-on: ubuntu-latest
     if: |
       !contains(github.event.pull_request.labels.*.name, 'skip changelog') &&
       !contains(github.event.pull_request.labels.*.name, 'dependencies')
