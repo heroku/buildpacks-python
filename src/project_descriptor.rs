@@ -99,6 +99,7 @@ pub(crate) enum ReadProjectDescriptorError {
 #[cfg(test)]
 mod tests {
     use super::*;
+    use libcnb_test::assert_contains;
 
     #[test]
     fn deserialize_empty_descriptor() {
@@ -180,10 +181,7 @@ mod tests {
         "#;
 
         let error = parse(toml_str).unwrap_err();
-        assert_eq!(
-            error.to_string(),
-            "missing field `type` for key `com.salesforce` at line 2 column 13"
-        );
+        assert_contains!(error.to_string(), "missing field `type`");
     }
 
     #[test]
@@ -194,9 +192,9 @@ mod tests {
         "#;
 
         let error = parse(toml_str).unwrap_err();
-        assert_eq!(
+        assert_contains!(
             error.to_string(),
-            "unknown variant `some_unknown_type`, expected `function` for key `com.salesforce.type` at line 2 column 13"
+            "unknown variant `some_unknown_type`, expected `function`"
         );
     }
 

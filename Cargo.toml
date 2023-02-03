@@ -12,12 +12,12 @@ publish = false
 # https://github.com/rust-lang/libz-sys/issues/93
 # As such we have to use the next best alternate backend, which is `zlib`.
 flate2 = { version = "1", default-features = false, features = ["zlib"] }
-indoc = "1"
+indoc = "2"
 libcnb = "0.11"
 libherokubuildpack = { version = "0.11", default-features = false, features = ["log"] }
 serde = "1"
 tar = "0.4"
-toml = "0.5"
+toml = "0.7"
 ureq = { version = "2", default-features = false, features = ["tls"] }
 
 [dev-dependencies]
