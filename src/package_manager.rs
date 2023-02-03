@@ -46,7 +46,7 @@ mod tests {
     #[test]
     fn determine_package_manager_requirements_txt() {
         assert!(matches!(
-            determine_package_manager(Path::new("test-fixtures/default")).unwrap(),
+            determine_package_manager(Path::new("tests/fixtures/default")).unwrap(),
             PackageManager::Pip
         ));
     }
@@ -54,7 +54,7 @@ mod tests {
     #[test]
     fn determine_package_manager_none() {
         assert!(matches!(
-            determine_package_manager(Path::new("test-fixtures/empty")).unwrap_err(),
+            determine_package_manager(Path::new("tests/fixtures/empty")).unwrap_err(),
             DeterminePackageManagerError::NoneFound
         ));
     }

@@ -73,12 +73,12 @@ mod tests {
     #[test]
     fn determine_python_version_runtime_txt_valid() {
         assert_eq!(
-            determine_python_version(Path::new("test-fixtures/runtime_txt_python_3.10")).unwrap(),
+            determine_python_version(Path::new("tests/fixtures/runtime_txt_python_3.10")).unwrap(),
             PythonVersion::new(3, 10, 9)
         );
         assert_eq!(
             determine_python_version(Path::new(
-                "test-fixtures/runtime_txt_python_version_unavailable"
+                "tests/fixtures/runtime_txt_python_version_unavailable"
             ))
             .unwrap(),
             PythonVersion::new(999, 999, 999)
@@ -89,7 +89,7 @@ mod tests {
     fn determine_python_version_runtime_txt_error() {
         assert!(matches!(
             determine_python_version(Path::new(
-                "test-fixtures/runtime_txt_python_version_invalid"
+                "tests/fixtures/runtime_txt_python_version_invalid"
             ))
             .unwrap_err(),
             PythonVersionError::RuntimeTxt(ReadRuntimeTxtError::Parse(_))
@@ -99,7 +99,7 @@ mod tests {
     #[test]
     fn determine_python_version_none_specified() {
         assert_eq!(
-            determine_python_version(Path::new("test-fixtures/empty")).unwrap(),
+            determine_python_version(Path::new("tests/fixtures/empty")).unwrap(),
             DEFAULT_PYTHON_VERSION
         );
     }

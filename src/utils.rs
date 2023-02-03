@@ -99,24 +99,24 @@ mod tests {
 
     #[test]
     fn is_python_project_valid_project() {
-        assert!(is_python_project(Path::new("test-fixtures/default")).unwrap());
+        assert!(is_python_project(Path::new("tests/fixtures/default")).unwrap());
     }
 
     #[test]
     fn is_python_project_empty() {
-        assert!(!is_python_project(Path::new("test-fixtures/empty")).unwrap());
+        assert!(!is_python_project(Path::new("tests/fixtures/empty")).unwrap());
     }
 
     #[test]
     fn is_python_project_io_error() {
-        assert!(is_python_project(Path::new("test-fixtures/empty/.gitkeep")).is_err());
+        assert!(is_python_project(Path::new("tests/fixtures/empty/.gitkeep")).is_err());
     }
 
     #[test]
     fn read_optional_file_valid_file() {
         assert_eq!(
             read_optional_file(Path::new(
-                "test-fixtures/runtime_txt_python_3.10/runtime.txt"
+                "tests/fixtures/runtime_txt_python_3.10/runtime.txt"
             ))
             .unwrap(),
             Some("python-3.10.9\n".to_string())
@@ -127,7 +127,7 @@ mod tests {
     fn read_optional_file_missing_file() {
         assert_eq!(
             read_optional_file(Path::new(
-                "test-fixtures/non-existent-dir/non-existent-file"
+                "tests/fixtures/non-existent-dir/non-existent-file"
             ))
             .unwrap(),
             None
@@ -136,7 +136,7 @@ mod tests {
 
     #[test]
     fn read_optional_file_io_error() {
-        assert!(read_optional_file(Path::new("test-fixtures/")).is_err());
+        assert!(read_optional_file(Path::new("tests/fixtures/")).is_err());
     }
 
     #[test]

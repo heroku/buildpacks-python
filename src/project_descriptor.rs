@@ -200,14 +200,14 @@ mod tests {
 
     #[test]
     fn read_project_descriptor_no_project_toml_file() {
-        let app_dir = Path::new("test-fixtures/empty");
+        let app_dir = Path::new("tests/fixtures/empty");
 
         assert_eq!(read_project_descriptor(app_dir).unwrap(), None);
     }
 
     #[test]
     fn read_project_descriptor_non_salesforce() {
-        let app_dir = Path::new("test-fixtures/project_toml_non_salesforce");
+        let app_dir = Path::new("tests/fixtures/project_toml_non_salesforce");
 
         assert_eq!(
             read_project_descriptor(app_dir).unwrap(),
@@ -219,7 +219,7 @@ mod tests {
 
     #[test]
     fn read_project_descriptor_function() {
-        let app_dir = Path::new("test-fixtures/function_template");
+        let app_dir = Path::new("tests/fixtures/function_template");
 
         assert_eq!(
             read_project_descriptor(app_dir).unwrap(),
@@ -235,7 +235,7 @@ mod tests {
 
     #[test]
     fn read_project_descriptor_invalid_project_toml_file() {
-        let app_dir = Path::new("test-fixtures/project_toml_invalid");
+        let app_dir = Path::new("tests/fixtures/project_toml_invalid");
 
         assert!(matches!(
             read_project_descriptor(app_dir).unwrap_err(),
@@ -245,21 +245,21 @@ mod tests {
 
     #[test]
     fn get_salesforce_project_type_missing() {
-        let app_dir = Path::new("test-fixtures/empty");
+        let app_dir = Path::new("tests/fixtures/empty");
 
         assert_eq!(read_salesforce_project_type(app_dir).unwrap(), None);
     }
 
     #[test]
     fn get_salesforce_project_type_non_salesforce() {
-        let app_dir = Path::new("test-fixtures/project_toml_non_salesforce");
+        let app_dir = Path::new("tests/fixtures/project_toml_non_salesforce");
 
         assert_eq!(read_salesforce_project_type(app_dir).unwrap(), None);
     }
 
     #[test]
     fn get_salesforce_project_type_function() {
-        let app_dir = Path::new("test-fixtures/function_template");
+        let app_dir = Path::new("tests/fixtures/function_template");
 
         assert_eq!(
             read_salesforce_project_type(app_dir).unwrap(),
@@ -269,7 +269,7 @@ mod tests {
 
     #[test]
     fn get_salesforce_project_type_invalid_project_toml_file() {
-        let app_dir = Path::new("test-fixtures/project_toml_invalid");
+        let app_dir = Path::new("tests/fixtures/project_toml_invalid");
 
         assert!(matches!(
             read_salesforce_project_type(app_dir).unwrap_err(),

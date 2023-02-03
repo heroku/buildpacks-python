@@ -195,12 +195,12 @@ mod tests {
     #[test]
     fn read_version_valid_runtime_txt() {
         assert_eq!(
-            read_version(Path::new("test-fixtures/runtime_txt_python_3.10")).unwrap(),
+            read_version(Path::new("tests/fixtures/runtime_txt_python_3.10")).unwrap(),
             Some(PythonVersion::new(3, 10, 9))
         );
         assert_eq!(
             read_version(Path::new(
-                "test-fixtures/runtime_txt_python_version_unavailable"
+                "tests/fixtures/runtime_txt_python_version_unavailable"
             ))
             .unwrap(),
             Some(PythonVersion::new(999, 999, 999))
@@ -210,7 +210,7 @@ mod tests {
     #[test]
     fn read_version_runtime_txt_not_present() {
         assert_eq!(
-            read_version(Path::new("test-fixtures/empty")).unwrap(),
+            read_version(Path::new("tests/fixtures/empty")).unwrap(),
             None
         );
     }
@@ -218,7 +218,7 @@ mod tests {
     #[test]
     fn read_version_io_error() {
         assert!(matches!(
-            read_version(Path::new("test-fixtures/empty/.gitkeep")).unwrap_err(),
+            read_version(Path::new("tests/fixtures/empty/.gitkeep")).unwrap_err(),
             ReadRuntimeTxtError::Io(_)
         ));
     }
@@ -227,7 +227,7 @@ mod tests {
     fn read_version_parse_error() {
         assert!(matches!(
             read_version(Path::new(
-                "test-fixtures/runtime_txt_python_version_invalid"
+                "tests/fixtures/runtime_txt_python_version_invalid"
             ))
             .unwrap_err(),
             ReadRuntimeTxtError::Parse(_)

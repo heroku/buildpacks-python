@@ -92,25 +92,25 @@ mod tests {
 
     #[test]
     fn is_function_project_no_project_toml() {
-        assert!(!is_function_project(Path::new("test-fixtures/empty")).unwrap());
+        assert!(!is_function_project(Path::new("tests/fixtures/empty")).unwrap());
     }
 
     #[test]
     fn is_function_project_non_salesforce_project_toml() {
         assert!(
-            !is_function_project(Path::new("test-fixtures/project_toml_non_salesforce")).unwrap()
+            !is_function_project(Path::new("tests/fixtures/project_toml_non_salesforce")).unwrap()
         );
     }
 
     #[test]
     fn is_function_project_valid_function_project_toml() {
-        assert!(is_function_project(Path::new("test-fixtures/function_template")).unwrap());
+        assert!(is_function_project(Path::new("tests/fixtures/function_template")).unwrap());
     }
 
     #[test]
     fn is_function_project_invalid_project_toml() {
         assert!(matches!(
-            is_function_project(Path::new("test-fixtures/project_toml_invalid")).unwrap_err(),
+            is_function_project(Path::new("tests/fixtures/project_toml_invalid")).unwrap_err(),
             ReadProjectDescriptorError::Parse(_)
         ));
     }

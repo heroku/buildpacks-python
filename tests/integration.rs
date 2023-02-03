@@ -19,7 +19,7 @@ fn builder() -> String {
 #[ignore = "integration test"]
 fn detect_rejects_non_python_projects() {
     TestRunner::default().build(
-        BuildConfig::new(builder(), "test-fixtures/empty")
+        BuildConfig::new(builder(), "tests/fixtures/empty")
             .expected_pack_result(PackResult::Failure),
         |context| {
             // We can't test the detect failure reason, since by default pack CLI only shows output for non-zero,
@@ -37,7 +37,7 @@ fn detect_rejects_non_python_projects() {
 #[ignore = "integration test"]
 fn function_template() {
     TestRunner::default().build(
-        BuildConfig::new(builder(), "test-fixtures/function_template"),
+        BuildConfig::new(builder(), "tests/fixtures/function_template"),
         |context| {
             // Pip outputs git clone output to stderr for some reason, so stderr isn't empty.
             // TODO: Decide whether this is a bug in pip and/or if we should work around it.
@@ -112,7 +112,7 @@ fn function_template() {
 #[ignore = "integration test"]
 fn function_repeat_build() {
     TestRunner::default().build(
-        BuildConfig::new(builder(), "test-fixtures/function_template"),
+        BuildConfig::new(builder(), "tests/fixtures/function_template"),
         |context| {
             let config = context.config.clone();
             context.rebuild(config, |rebuild_context| {
@@ -148,7 +148,7 @@ fn runtime_txt_python_version_unavailable() {
     TestRunner::default().build(
         BuildConfig::new(
             &builder,
-            "test-fixtures/runtime_txt_python_version_unavailable",
+            "tests/fixtures/runtime_txt_python_version_unavailable",
         )
         .expected_pack_result(PackResult::Failure),
         |context| {
@@ -181,7 +181,7 @@ fn runtime_txt_python_version_invalid() {
     TestRunner::default().build(
         BuildConfig::new(
             builder(),
-            "test-fixtures/runtime_txt_python_version_invalid",
+            "tests/fixtures/runtime_txt_python_version_invalid",
         )
         .expected_pack_result(PackResult::Failure),
         |context| {
@@ -217,7 +217,7 @@ fn function_missing_functions_package() {
     TestRunner::default().build(
         BuildConfig::new(
             builder(),
-            "test-fixtures/function_missing_functions_package",
+            "tests/fixtures/function_missing_functions_package",
         )
         .expected_pack_result(PackResult::Failure),
         |context| {
@@ -245,7 +245,7 @@ fn function_fails_self_check() {
     TestRunner::default().build(
         BuildConfig::new(
             builder(),
-            "test-fixtures/function_fails_self_check",
+            "tests/fixtures/function_fails_self_check",
         )
         .expected_pack_result(PackResult::Failure),
         |context| {
