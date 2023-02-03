@@ -3,9 +3,8 @@ name: CI
 on:
   push:
     # Avoid duplicate builds on PRs.
-    # TODO: Uncomment once this is merged to `main`.
-    # branches:
-    #   - main
+    branches:
+      - main
   pull_request:
 
 permissions:
