@@ -257,7 +257,7 @@ fn function_fails_self_check() {
                     there is a problem with the Python Salesforce Function in this project.
                     
                     Details:
-                    Function failed validation: 'invalid' is not a valid Salesforce REST API version. Update 'salesforce-api-version' in project.toml to a version of form 'X.Y'.
+                    Function failed validation: 'invalid' isn't a valid Salesforce REST API version. Update the 'salesforce-api-version' key in project.toml to a version that uses the form 'X.Y', such as '56.0'.
                 "}
             );
         },
