@@ -55,7 +55,7 @@ fn function_template() {
                     Python installation successful
                     
                     [Installing Pip]
-                    Installing pip 23.0, setuptools 67.0.0 and wheel 0.38.4
+                    Installing pip 23.0, setuptools 67.1.0 and wheel 0.38.4
                     Installation completed
                     
                     [Installing dependencies using Pip]
@@ -127,7 +127,7 @@ fn function_repeat_build() {
                         Re-using cached Python 3.11.1
                         
                         [Installing Pip]
-                        Re-using cached pip 23.0, setuptools 67.0.0 and wheel 0.38.4
+                        Re-using cached pip 23.0, setuptools 67.1.0 and wheel 0.38.4
                         
                         [Installing dependencies using Pip]
                         Re-using cached pip-cache

@@ -16,7 +16,7 @@ use std::process::Command;
 use std::{fs, io};
 
 const PIP_VERSION: &str = "23.0";
-const SETUPTOOLS_VERSION: &str = "67.0.0";
+const SETUPTOOLS_VERSION: &str = "67.1.0";
 const WHEEL_VERSION: &str = "0.38.4";
 
 pub(crate) struct PythonLayer<'a> {
