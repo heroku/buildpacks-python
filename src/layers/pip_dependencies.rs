@@ -11,8 +11,11 @@ use std::path::{Path, PathBuf};
 use std::process::Command;
 use std::{fs, io};
 
+/// Layer containing the application's Python dependencies, installed using Pip.
 pub(crate) struct PipDependenciesLayer<'a> {
-    pub env: &'a Env,
+    /// Environment variables inherited from earlier buildpack steps.
+    pub base_env: &'a Env,
+    /// The path to the Pip cache directory, which is stored in another layer since it isn't needed at runtime.
     pub pip_cache_dir: PathBuf,
 }
 
@@ -42,7 +45,7 @@ impl Layer for PipDependenciesLayer<'_> {
             "PYTHONUSERBASE",
             layer_path,
         );
-        let env = layer_env.apply(Scope::Build, self.env);
+        let env = layer_env.apply(Scope::Build, self.base_env);
 
         let src_dir = layer_path.join("src");
         fs::create_dir(&src_dir).map_err(PipDependenciesLayerError::CreateSrcDirIo)?;

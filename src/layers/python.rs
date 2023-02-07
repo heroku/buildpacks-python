@@ -19,8 +19,11 @@ const PIP_VERSION: &str = "23.0";
 const SETUPTOOLS_VERSION: &str = "67.1.0";
 const WHEEL_VERSION: &str = "0.38.4";
 
+/// Layer containing the Python runtime, and the packages `pip`, `setuptools` and `wheel`.
 pub(crate) struct PythonLayer<'a> {
-    pub env: &'a Env,
+    /// Environment variables inherited from earlier buildpack steps.
+    pub base_env: &'a Env,
+    /// The Python version that will be installed.
     pub python_version: &'a PythonVersion,
 }
 
@@ -45,7 +48,6 @@ impl Layer for PythonLayer<'_> {
         }
     }
 
-    #[allow(clippy::too_many_lines)]
     fn create(
         &self,
         context: &BuildContext<Self::Buildpack>,
@@ -75,51 +77,8 @@ impl Layer for PythonLayer<'_> {
         })?;
         log_info("Python installation successful");
 
-        // Remember to force invalidation of the cached layer if this list ever changes.
-        let layer_env = LayerEnv::new()
-            // We have to set `CPATH` explicitly, since the automatic path set by lifecycle/libcnb is
-            // `<layer>/include/` whereas Python's header files are at `<layer>/include/pythonX.Y/`
-            // (and compilers don't recursively search).
-            .chainable_insert(
-                Scope::All,
-                ModificationBehavior::Prepend,
-                "CPATH",
-                layer_path.join(format!(
-                    "include/python{}.{}",
-                    self.python_version.major, self.python_version.minor
-                )),
-            )
-            .chainable_insert(Scope::All, ModificationBehavior::Delimiter, "CPATH", ":")
-            // Ensure Python uses a Unicode locate, to prevent the issues described in:
-            // https://github.com/docker-library/python/pull/570
-            .chainable_insert(
-                Scope::All,
-                ModificationBehavior::Override,
-                "LANG",
-                "C.UTF-8",
-            )
-            // We have to set `PKG_CONFIG_PATH` explicitly, since the automatic path set by lifecycle/libcnb
-            // is `<layer>/pkgconfig/`, whereas Python's pkgconfig files are at `<layer>/lib/pkgconfig/`.
-            .chainable_insert(
-                Scope::All,
-                ModificationBehavior::Prepend,
-                "PKG_CONFIG_PATH",
-                layer_path.join("lib/pkgconfig"),
-            )
-            .chainable_insert(
-                Scope::All,
-                ModificationBehavior::Delimiter,
-                "PKG_CONFIG_PATH",
-                ":",
-            )
-            // Disable Python's output buffering to ensure logs aren't dropped if an app crashes.
-            .chainable_insert(
-                Scope::All,
-                ModificationBehavior::Override,
-                "PYTHONUNBUFFERED",
-                "1",
-            );
-        let mut env = layer_env.apply(Scope::Build, self.env);
+        let layer_env = generate_layer_env(layer_path, self.python_version);
+        let mut env = layer_env.apply(Scope::Build, self.base_env);
 
         // The Python binaries are built using `--shared`, and since they're being installed at a
         // different location from their original `--prefix`, they need `LD_LIBRARY_PATH` to be set
@@ -138,15 +97,18 @@ impl Layer for PythonLayer<'_> {
         ));
         let site_packages_dir = python_stdlib_dir.join("site-packages");
 
-        // TODO: Explain what's happening here
-        let bundled_pip_module =
-            bundled_pip_module(&python_stdlib_dir).map_err(PythonLayerError::LocateBundledPipIo)?;
+        // Python bundles Pip within its standard library, which we can use to install our chosen
+        // pip version from PyPI, saving us from having to download the usual pip bootstrap script.
+        let bundled_pip_module_path = bundled_pip_module_path(&python_stdlib_dir)
+            .map_err(PythonLayerError::LocateBundledPipIo)?;
+
         utils::run_command(
             Command::new(python_binary)
                 .args([
-                    &bundled_pip_module.to_string_lossy(),
+                    &bundled_pip_module_path.to_string_lossy(),
                     "install",
                     "--disable-pip-version-check",
+                    // There is no point using Pip's cache here, since the layer itself will be cached.
                     "--no-cache-dir",
                     "--no-input",
                     "--quiet",
@@ -168,7 +130,7 @@ impl Layer for PythonLayer<'_> {
         // site-packages, it's possible other buildpacks or custom scripts may forget to do so.
         // By making the system site-packages directory read-only, Pip will automatically use
         // user installs in such cases:
-        // https://github.com/pypa/pip/blob/22.3.1/src/pip/_internal/commands/install.py#L706-L764
+        // https://github.com/pypa/pip/blob/23.0/src/pip/_internal/commands/install.py#L715-L773
         fs::set_permissions(site_packages_dir, Permissions::from_mode(0o555))
             .map_err(PythonLayerError::MakeSitePackagesReadOnlyIo)?;
 
@@ -222,28 +184,80 @@ impl Layer for PythonLayer<'_> {
     }
 }
 
-// TODO: Explain what's happening here
-// The bundled version of Pip (and thus the wheel filename) varies across Python versions,
-// so we have to search the bundled wheels directory for the appropriate file.
-// TODO: This returns a module path rather than a wheel path - change?
-fn bundled_pip_module(python_stdlib_dir: &Path) -> io::Result<PathBuf> {
-    let bundled_wheels_dir = python_stdlib_dir.join("ensurepip/_bundled");
-    let pip_wheel_filename_prefix = "pip-";
+/// Environment variables that will be set by this layer.
+fn generate_layer_env(layer_path: &Path, python_version: &PythonVersion) -> LayerEnv {
+    // Several of the env vars below are technically build-time only vars, however, we use
+    // `Scope::All` instead of `Scope::Build` to reduce confusion if pip install commands
+    // are used at runtime when debugging.
+    //
+    // Remember to force invalidation of the cached layer if these env vars ever change.
+    LayerEnv::new()
+        // We have to set `CPATH` explicitly, since the automatic path set by lifecycle/libcnb is
+        // `<layer>/include/` whereas Python's header files are at `<layer>/include/pythonX.Y/`
+        // (and compilers don't recursively search).
+        .chainable_insert(
+            Scope::All,
+            ModificationBehavior::Prepend,
+            "CPATH",
+            layer_path.join(format!(
+                "include/python{}.{}",
+                python_version.major, python_version.minor
+            )),
+        )
+        .chainable_insert(Scope::All, ModificationBehavior::Delimiter, "CPATH", ":")
+        // Ensure Python uses a Unicode locate, to prevent the issues described in:
+        // https://github.com/docker-library/python/pull/570
+        .chainable_insert(
+            Scope::All,
+            ModificationBehavior::Override,
+            "LANG",
+            "C.UTF-8",
+        )
+        // We have to set `PKG_CONFIG_PATH` explicitly, since the automatic path set by lifecycle/libcnb
+        // is `<layer>/pkgconfig/`, whereas Python's pkgconfig files are at `<layer>/lib/pkgconfig/`.
+        .chainable_insert(
+            Scope::All,
+            ModificationBehavior::Prepend,
+            "PKG_CONFIG_PATH",
+            layer_path.join("lib/pkgconfig"),
+        )
+        .chainable_insert(
+            Scope::All,
+            ModificationBehavior::Delimiter,
+            "PKG_CONFIG_PATH",
+            ":",
+        )
+        // Disable Python's output buffering to ensure logs aren't dropped if an app crashes.
+        .chainable_insert(
+            Scope::All,
+            ModificationBehavior::Override,
+            "PYTHONUNBUFFERED",
+            "1",
+        )
+}
 
+/// The path to the Pip module bundled in Python's standard library.
+fn bundled_pip_module_path(python_stdlib_dir: &Path) -> io::Result<PathBuf> {
+    let bundled_wheels_dir = python_stdlib_dir.join("ensurepip/_bundled");
+
+    // The wheel filename includes the Pip version (for example `pip-XX.Y-py3-none-any.whl`),
+    // which varies from one Python release to the next (including between patch releases).
+    // As such, we have to find the wheel based on the known filename prefix of `pip-`.
     for entry in fs::read_dir(bundled_wheels_dir)? {
         let entry = entry?;
-        if entry
-            .file_name()
-            .to_string_lossy()
-            .starts_with(pip_wheel_filename_prefix)
-        {
-            return Ok(entry.path().join("pip"));
+        if entry.file_name().to_string_lossy().starts_with("pip-") {
+            let pip_wheel_path = entry.path();
+            // The Pip module exists inside the pip wheel (which is a zip file), however,
+            // Python can load it directly by appending the module name to the zip filename,
+            // as though it were a path. For example: `pip-XX.Y-py3-none-any.whl/pip`
+            let pip_module_path = pip_wheel_path.join("pip");
+            return Ok(pip_module_path);
         }
     }
 
     Err(io::Error::new(
         io::ErrorKind::NotFound,
-        format!("No files found matching the filename prefix of '{pip_wheel_filename_prefix}'"),
+        "No files found matching the pip wheel filename prefix",
     ))
 }
 
@@ -279,4 +293,55 @@ impl From<PythonLayerError> for BuildpackError {
     }
 }
 
-// TODO: Unit tests for cache invalidation handling?
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn test_generate_layer_env() {
+        let mut base_env = Env::new();
+        base_env.insert("CPATH", "/base");
+        base_env.insert("LANG", "this-should-be-overridden");
+        base_env.insert("PKG_CONFIG_PATH", "/base");
+        base_env.insert("PYTHONUNBUFFERED", "this-should-be-overridden");
+
+        let layer_env = generate_layer_env(
+            Path::new("/layers/python"),
+            &PythonVersion {
+                major: 3,
+                minor: 11,
+                patch: 1,
+            },
+        );
+
+        // Remember to force invalidation of the cached layer if these env vars ever change.
+        assert_eq!(
+            environment_as_sorted_vector(&layer_env.apply(Scope::Build, &base_env)),
+            vec![
+                ("CPATH", "/layers/python/include/python3.11:/base"),
+                ("LANG", "C.UTF-8"),
+                ("PKG_CONFIG_PATH", "/layers/python/lib/pkgconfig:/base"),
+                ("PYTHONUNBUFFERED", "1"),
+            ]
+        );
+        assert_eq!(
+            environment_as_sorted_vector(&layer_env.apply(Scope::Launch, &base_env)),
+            vec![
+                ("CPATH", "/layers/python/include/python3.11:/base"),
+                ("LANG", "C.UTF-8"),
+                ("PKG_CONFIG_PATH", "/layers/python/lib/pkgconfig:/base"),
+                ("PYTHONUNBUFFERED", "1"),
+            ]
+        );
+    }
+
+    fn environment_as_sorted_vector(environment: &Env) -> Vec<(&str, &str)> {
+        let mut result: Vec<(&str, &str)> = environment
+            .iter()
+            .map(|(k, v)| (k.to_str().unwrap(), v.to_str().unwrap()))
+            .collect();
+
+        result.sort_by_key(|kv| kv.0);
+        result
+    }
+}

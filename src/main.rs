@@ -67,11 +67,11 @@ impl Buildpack for PythonBuildpack {
         // env vars will still be excluded, due to the use of `clear-env` in `buildpack.toml`.
         let mut env = Env::from_current();
 
-        // Create the layer containing the Python runtime and required packaging tools.
+        // Create the layer containing the Python runtime and the packages `pip`, `setuptools` and `wheel`.
         let python_layer = context.handle_layer(
             layer_name!("python"),
             PythonLayer {
-                env: &env,
+                base_env: &env,
                 python_version: &python_version,
             },
         )?;
@@ -91,7 +91,7 @@ impl Buildpack for PythonBuildpack {
                 let pip_layer = context.handle_layer(
                     layer_name!("dependencies"),
                     PipDependenciesLayer {
-                        env: &env,
+                        base_env: &env,
                         pip_cache_dir: pip_cache_layer.path,
                     },
                 )?;
