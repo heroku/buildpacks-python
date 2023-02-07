@@ -112,14 +112,6 @@ impl Layer for PythonLayer<'_> {
                 "PKG_CONFIG_PATH",
                 ":",
             )
-            // We use a curated Pip version, so skip the update check to speed up Pip invocations,
-            // reduce build log spam and prevent users from thinking they need to manually upgrade.
-            .chainable_insert(
-                Scope::All,
-                ModificationBehavior::Override,
-                "PIP_DISABLE_PIP_VERSION_CHECK",
-                "1",
-            )
             // Disable Python's output buffering to ensure logs aren't dropped if an app crashes.
             .chainable_insert(
                 Scope::All,
@@ -154,6 +146,7 @@ impl Layer for PythonLayer<'_> {
                 .args([
                     &bundled_pip_module.to_string_lossy(),
                     "install",
+                    "--disable-pip-version-check",
                     "--no-cache-dir",
                     "--no-input",
                     "--quiet",
