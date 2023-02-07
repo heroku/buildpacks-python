@@ -3,7 +3,7 @@ use crate::layers::pip_dependencies::PipDependenciesLayerError;
 use crate::layers::python::PythonLayerError;
 use crate::package_manager::DeterminePackageManagerError;
 use crate::project_descriptor::ReadProjectDescriptorError;
-use crate::python_version::{PythonVersionError, DEFAULT_PYTHON_VERSION};
+use crate::python_version::{PythonVersion, PythonVersionError, DEFAULT_PYTHON_VERSION};
 use crate::runtime_txt::{ParseRuntimeTxtError, ReadRuntimeTxtError};
 use crate::utils::{CommandError, DownloadUnpackArchiveError};
 use crate::BuildpackError;
@@ -40,8 +40,8 @@ pub(crate) fn on_error(error: libcnb::Error<BuildpackError>) {
     };
 }
 
-fn on_buildpack_error(buildpack_error: BuildpackError) {
-    match buildpack_error {
+fn on_buildpack_error(error: BuildpackError) {
+    match error {
         BuildpackError::CheckFunction(error) => on_check_function_error(error),
         BuildpackError::DetectIo(io_error) => log_io_error(
             "Unable to complete buildpack detection",
@@ -56,8 +56,8 @@ fn on_buildpack_error(buildpack_error: BuildpackError) {
     };
 }
 
-fn on_project_descriptor_error(project_descriptor_error: ReadProjectDescriptorError) {
-    match project_descriptor_error {
+fn on_project_descriptor_error(error: ReadProjectDescriptorError) {
+    match error {
         ReadProjectDescriptorError::Io(io_error) => log_io_error(
             "Unable to read project.toml",
             "reading the (optional) project.toml file",
@@ -74,10 +74,8 @@ fn on_project_descriptor_error(project_descriptor_error: ReadProjectDescriptorEr
     };
 }
 
-fn on_determine_package_manager_error(
-    determine_package_manager_error: DeterminePackageManagerError,
-) {
-    match determine_package_manager_error {
+fn on_determine_package_manager_error(error: DeterminePackageManagerError) {
+    match error {
         DeterminePackageManagerError::Io(io_error) => log_io_error(
             "Unable to determine the package manager",
             "determining which Python package manager to use for this project",
@@ -100,8 +98,8 @@ fn on_determine_package_manager_error(
     };
 }
 
-fn on_python_version_error(python_version_error: PythonVersionError) {
-    match python_version_error {
+fn on_python_version_error(error: PythonVersionError) {
+    match error {
         PythonVersionError::RuntimeTxt(error) => match error {
             ReadRuntimeTxtError::Io(io_error) => log_io_error(
                 "Unable to read runtime.txt",
@@ -109,37 +107,40 @@ fn on_python_version_error(python_version_error: PythonVersionError) {
                 &io_error,
             ),
             // TODO: Write the supported Python versions inline, instead of linking out to Dev Center.
-            ReadRuntimeTxtError::Parse(ParseRuntimeTxtError { cleaned_contents }) => log_error(
-                "Invalid Python version in runtime.txt",
-                formatdoc! {"
-                    The Python version specified in 'runtime.txt' is not in the correct format.
-                    
-                    The following file contents were found:
-                    {cleaned_contents}
-                    
-                    However, the file contents must begin with a 'python-' prefix, followed by the
-                    version specified as '<major>.<minor>.<patch>'. Comments are not supported.
-                    
-                    For example, to request Python {DEFAULT_PYTHON_VERSION}, the correct version format is:
-                    python-{major}.{minor}.{patch}
-                    
-                    Please update 'runtime.txt' to use the correct version format, or else remove
-                    the file to instead use the default version (currently Python {DEFAULT_PYTHON_VERSION}).
-                    
-                    For a list of the supported Python versions, see:
-                    https://devcenter.heroku.com/articles/python-support#supported-runtimes
-                    ",
-                    major = DEFAULT_PYTHON_VERSION.major,
-                    minor = DEFAULT_PYTHON_VERSION.minor,
-                    patch = DEFAULT_PYTHON_VERSION.patch
-                },
-            ),
+            ReadRuntimeTxtError::Parse(ParseRuntimeTxtError { cleaned_contents }) => {
+                let PythonVersion {
+                    major,
+                    minor,
+                    patch,
+                } = DEFAULT_PYTHON_VERSION;
+                log_error(
+                    "Invalid Python version in runtime.txt",
+                    formatdoc! {"
+                        The Python version specified in 'runtime.txt' is not in the correct format.
+                        
+                        The following file contents were found:
+                        {cleaned_contents}
+                        
+                        However, the file contents must begin with a 'python-' prefix, followed by the
+                        version specified as '<major>.<minor>.<patch>'. Comments are not supported.
+                        
+                        For example, to request Python {DEFAULT_PYTHON_VERSION}, the correct version format is:
+                        python-{major}.{minor}.{patch}
+                        
+                        Please update 'runtime.txt' to use the correct version format, or else remove
+                        the file to instead use the default version (currently Python {DEFAULT_PYTHON_VERSION}).
+                        
+                        For a list of the supported Python versions, see:
+                        https://devcenter.heroku.com/articles/python-support#supported-runtimes
+                    "},
+                );
+            }
         },
     };
 }
 
-fn on_python_layer_error(python_layer_error: PythonLayerError) {
-    match python_layer_error {
+fn on_python_layer_error(error: PythonLayerError) {
+    match error {
         PythonLayerError::BootstrapPipCommand(error) => match error {
             CommandError::Io(io_error) => log_io_error(
                 "Unable to bootstrap pip",
@@ -210,8 +211,8 @@ fn on_python_layer_error(python_layer_error: PythonLayerError) {
     };
 }
 
-fn on_pip_dependencies_layer_error(pip_dependencies_layer_error: PipDependenciesLayerError) {
-    match pip_dependencies_layer_error {
+fn on_pip_dependencies_layer_error(error: PipDependenciesLayerError) {
+    match error {
         PipDependenciesLayerError::CreateSrcDirIo(io_error) => log_io_error(
             "Unable to create 'src' directory required for pip install",
             "creating the 'src' directory in the pip layer, prior to running pip install",
@@ -238,8 +239,8 @@ fn on_pip_dependencies_layer_error(pip_dependencies_layer_error: PipDependencies
     };
 }
 
-fn on_check_function_error(check_function_error: CheckFunctionError) {
-    match check_function_error {
+fn on_check_function_error(error: CheckFunctionError) {
+    match error {
         CheckFunctionError::Io(io_error) => log_io_error(
             "Unable to run the Salesforce Functions self-check command",
             &format!("running the '{FUNCTION_RUNTIME_PROGRAM_NAME} check' command"),
