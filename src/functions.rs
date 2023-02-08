@@ -30,6 +30,7 @@ pub(crate) fn check_function(env: &Env) -> Result<(), CheckFunctionError> {
     // display it if the check command fails.
     Command::new(FUNCTION_RUNTIME_PROGRAM_NAME)
         .args(["check", "."])
+        .env_clear()
         .envs(env)
         .output()
         .map_err(|io_error| match io_error.kind() {

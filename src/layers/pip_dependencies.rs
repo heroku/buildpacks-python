@@ -53,8 +53,6 @@ impl Layer for PipDependenciesLayer<'_> {
         log_info("Running pip install");
 
         // TODO: Explain why we're using user install
-        // TODO: Mention that we're intentionally not using env_clear() otherwise
-        // PATH won't be set, and Pip won't be able to find things like Git.
         utils::run_command(
             Command::new("pip")
                 .args([
@@ -78,6 +76,7 @@ impl Layer for PipDependenciesLayer<'_> {
                     "--src",
                     &src_dir.to_string_lossy(),
                 ])
+                .env_clear()
                 .envs(&env)
                 // TODO: Explain why we're setting this
                 // Using 1980-01-01T00:00:01Z to avoid:

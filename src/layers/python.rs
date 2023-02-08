@@ -116,6 +116,7 @@ impl Layer for PythonLayer<'_> {
                     format!("setuptools=={SETUPTOOLS_VERSION}").as_str(),
                     format!("wheel=={WHEEL_VERSION}").as_str(),
                 ])
+                .env_clear()
                 .envs(&env)
                 // TODO: Explain why we're setting this
                 // Using 1980-01-01T00:00:01Z to avoid:
