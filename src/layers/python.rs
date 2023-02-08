@@ -299,7 +299,7 @@ mod tests {
     use super::*;
 
     #[test]
-    fn test_generate_layer_env() {
+    fn python_layer_env() {
         let mut base_env = Env::new();
         base_env.insert("CPATH", "/base");
         base_env.insert("LANG", "this-should-be-overridden");
@@ -317,7 +317,7 @@ mod tests {
 
         // Remember to force invalidation of the cached layer if these env vars ever change.
         assert_eq!(
-            environment_as_sorted_vector(&layer_env.apply(Scope::Build, &base_env)),
+            utils::environment_as_sorted_vector(&layer_env.apply(Scope::Build, &base_env)),
             vec![
                 ("CPATH", "/layers/python/include/python3.11:/base"),
                 ("LANG", "C.UTF-8"),
@@ -326,7 +326,7 @@ mod tests {
             ]
         );
         assert_eq!(
-            environment_as_sorted_vector(&layer_env.apply(Scope::Launch, &base_env)),
+            utils::environment_as_sorted_vector(&layer_env.apply(Scope::Launch, &base_env)),
             vec![
                 ("CPATH", "/layers/python/include/python3.11:/base"),
                 ("LANG", "C.UTF-8"),
@@ -334,15 +334,5 @@ mod tests {
                 ("PYTHONUNBUFFERED", "1"),
             ]
         );
-    }
-
-    fn environment_as_sorted_vector(environment: &Env) -> Vec<(&str, &str)> {
-        let mut result: Vec<(&str, &str)> = environment
-            .iter()
-            .map(|(k, v)| (k.to_str().unwrap(), v.to_str().unwrap()))
-            .collect();
-
-        result.sort_by_key(|kv| kv.0);
-        result
     }
 }
