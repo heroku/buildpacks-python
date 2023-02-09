@@ -120,12 +120,19 @@ impl Buildpack for PythonBuildpack {
 
 #[derive(Debug)]
 pub(crate) enum BuildpackError {
+    /// Errors running the `sf-functions-python check` command.
     CheckFunction(CheckFunctionError),
+    /// IO errors when performing buildpack detection.
     DetectIo(io::Error),
+    /// Errors determining which Python package manager to use for a project.
     DeterminePackageManager(DeterminePackageManagerError),
+    /// Errors installing the project's dependencies into a layer using Pip.
     PipLayer(PipDependenciesLayerError),
+    /// Errors reading and parsing a `project.toml` file.
     ProjectDescriptor(ReadProjectDescriptorError),
+    /// Errors installing Python and required packaging tools into a layer.
     PythonLayer(PythonLayerError),
+    /// Errors determining which Python version to use for a project.
     PythonVersion(PythonVersionError),
 }
 

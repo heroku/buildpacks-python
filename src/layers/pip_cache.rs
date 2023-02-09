@@ -9,6 +9,7 @@ use libherokubuildpack::log::log_info;
 use serde::{Deserialize, Serialize};
 use std::path::Path;
 
+/// Layer containing Pip's cache of HTTP requests/downloads and built package wheels.
 pub(crate) struct PipCacheLayer<'a> {
     pub python_version: &'a PythonVersion,
 }

@@ -60,9 +60,10 @@ pub(crate) fn determine_python_version(
     Ok(DEFAULT_PYTHON_VERSION)
 }
 
-/// Errors that can occur when determining which Python package manager to use for a project.
+/// Errors that can occur when determining which Python version to use for a project.
 #[derive(Debug)]
 pub(crate) enum PythonVersionError {
+    /// Errors reading and parsing a `runtime.txt` file.
     RuntimeTxt(ReadRuntimeTxtError),
 }
 

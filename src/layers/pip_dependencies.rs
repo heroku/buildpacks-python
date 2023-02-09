@@ -24,6 +24,23 @@ impl Layer for PipDependenciesLayer<'_> {
     type Metadata = GenericMetadata;
 
     fn types(&self) -> LayerTypes {
+        // This layer is not cached, since:
+        // - Pip is a package installer rather than a project/environment manager, and so does
+        //   not deterministically manage installed Python packages. For example, if a package
+        //   entry in a requirements file is later removed, Pip will not uninstall the package.
+        //   In addition, there is no official lockfile support (only partial support via
+        //   third-party requirements file tools), so changes in transitive dependencies add yet
+        //   more opportunity for non-determinism between each install.
+        // - The Pip HTTP/wheel cache is itself cached in a separate layer, which covers the most
+        //   time consuming part of performing a pip install: downloading the dependencies and then
+        //   generating wheels (for any packages that use compiled components but don't distribute
+        //   pre-built wheels matching the current Python version).
+        // - The only case where the Pip wheel cache doesn't help, is for projects that use
+        //   hash-checking mode and so are affected by this Pip issue:
+        //   https://github.com/pypa/pip/issues/5037
+        //   ...however, the limitation should really be fixed upstream, and this mode is rarely
+        //   used in practice, and only by more advanced projects that would actually probably be
+        //   better off using Poetry instead of Pip (once the buildpack supports Poetry).
         LayerTypes {
             build: true,
             cache: false,
@@ -31,7 +48,6 @@ impl Layer for PipDependenciesLayer<'_> {
         }
     }
 
-    // TODO: Explain why we're not caching here.
     fn create(
         &self,
         _context: &BuildContext<Self::Buildpack>,
@@ -40,6 +56,14 @@ impl Layer for PipDependenciesLayer<'_> {
         let layer_env = generate_layer_env(layer_path);
         let command_env = layer_env.apply(Scope::Build, self.command_env);
 
+        // When Pip installs dependencies from a VCS URL it has to clone the repository in order
+        // to install it. In standard installation mode the clone is made to a temporary directory
+        // and then deleted, however, when packages are installed in editable mode Pip must keep
+        // the repository around, since the directory is added to the Python path directly (via
+        // the `.pth` file created in `site-packages`). By default Pip will store the repository
+        // in the current working directory (the app dir), however, we would prefer it to be stored
+        // in the dependencies layer instead for consistency. (Plus if this layer were ever cached,
+        // storing the repository in the app dir would break on repeat-builds).
         let src_dir = layer_path.join("src");
         fs::create_dir(&src_dir).map_err(PipDependenciesLayerError::CreateSrcDirIo)?;
 
@@ -67,8 +91,8 @@ impl Layer for PipDependenciesLayer<'_> {
                     "--user",
                     "--requirement",
                     "requirements.txt",
-                    // Make pip clone any VCS repositories installed in editable mode into a directory in this
-                    // layer, rather than the default of the current working directory (the app dir).
+                    // Clone any VCS repositories installed in editable mode into the directory created
+                    // above, rather than the default of the current working directory (the app dir).
                     "--src",
                     &src_dir.to_string_lossy(),
                 ])
