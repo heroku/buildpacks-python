@@ -117,11 +117,7 @@ impl Layer for PythonLayer<'_> {
                     format!("wheel=={WHEEL_VERSION}").as_str(),
                 ])
                 .env_clear()
-                .envs(&command_env)
-                // TODO: Explain why we're setting this
-                // Using 1980-01-01T00:00:01Z to avoid:
-                // ValueError: ZIP does not support timestamps before 1980
-                .env("SOURCE_DATE_EPOCH", "315532800"),
+                .envs(&command_env),
         )
         .map_err(PythonLayerError::BootstrapPipCommand)?;
 
@@ -235,6 +231,61 @@ fn generate_layer_env(layer_path: &Path, python_version: &PythonVersion) -> Laye
             "PYTHONUNBUFFERED",
             "1",
         )
+        // By default, when Python creates cached bytecode files (`.pyc` files) it embeds the
+        // `.py` source file's last-modified time in the `.pyc` file, so it can later be used
+        // to determine whether the cached bytecode file needs regenerating.
+        //
+        // This causes the `.pyc` file contents (and thus layer SHA256) to be non-deterministic in
+        // cases where the `.py` file's last-modified time can vary (such as files installed by Pip,
+        // since it doesn't preserve the last modified time of the original downloaded package).
+        //
+        // In addition, as part of generating the OCI image, lifecycle resets the timestamps on all
+        // files to a fixed value in order to improve the determinism of builds:
+        // https://buildpacks.io/docs/features/reproducibility/#consequences-and-caveats
+        //
+        // At runtime, this then means the timestamps embedded in the `.pyc` files no longer match
+        // the timestamps of the original `.py` files, causing Python to have to regenerate the
+        // bytecode, and so losing any benefit of having kept the `.pyc` files in the image.
+        //
+        // One option to solve all of the above, would be to delete the `.pyc` files from the image
+        // at the end of the buildpack's build phase, however:
+        //   - This means they need to be regenerated at app start boot, slowing boot times.
+        //     (For a simple Django project on a Perf-M, boot time increases from ~0.5s to ~1.5s.)
+        //   - If any other later buildpack runs any of the Python files added by this buildpack, then
+        //     the timestamp based `.pyc` files will be created again, re-introducing non-determinism.
+        //
+        // Instead, we use the hash-based cache files mode added in Python 3.7+, which embeds a hash
+        // of the original `.py` file in the `.pyc` file instead of the timestamp:
+        // https://docs.python.org/3.11/reference/import.html#pyc-invalidation
+        // https://peps.python.org/pep-0552/
+        //
+        // This mode can be enabled by passing `--invalidation-mode checked-hash` to `compileall`,
+        // or via the `SOURCE_DATE_EPOCH` env var:
+        // https://docs.python.org/3.11/library/compileall.html#cmdoption-compileall-invalidation-mode
+        //
+        // Note: Both the CLI args and the env var only apply to usages of `compileall` or `py_compile`,
+        // and not `.pyc` generation as part of Python importing a file during normal operation.
+        //
+        // We use the env var, since:
+        //   - Pip calls `compileall` itself after installing packages, and doesn't allow us to
+        //     customise the options passed to it, which would mean we'd have to pass `--no-compile`
+        //     to Pip followed by running `compileall` manually ourselves, meaning more complexity
+        //     every time we (or a later buildpack) use `pip install`.
+        //   - When we add support for Poetry, we'll have to use an env var regardless, since Poetry
+        //     doesn't allow customising the options passed to its internal Pip invocations, so we'd
+        //     have no way of passing `--no-compile` to Pip.
+        .chainable_insert(
+            Scope::Build,
+            ModificationBehavior::Default,
+            "SOURCE_DATE_EPOCH",
+            // Whilst `compileall` doesn't use the value of `SOURCE_DATE_EPOCH` (only whether it is
+            // set or not), the value ends up being used when wheel archives are generated during
+            // the pip install. As such, we cannot use a zero value since the ZIP file format doesn't
+            // support dates before 1980. Instead, we use a value equivalent to `1980-01-01T00:00:01Z`,
+            // for parity with that used by lifecycle:
+            // https://github.com/buildpacks/lifecycle/blob/v0.15.3/archive/writer.go#L12
+            "315532801",
+        )
 }
 
 /// The path to the Pip module bundled in Python's standard library.
@@ -300,11 +351,45 @@ mod tests {
 
     #[test]
     fn python_layer_env() {
+        let layer_env = generate_layer_env(
+            Path::new("/layers/python"),
+            &PythonVersion {
+                major: 3,
+                minor: 9,
+                patch: 0,
+            },
+        );
+
+        // Remember to force invalidation of the cached layer if these env vars ever change.
+        assert_eq!(
+            utils::environment_as_sorted_vector(&layer_env.apply_to_empty(Scope::Build)),
+            vec![
+                ("CPATH", "/layers/python/include/python3.9"),
+                ("LANG", "C.UTF-8"),
+                ("PKG_CONFIG_PATH", "/layers/python/lib/pkgconfig"),
+                ("PYTHONUNBUFFERED", "1"),
+                ("SOURCE_DATE_EPOCH", "315532801"),
+            ]
+        );
+        assert_eq!(
+            utils::environment_as_sorted_vector(&layer_env.apply_to_empty(Scope::Launch)),
+            vec![
+                ("CPATH", "/layers/python/include/python3.9"),
+                ("LANG", "C.UTF-8"),
+                ("PKG_CONFIG_PATH", "/layers/python/lib/pkgconfig"),
+                ("PYTHONUNBUFFERED", "1"),
+            ]
+        );
+    }
+
+    #[test]
+    fn python_layer_env_with_existing_env() {
         let mut base_env = Env::new();
         base_env.insert("CPATH", "/base");
         base_env.insert("LANG", "this-should-be-overridden");
         base_env.insert("PKG_CONFIG_PATH", "/base");
         base_env.insert("PYTHONUNBUFFERED", "this-should-be-overridden");
+        base_env.insert("SOURCE_DATE_EPOCH", "this-should-be-preserved");
 
         let layer_env = generate_layer_env(
             Path::new("/layers/python"),
@@ -323,6 +408,7 @@ mod tests {
                 ("LANG", "C.UTF-8"),
                 ("PKG_CONFIG_PATH", "/layers/python/lib/pkgconfig:/base"),
                 ("PYTHONUNBUFFERED", "1"),
+                ("SOURCE_DATE_EPOCH", "this-should-be-preserved"),
             ]
         );
         assert_eq!(
@@ -332,6 +418,7 @@ mod tests {
                 ("LANG", "C.UTF-8"),
                 ("PKG_CONFIG_PATH", "/layers/python/lib/pkgconfig:/base"),
                 ("PYTHONUNBUFFERED", "1"),
+                ("SOURCE_DATE_EPOCH", "this-should-be-preserved"),
             ]
         );
     }

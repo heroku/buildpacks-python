@@ -39,8 +39,10 @@ impl Layer for PipDependenciesLayer<'_> {
         //   hash-checking mode and so are affected by this Pip issue:
         //   https://github.com/pypa/pip/issues/5037
         //   ...however, the limitation should really be fixed upstream, and this mode is rarely
-        //   used in practice, and only by more advanced projects that would actually probably be
-        //   better off using Poetry instead of Pip (once the buildpack supports Poetry).
+        //   used in practice.
+        //
+        // Longer term, the best option for projects that want no-op deterministic installs will
+        // be to use Poetry instead of Pip (once the buildpack supports Poetry).
         LayerTypes {
             build: true,
             cache: false,
@@ -85,9 +87,17 @@ impl Layer for PipDependenciesLayer<'_> {
                     "--progress",
                     "off",
                     // Install dependencies into the user `site-packages` directory (set by `PYTHONUSERBASE`),
-                    // rather than the system `site-packages` directory, since the latter is inside the
-                    // Python runtime layer, and we want to keep the application dependencies in a separate
-                    // layer to the runtime.
+                    // rather than the system `site-packages` directory (since we want to keep dependencies in
+                    // a separate layer to the Python runtime).
+                    //
+                    // Another option is to install into an arbitrary directory using Pip's `--target` option
+                    // combined with adding that directory to `PYTHONPATH`, however:
+                    //   - Using `--target` causes a number of issues with Pip, eg:
+                    //     https://github.com/pypa/pip/issues/8799
+                    //   - Directories added to `PYTHONPATH` take precedence over the Python stdlib (unlike
+                    //     the system or user site-packages directories), and so can result in hard to debug
+                    //     stdlib shadowing problems that users won't encounter locally (for example if one
+                    //     of the app's transitive dependencies is an outdated stdlib backport package).
                     "--user",
                     "--requirement",
                     "requirements.txt",
@@ -97,11 +107,7 @@ impl Layer for PipDependenciesLayer<'_> {
                     &src_dir.to_string_lossy(),
                 ])
                 .env_clear()
-                .envs(&command_env)
-                // TODO: Explain why we're setting this
-                // Using 1980-01-01T00:00:01Z to avoid:
-                // ValueError: ZIP does not support timestamps before 1980
-                .env("SOURCE_DATE_EPOCH", "315532800"),
+                .envs(&command_env),
         )
         .map_err(PipDependenciesLayerError::PipInstallCommand)?;
 
