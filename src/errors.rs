@@ -1,10 +1,10 @@
-use crate::functions::{CheckFunctionError, FUNCTION_RUNTIME_PROGRAM_NAME};
 use crate::layers::pip_dependencies::PipDependenciesLayerError;
 use crate::layers::python::PythonLayerError;
 use crate::package_manager::DeterminePackageManagerError;
 use crate::project_descriptor::ReadProjectDescriptorError;
 use crate::python_version::{PythonVersion, PythonVersionError, DEFAULT_PYTHON_VERSION};
 use crate::runtime_txt::{ParseRuntimeTxtError, ReadRuntimeTxtError};
+use crate::salesforce_functions::{CheckSalesforceFunctionError, FUNCTION_RUNTIME_PROGRAM_NAME};
 use crate::utils::{CommandError, DownloadUnpackArchiveError};
 use crate::BuildpackError;
 use indoc::{formatdoc, indoc};
@@ -42,7 +42,7 @@ pub(crate) fn on_error(error: libcnb::Error<BuildpackError>) {
 
 fn on_buildpack_error(error: BuildpackError) {
     match error {
-        BuildpackError::CheckFunction(error) => on_check_function_error(error),
+        BuildpackError::CheckSalesforceFunction(error) => on_check_salesforce_function_error(error),
         BuildpackError::DetectIo(io_error) => log_io_error(
             "Unable to complete buildpack detection",
             "determining if the Python buildpack should be run for this application",
@@ -239,14 +239,14 @@ fn on_pip_dependencies_layer_error(error: PipDependenciesLayerError) {
     };
 }
 
-fn on_check_function_error(error: CheckFunctionError) {
+fn on_check_salesforce_function_error(error: CheckSalesforceFunctionError) {
     match error {
-        CheckFunctionError::Io(io_error) => log_io_error(
+        CheckSalesforceFunctionError::Io(io_error) => log_io_error(
             "Unable to run the Salesforce Functions self-check command",
             &format!("running the '{FUNCTION_RUNTIME_PROGRAM_NAME} check' command"),
             &io_error,
         ),
-        CheckFunctionError::NonZeroExitStatus(output) => log_error(
+        CheckSalesforceFunctionError::NonZeroExitStatus(output) => log_error(
             "The Salesforce Functions self-check failed",
             formatdoc! {"
                 The '{FUNCTION_RUNTIME_PROGRAM_NAME} check' command failed ({exit_status}), indicating
@@ -259,7 +259,7 @@ fn on_check_function_error(error: CheckFunctionError) {
                 stderr = String::from_utf8_lossy(&output.stderr),
             },
         ),
-        CheckFunctionError::ProgramNotFound => log_error(
+        CheckSalesforceFunctionError::ProgramNotFound => log_error(
             "The Salesforce Functions package is not installed",
             formatdoc! {"
                 The '{FUNCTION_RUNTIME_PROGRAM_NAME}' program that is required for Python Salesforce

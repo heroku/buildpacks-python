@@ -25,7 +25,7 @@ pub(crate) fn is_function_project(app_dir: &Path) -> Result<bool, ReadProjectDes
 }
 
 /// Validate the function using the `sf-functions-python check` command.
-pub(crate) fn check_function(command_env: &Env) -> Result<(), CheckFunctionError> {
+pub(crate) fn check_function(command_env: &Env) -> Result<(), CheckSalesforceFunctionError> {
     // Not using `utils::run_command` since we want to capture output and only
     // display it if the check command fails.
     Command::new(FUNCTION_RUNTIME_PROGRAM_NAME)
@@ -34,14 +34,14 @@ pub(crate) fn check_function(command_env: &Env) -> Result<(), CheckFunctionError
         .envs(command_env)
         .output()
         .map_err(|io_error| match io_error.kind() {
-            io::ErrorKind::NotFound => CheckFunctionError::ProgramNotFound,
-            _ => CheckFunctionError::Io(io_error),
+            io::ErrorKind::NotFound => CheckSalesforceFunctionError::ProgramNotFound,
+            _ => CheckSalesforceFunctionError::Io(io_error),
         })
         .and_then(|output| {
             if output.status.success() {
                 Ok(())
             } else {
-                Err(CheckFunctionError::NonZeroExitStatus(output))
+                Err(CheckSalesforceFunctionError::NonZeroExitStatus(output))
             }
         })
 }
@@ -81,7 +81,7 @@ pub(crate) fn launch_config() -> Launch {
 
 /// Errors that can occur when running the `sf-functions-python check` command.
 #[derive(Debug)]
-pub(crate) enum CheckFunctionError {
+pub(crate) enum CheckSalesforceFunctionError {
     Io(io::Error),
     NonZeroExitStatus(Output),
     ProgramNotFound,
