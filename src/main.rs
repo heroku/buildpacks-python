@@ -65,17 +65,17 @@ impl Buildpack for PythonBuildpack {
         // We inherit the current process's env vars, since we want `PATH` and `HOME` to be set
         // so that later commands can find tools like Git in the stack image. Any user-provided
         // env vars will still be excluded, due to the use of `clear-env` in `buildpack.toml`.
-        let mut env = Env::from_current();
+        let mut command_env = Env::from_current();
 
-        // Create the layer containing the Python runtime and the packages `pip`, `setuptools` and `wheel`.
+        // Create the layer containing the Python runtime, and the packages `pip`, `setuptools` and `wheel`.
         let python_layer = context.handle_layer(
             layer_name!("python"),
             PythonLayer {
-                base_env: &env,
+                command_env: &command_env,
                 python_version: &python_version,
             },
         )?;
-        env = python_layer.env.apply(Scope::Build, &env);
+        command_env = python_layer.env.apply(Scope::Build, &command_env);
 
         // Create the layers for the application dependencies and package manager cache.
         // In the future support will be added for package managers other than pip.
@@ -91,18 +91,18 @@ impl Buildpack for PythonBuildpack {
                 let pip_layer = context.handle_layer(
                     layer_name!("dependencies"),
                     PipDependenciesLayer {
-                        base_env: &env,
+                        command_env: &command_env,
                         pip_cache_dir: pip_cache_layer.path,
                     },
                 )?;
                 pip_layer.env
             }
         };
-        env = dependencies_layer_env.apply(Scope::Build, &env);
+        command_env = dependencies_layer_env.apply(Scope::Build, &command_env);
 
         if is_function {
             log_header("Validating Salesforce Function");
-            functions::check_function(&env).map_err(BuildpackError::CheckFunction)?;
+            functions::check_function(&command_env).map_err(BuildpackError::CheckFunction)?;
             log_info("Function passed validation.");
 
             BuildResultBuilder::new()

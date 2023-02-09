@@ -22,7 +22,7 @@ const WHEEL_VERSION: &str = "0.38.4";
 /// Layer containing the Python runtime, and the packages `pip`, `setuptools` and `wheel`.
 pub(crate) struct PythonLayer<'a> {
     /// Environment variables inherited from earlier buildpack steps.
-    pub base_env: &'a Env,
+    pub command_env: &'a Env,
     /// The Python version that will be installed.
     pub python_version: &'a PythonVersion,
 }
@@ -78,14 +78,14 @@ impl Layer for PythonLayer<'_> {
         log_info("Python installation successful");
 
         let layer_env = generate_layer_env(layer_path, self.python_version);
-        let mut env = layer_env.apply(Scope::Build, self.base_env);
+        let mut command_env = layer_env.apply(Scope::Build, self.command_env);
 
         // The Python binaries are built using `--shared`, and since they're being installed at a
         // different location from their original `--prefix`, they need `LD_LIBRARY_PATH` to be set
         // in order to find `libpython3`. Whilst `LD_LIBRARY_PATH` will be automatically set later by
         // lifecycle/libcnb, it's not set by libcnb until this `Layer` has ended, and so we have to
         // explicitly set it for the Python invocations within this layer.
-        env.insert("LD_LIBRARY_PATH", layer_path.join("lib"));
+        command_env.insert("LD_LIBRARY_PATH", layer_path.join("lib"));
 
         log_header("Installing Pip");
         log_info(format!("Installing pip {PIP_VERSION}, setuptools {SETUPTOOLS_VERSION} and wheel {WHEEL_VERSION}"));
@@ -117,7 +117,7 @@ impl Layer for PythonLayer<'_> {
                     format!("wheel=={WHEEL_VERSION}").as_str(),
                 ])
                 .env_clear()
-                .envs(&env)
+                .envs(&command_env)
                 // TODO: Explain why we're setting this
                 // Using 1980-01-01T00:00:01Z to avoid:
                 // ValueError: ZIP does not support timestamps before 1980

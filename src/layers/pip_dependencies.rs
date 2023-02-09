@@ -14,7 +14,7 @@ use std::{fs, io};
 /// Layer containing the application's Python dependencies, installed using Pip.
 pub(crate) struct PipDependenciesLayer<'a> {
     /// Environment variables inherited from earlier buildpack steps.
-    pub base_env: &'a Env,
+    pub command_env: &'a Env,
     /// The path to the Pip cache directory, which is stored in another layer since it isn't needed at runtime.
     pub pip_cache_dir: PathBuf,
 }
@@ -38,7 +38,7 @@ impl Layer for PipDependenciesLayer<'_> {
         layer_path: &Path,
     ) -> Result<LayerResult<Self::Metadata>, <Self::Buildpack as Buildpack>::Error> {
         let layer_env = generate_layer_env(layer_path);
-        let env = layer_env.apply(Scope::Build, self.base_env);
+        let command_env = layer_env.apply(Scope::Build, self.command_env);
 
         let src_dir = layer_path.join("src");
         fs::create_dir(&src_dir).map_err(PipDependenciesLayerError::CreateSrcDirIo)?;
@@ -67,13 +67,13 @@ impl Layer for PipDependenciesLayer<'_> {
                     "--user",
                     "--requirement",
                     "requirements.txt",
-                    // Make pip clone any VCS repositories installed in editable mode into a directory in this layer,
-                    // rather than the default of the current working directory (the app dir).
+                    // Make pip clone any VCS repositories installed in editable mode into a directory in this
+                    // layer, rather than the default of the current working directory (the app dir).
                     "--src",
                     &src_dir.to_string_lossy(),
                 ])
                 .env_clear()
-                .envs(&env)
+                .envs(&command_env)
                 // TODO: Explain why we're setting this
                 // Using 1980-01-01T00:00:01Z to avoid:
                 // ValueError: ZIP does not support timestamps before 1980

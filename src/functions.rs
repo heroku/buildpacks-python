@@ -25,13 +25,13 @@ pub(crate) fn is_function_project(app_dir: &Path) -> Result<bool, ReadProjectDes
 }
 
 /// Validate the function using the `sf-functions-python check` command.
-pub(crate) fn check_function(env: &Env) -> Result<(), CheckFunctionError> {
+pub(crate) fn check_function(command_env: &Env) -> Result<(), CheckFunctionError> {
     // Not using `utils::run_command` since we want to capture output and only
     // display it if the check command fails.
     Command::new(FUNCTION_RUNTIME_PROGRAM_NAME)
         .args(["check", "."])
         .env_clear()
-        .envs(env)
+        .envs(command_env)
         .output()
         .map_err(|io_error| match io_error.kind() {
             io::ErrorKind::NotFound => CheckFunctionError::ProgramNotFound,
