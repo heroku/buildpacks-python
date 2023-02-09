@@ -145,7 +145,7 @@ pub(crate) enum PipDependenciesLayerError {
 
 impl From<PipDependenciesLayerError> for BuildpackError {
     fn from(error: PipDependenciesLayerError) -> Self {
-        Self::PipLayer(error)
+        Self::PipDependenciesLayer(error)
     }
 }
 

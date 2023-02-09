@@ -12,7 +12,7 @@ use std::path::Path;
 /// or the TOML document does not adhere to the schema.
 pub(crate) fn read_salesforce_project_type(
     app_dir: &Path,
-) -> Result<Option<SalesforceProjectType>, ReadProjectDescriptorError> {
+) -> Result<Option<SalesforceProjectType>, ProjectDescriptorError> {
     read_project_descriptor(app_dir).map(|descriptor| {
         descriptor
             .unwrap_or_default()
@@ -31,12 +31,12 @@ pub(crate) fn read_salesforce_project_type(
 /// or the TOML document does not adhere to the schema.
 fn read_project_descriptor(
     app_dir: &Path,
-) -> Result<Option<ProjectDescriptor>, ReadProjectDescriptorError> {
+) -> Result<Option<ProjectDescriptor>, ProjectDescriptorError> {
     let project_descriptor_path = app_dir.join("project.toml");
 
     utils::read_optional_file(&project_descriptor_path)
-        .map_err(ReadProjectDescriptorError::Io)?
-        .map(|contents| parse(&contents).map_err(ReadProjectDescriptorError::Parse))
+        .map_err(ProjectDescriptorError::Io)?
+        .map(|contents| parse(&contents).map_err(ProjectDescriptorError::Parse))
         .transpose()
 }
 
@@ -91,7 +91,7 @@ pub(crate) enum SalesforceProjectType {
 
 /// Errors that can occur when reading and parsing a `project.toml` file.
 #[derive(Debug)]
-pub(crate) enum ReadProjectDescriptorError {
+pub(crate) enum ProjectDescriptorError {
     Io(io::Error),
     Parse(toml::de::Error),
 }
@@ -239,7 +239,7 @@ mod tests {
 
         assert!(matches!(
             read_project_descriptor(app_dir).unwrap_err(),
-            ReadProjectDescriptorError::Parse(_)
+            ProjectDescriptorError::Parse(_)
         ));
     }
 
@@ -273,7 +273,7 @@ mod tests {
 
         assert!(matches!(
             read_salesforce_project_type(app_dir).unwrap_err(),
-            ReadProjectDescriptorError::Parse(_)
+            ProjectDescriptorError::Parse(_)
         ));
     }
 }

@@ -1,4 +1,4 @@
-use crate::runtime_txt::{self, ReadRuntimeTxtError};
+use crate::runtime_txt::{self, RuntimeTxtError};
 use indoc::formatdoc;
 use libherokubuildpack::log::log_info;
 use std::fmt::{self, Display};
@@ -64,7 +64,7 @@ pub(crate) fn determine_python_version(
 #[derive(Debug)]
 pub(crate) enum PythonVersionError {
     /// Errors reading and parsing a `runtime.txt` file.
-    RuntimeTxt(ReadRuntimeTxtError),
+    RuntimeTxt(RuntimeTxtError),
 }
 
 #[cfg(test)]
@@ -93,7 +93,7 @@ mod tests {
                 "tests/fixtures/runtime_txt_python_version_invalid"
             ))
             .unwrap_err(),
-            PythonVersionError::RuntimeTxt(ReadRuntimeTxtError::Parse(_))
+            PythonVersionError::RuntimeTxt(RuntimeTxtError::Parse(_))
         ));
     }
 

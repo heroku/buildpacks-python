@@ -8,12 +8,12 @@ use std::path::Path;
 ///
 /// Returns `Ok(None)` if the file does not exist, but returns the error for all other
 /// forms of IO or parsing errors.
-pub(crate) fn read_version(app_dir: &Path) -> Result<Option<PythonVersion>, ReadRuntimeTxtError> {
+pub(crate) fn read_version(app_dir: &Path) -> Result<Option<PythonVersion>, RuntimeTxtError> {
     let runtime_txt_path = app_dir.join("runtime.txt");
 
     utils::read_optional_file(&runtime_txt_path)
-        .map_err(ReadRuntimeTxtError::Io)?
-        .map(|contents| parse(&contents).map_err(ReadRuntimeTxtError::Parse))
+        .map_err(RuntimeTxtError::Io)?
+        .map(|contents| parse(&contents).map_err(RuntimeTxtError::Parse))
         .transpose()
 }
 
@@ -51,7 +51,7 @@ fn parse(contents: &str) -> Result<PythonVersion, ParseRuntimeTxtError> {
 
 /// Errors that can occur when reading and parsing a `runtime.txt` file.
 #[derive(Debug)]
-pub(crate) enum ReadRuntimeTxtError {
+pub(crate) enum RuntimeTxtError {
     Io(io::Error),
     Parse(ParseRuntimeTxtError),
 }
@@ -219,7 +219,7 @@ mod tests {
     fn read_version_io_error() {
         assert!(matches!(
             read_version(Path::new("tests/fixtures/empty/.gitkeep")).unwrap_err(),
-            ReadRuntimeTxtError::Io(_)
+            RuntimeTxtError::Io(_)
         ));
     }
 
@@ -230,7 +230,7 @@ mod tests {
                 "tests/fixtures/runtime_txt_python_version_invalid"
             ))
             .unwrap_err(),
-            ReadRuntimeTxtError::Parse(_)
+            RuntimeTxtError::Parse(_)
         ));
     }
 }

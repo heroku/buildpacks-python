@@ -67,12 +67,12 @@ impl Layer for PythonLayer<'_> {
                 // TODO: Remove this once the Python version is validated against a manifest (at which
                 // point 404s can be treated as an internal error, instead of user error)
                 DownloadUnpackArchiveError::Request(ureq::Error::Status(404, _)) => {
-                    PythonLayerError::PythonVersionNotFound {
+                    PythonLayerError::PythonArchiveNotFound {
                         stack: context.stack_id.clone(),
                         python_version: self.python_version.clone(),
                     }
                 }
-                other_error => PythonLayerError::DownloadUnpackArchive(other_error),
+                other_error => PythonLayerError::DownloadUnpackPythonArchive(other_error),
             }
         })?;
         log_info("Python installation successful");
@@ -279,10 +279,10 @@ fn generate_layer_metadata(
 #[derive(Debug)]
 pub(crate) enum PythonLayerError {
     BootstrapPipCommand(CommandError),
-    DownloadUnpackArchive(DownloadUnpackArchiveError),
+    DownloadUnpackPythonArchive(DownloadUnpackArchiveError),
     LocateBundledPipIo(io::Error),
     MakeSitePackagesReadOnlyIo(io::Error),
-    PythonVersionNotFound {
+    PythonArchiveNotFound {
         python_version: PythonVersion,
         stack: StackId,
     },

@@ -1,9 +1,9 @@
 use crate::layers::pip_dependencies::PipDependenciesLayerError;
 use crate::layers::python::PythonLayerError;
 use crate::package_manager::DeterminePackageManagerError;
-use crate::project_descriptor::ReadProjectDescriptorError;
+use crate::project_descriptor::ProjectDescriptorError;
 use crate::python_version::{PythonVersion, PythonVersionError, DEFAULT_PYTHON_VERSION};
-use crate::runtime_txt::{ParseRuntimeTxtError, ReadRuntimeTxtError};
+use crate::runtime_txt::{ParseRuntimeTxtError, RuntimeTxtError};
 use crate::salesforce_functions::{CheckSalesforceFunctionError, FUNCTION_RUNTIME_PROGRAM_NAME};
 use crate::utils::{CommandError, DownloadUnpackArchiveError};
 use crate::BuildpackError;
@@ -49,21 +49,21 @@ fn on_buildpack_error(error: BuildpackError) {
             &io_error,
         ),
         BuildpackError::DeterminePackageManager(error) => on_determine_package_manager_error(error),
-        BuildpackError::PipLayer(error) => on_pip_dependencies_layer_error(error),
+        BuildpackError::PipDependenciesLayer(error) => on_pip_dependencies_layer_error(error),
         BuildpackError::ProjectDescriptor(error) => on_project_descriptor_error(error),
         BuildpackError::PythonLayer(error) => on_python_layer_error(error),
         BuildpackError::PythonVersion(error) => on_python_version_error(error),
     };
 }
 
-fn on_project_descriptor_error(error: ReadProjectDescriptorError) {
+fn on_project_descriptor_error(error: ProjectDescriptorError) {
     match error {
-        ReadProjectDescriptorError::Io(io_error) => log_io_error(
+        ProjectDescriptorError::Io(io_error) => log_io_error(
             "Unable to read project.toml",
             "reading the (optional) project.toml file",
             &io_error,
         ),
-        ReadProjectDescriptorError::Parse(toml_error) => log_error(
+        ProjectDescriptorError::Parse(toml_error) => log_error(
             "Invalid project.toml",
             formatdoc! {"
                 A parsing/validation error error occurred whilst loading the project.toml file.
@@ -101,13 +101,13 @@ fn on_determine_package_manager_error(error: DeterminePackageManagerError) {
 fn on_python_version_error(error: PythonVersionError) {
     match error {
         PythonVersionError::RuntimeTxt(error) => match error {
-            ReadRuntimeTxtError::Io(io_error) => log_io_error(
+            RuntimeTxtError::Io(io_error) => log_io_error(
                 "Unable to read runtime.txt",
                 "reading the (optional) runtime.txt file",
                 &io_error,
             ),
             // TODO: Write the supported Python versions inline, instead of linking out to Dev Center.
-            ReadRuntimeTxtError::Parse(ParseRuntimeTxtError { cleaned_contents }) => {
+            RuntimeTxtError::Parse(ParseRuntimeTxtError { cleaned_contents }) => {
                 let PythonVersion {
                     major,
                     minor,
@@ -163,7 +163,7 @@ fn on_python_layer_error(error: PythonLayerError) {
                 "},
             ),
         },
-        PythonLayerError::DownloadUnpackArchive(error) => match error {
+        PythonLayerError::DownloadUnpackPythonArchive(error) => match error {
             DownloadUnpackArchiveError::Io(io_error) => log_io_error(
                 "Unable to unpack the Python archive",
                 "unpacking the downloaded Python runtime archive and writing it to disk",
@@ -193,7 +193,7 @@ fn on_python_layer_error(error: PythonLayerError) {
         ),
         // This error will change once the Python version is validated against a manifest.
         // TODO: Write the supported Python versions inline, instead of linking out to Dev Center.
-        PythonLayerError::PythonVersionNotFound {
+        PythonLayerError::PythonArchiveNotFound {
             python_version,
             stack,
         } => log_error(

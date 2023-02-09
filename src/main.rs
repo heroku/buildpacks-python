@@ -18,7 +18,7 @@ use crate::layers::pip_cache::PipCacheLayer;
 use crate::layers::pip_dependencies::{PipDependenciesLayer, PipDependenciesLayerError};
 use crate::layers::python::{PythonLayer, PythonLayerError};
 use crate::package_manager::{DeterminePackageManagerError, PackageManager};
-use crate::project_descriptor::ReadProjectDescriptorError;
+use crate::project_descriptor::ProjectDescriptorError;
 use crate::python_version::PythonVersionError;
 use crate::salesforce_functions::CheckSalesforceFunctionError;
 use libcnb::build::{BuildContext, BuildResult, BuildResultBuilder};
@@ -128,9 +128,9 @@ pub(crate) enum BuildpackError {
     /// Errors determining which Python package manager to use for a project.
     DeterminePackageManager(DeterminePackageManagerError),
     /// Errors installing the project's dependencies into a layer using Pip.
-    PipLayer(PipDependenciesLayerError),
+    PipDependenciesLayer(PipDependenciesLayerError),
     /// Errors reading and parsing a `project.toml` file.
-    ProjectDescriptor(ReadProjectDescriptorError),
+    ProjectDescriptor(ProjectDescriptorError),
     /// Errors installing Python and required packaging tools into a layer.
     PythonLayer(PythonLayerError),
     /// Errors determining which Python version to use for a project.

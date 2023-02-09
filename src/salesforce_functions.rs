@@ -1,4 +1,4 @@
-use crate::project_descriptor::{self, ReadProjectDescriptorError, SalesforceProjectType};
+use crate::project_descriptor::{self, ProjectDescriptorError, SalesforceProjectType};
 use libcnb::data::launch::{Launch, LaunchBuilder, ProcessBuilder};
 use libcnb::data::process_type;
 use libcnb::Env;
@@ -19,7 +19,7 @@ pub(crate) const FUNCTION_RUNTIME_PROGRAM_NAME: &str = "sf-functions-python";
 ///
 /// However, an error will be returned if any other IO error occurred, if the `project.toml` file
 /// is not valid TOML, or the TOML document does not adhere to the schema.
-pub(crate) fn is_function_project(app_dir: &Path) -> Result<bool, ReadProjectDescriptorError> {
+pub(crate) fn is_function_project(app_dir: &Path) -> Result<bool, ProjectDescriptorError> {
     project_descriptor::read_salesforce_project_type(app_dir)
         .map(|project_type| project_type == Some(SalesforceProjectType::Function))
 }
@@ -112,7 +112,7 @@ mod tests {
     fn is_function_project_invalid_project_toml() {
         assert!(matches!(
             is_function_project(Path::new("tests/fixtures/project_toml_invalid")).unwrap_err(),
-            ReadProjectDescriptorError::Parse(_)
+            ProjectDescriptorError::Parse(_)
         ));
     }
 }
