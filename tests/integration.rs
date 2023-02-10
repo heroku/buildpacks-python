@@ -47,11 +47,11 @@ fn function_template() {
                 context.pack_stdout,
                 indoc! {"
                     [Determining Python version]
-                    No Python version specified, using the current default of 3.11.1.
+                    No Python version specified, using the current default of 3.11.2.
                     To use a different version, see: https://devcenter.heroku.com/articles/python-runtimes
                     
                     [Installing Python]
-                    Downloading Python 3.11.1
+                    Downloading Python 3.11.2
                     Python installation successful
                     
                     [Installing Pip]
@@ -120,11 +120,11 @@ fn function_repeat_build() {
                     rebuild_context.pack_stdout,
                     indoc! {"
                         [Determining Python version]
-                        No Python version specified, using the current default of 3.11.1.
+                        No Python version specified, using the current default of 3.11.2.
                         To use a different version, see: https://devcenter.heroku.com/articles/python-runtimes
                         
                         [Installing Python]
-                        Re-using cached Python 3.11.1
+                        Re-using cached Python 3.11.2
                         
                         [Installing Pip]
                         Re-using cached pip 23.0, setuptools 67.1.0 and wheel 0.38.4
@@ -165,7 +165,7 @@ fn runtime_txt_python_version_unavailable() {
                     The requested Python version (999.999.999) is not available for this stack ({expected_stack}).
                     
                     Please update the version in 'runtime.txt' to a supported Python version, or else
-                    remove the file to instead use the default version (currently Python 3.11.1).
+                    remove the file to instead use the default version (currently Python 3.11.2).
                     
                     For a list of the supported Python versions, see:
                     https://devcenter.heroku.com/articles/python-support#supported-runtimes
@@ -197,11 +197,11 @@ fn runtime_txt_python_version_invalid() {
                     However, the file contents must begin with a 'python-' prefix, followed by the
                     version specified as '<major>.<minor>.<patch>'. Comments are not supported.
                     
-                    For example, to request Python 3.11.1, the correct version format is:
-                    python-3.11.1
+                    For example, to request Python 3.11.2, the correct version format is:
+                    python-3.11.2
                     
                     Please update 'runtime.txt' to use the correct version format, or else remove
-                    the file to instead use the default version (currently Python 3.11.1).
+                    the file to instead use the default version (currently Python 3.11.2).
                     
                     For a list of the supported Python versions, see:
                     https://devcenter.heroku.com/articles/python-support#supported-runtimes
