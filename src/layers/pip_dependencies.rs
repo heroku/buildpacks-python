@@ -77,9 +77,6 @@ impl Layer for PipDependenciesLayer<'_> {
                     "install",
                     "--cache-dir",
                     &self.pip_cache_dir.to_string_lossy(),
-                    // We use a curated Pip version, so skip the update check to speed up Pip invocations,
-                    // reduce build log spam and prevent users from thinking they need to manually upgrade.
-                    "--disable-pip-version-check",
                     "--no-input",
                     // Prevent warning about the `bin/` directory not being on `PATH`, since it
                     // will be added automatically by libcnb/lifecycle later.

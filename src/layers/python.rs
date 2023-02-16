@@ -107,7 +107,6 @@ impl Layer for PythonLayer<'_> {
                 .args([
                     &bundled_pip_module_path.to_string_lossy(),
                     "install",
-                    "--disable-pip-version-check",
                     // There is no point using Pip's cache here, since the layer itself will be cached.
                     "--no-cache-dir",
                     "--no-input",
@@ -209,6 +208,16 @@ fn generate_layer_env(layer_path: &Path, python_version: &PythonVersion) -> Laye
             ModificationBehavior::Override,
             "LANG",
             "C.UTF-8",
+        )
+        // We use a curated Pip version, so disable the update check to speed up Pip invocations,
+        // reduce build log spam and prevent users from thinking they need to manually upgrade.
+        // This uses an env var (rather than the `--disable-pip-version-check` arg) so that it also
+        // takes effect for any pip invocations in later buildpacks or when debugging at runtime.
+        .chainable_insert(
+            Scope::All,
+            ModificationBehavior::Override,
+            "PIP_DISABLE_PIP_VERSION_CHECK",
+            "1",
         )
         // We have to set `PKG_CONFIG_PATH` explicitly, since the automatic path set by lifecycle/libcnb
         // is `<layer>/pkgconfig/`, whereas Python's pkgconfig files are at `<layer>/lib/pkgconfig/`.
@@ -366,6 +375,7 @@ mod tests {
             vec![
                 ("CPATH", "/layers/python/include/python3.9"),
                 ("LANG", "C.UTF-8"),
+                ("PIP_DISABLE_PIP_VERSION_CHECK", "1"),
                 ("PKG_CONFIG_PATH", "/layers/python/lib/pkgconfig"),
                 ("PYTHONUNBUFFERED", "1"),
                 ("SOURCE_DATE_EPOCH", "315532801"),
@@ -376,6 +386,7 @@ mod tests {
             vec![
                 ("CPATH", "/layers/python/include/python3.9"),
                 ("LANG", "C.UTF-8"),
+                ("PIP_DISABLE_PIP_VERSION_CHECK", "1"),
                 ("PKG_CONFIG_PATH", "/layers/python/lib/pkgconfig"),
                 ("PYTHONUNBUFFERED", "1"),
             ]
@@ -387,6 +398,7 @@ mod tests {
         let mut base_env = Env::new();
         base_env.insert("CPATH", "/base");
         base_env.insert("LANG", "this-should-be-overridden");
+        base_env.insert("PIP_DISABLE_PIP_VERSION_CHECK", "this-should-be-overridden");
         base_env.insert("PKG_CONFIG_PATH", "/base");
         base_env.insert("PYTHONUNBUFFERED", "this-should-be-overridden");
         base_env.insert("SOURCE_DATE_EPOCH", "this-should-be-preserved");
@@ -406,6 +418,7 @@ mod tests {
             vec![
                 ("CPATH", "/layers/python/include/python3.11:/base"),
                 ("LANG", "C.UTF-8"),
+                ("PIP_DISABLE_PIP_VERSION_CHECK", "1"),
                 ("PKG_CONFIG_PATH", "/layers/python/lib/pkgconfig:/base"),
                 ("PYTHONUNBUFFERED", "1"),
                 ("SOURCE_DATE_EPOCH", "this-should-be-preserved"),
@@ -416,6 +429,7 @@ mod tests {
             vec![
                 ("CPATH", "/layers/python/include/python3.11:/base"),
                 ("LANG", "C.UTF-8"),
+                ("PIP_DISABLE_PIP_VERSION_CHECK", "1"),
                 ("PKG_CONFIG_PATH", "/layers/python/lib/pkgconfig:/base"),
                 ("PYTHONUNBUFFERED", "1"),
                 ("SOURCE_DATE_EPOCH", "this-should-be-preserved"),
