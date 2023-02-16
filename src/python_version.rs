@@ -55,7 +55,7 @@ pub(crate) fn determine_python_version(
     // TODO: Write this content inline, instead of linking out to Dev Center.
     // Also adjust wording to mention pinning as a use-case, not just using a different version.
     log_info(formatdoc! {"
-        No Python version specified, using the current default of {DEFAULT_PYTHON_VERSION}.
+        No Python version specified, using the current default of Python {DEFAULT_PYTHON_VERSION}.
         To use a different version, see: https://devcenter.heroku.com/articles/python-runtimes"});
     Ok(DEFAULT_PYTHON_VERSION)
 }
@@ -74,14 +74,12 @@ mod tests {
     #[test]
     fn determine_python_version_runtime_txt_valid() {
         assert_eq!(
-            determine_python_version(Path::new("tests/fixtures/runtime_txt_python_3.10")).unwrap(),
-            PythonVersion::new(3, 10, 9)
+            determine_python_version(Path::new("tests/fixtures/python_3.9")).unwrap(),
+            PythonVersion::new(3, 9, 16)
         );
         assert_eq!(
-            determine_python_version(Path::new(
-                "tests/fixtures/runtime_txt_python_version_unavailable"
-            ))
-            .unwrap(),
+            determine_python_version(Path::new("tests/fixtures/runtime_txt_non_existent_version"))
+                .unwrap(),
             PythonVersion::new(999, 999, 999)
         );
     }
@@ -89,10 +87,8 @@ mod tests {
     #[test]
     fn determine_python_version_runtime_txt_error() {
         assert!(matches!(
-            determine_python_version(Path::new(
-                "tests/fixtures/runtime_txt_python_version_invalid"
-            ))
-            .unwrap_err(),
+            determine_python_version(Path::new("tests/fixtures/runtime_txt_invalid_version"))
+                .unwrap_err(),
             PythonVersionError::RuntimeTxt(RuntimeTxtError::Parse(_))
         ));
     }

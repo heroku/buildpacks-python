@@ -105,7 +105,9 @@ mod tests {
 
     #[test]
     fn is_function_project_valid_function_project_toml() {
-        assert!(is_function_project(Path::new("tests/fixtures/function_template")).unwrap());
+        assert!(
+            is_function_project(Path::new("tests/fixtures/salesforce_function_template")).unwrap()
+        );
     }
 
     #[test]

@@ -15,8 +15,8 @@ use std::path::{Path, PathBuf};
 use std::process::Command;
 use std::{fs, io};
 
-const PIP_VERSION: &str = "23.0";
-const SETUPTOOLS_VERSION: &str = "67.1.0";
+const PIP_VERSION: &str = "23.0.1";
+const SETUPTOOLS_VERSION: &str = "67.3.2";
 const WHEEL_VERSION: &str = "0.38.4";
 
 /// Layer containing the Python runtime, and the packages `pip`, `setuptools` and `wheel`.
@@ -188,9 +188,11 @@ fn generate_layer_env(layer_path: &Path, python_version: &PythonVersion) -> Laye
     //
     // Remember to force invalidation of the cached layer if these env vars ever change.
     LayerEnv::new()
-        // We have to set `CPATH` explicitly, since the automatic path set by lifecycle/libcnb is
-        // `<layer>/include/` whereas Python's header files are at `<layer>/include/pythonX.Y/`
-        // (and compilers don't recursively search).
+        // We have to set `CPATH` explicitly, since:
+        //  - The automatic path set by lifecycle/libcnb is `<layer>/include/` whereas Python's
+        //    headers are at `<layer>/include/pythonX.Y/` (compilers don't recursively search).
+        //  - Older setuptools cannot find this directory without `CPATH` being set:
+        //    https://github.com/pypa/setuptools/issues/3657
         .chainable_insert(
             Scope::All,
             ModificationBehavior::Prepend,

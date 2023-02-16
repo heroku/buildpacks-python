@@ -195,14 +195,11 @@ mod tests {
     #[test]
     fn read_version_valid_runtime_txt() {
         assert_eq!(
-            read_version(Path::new("tests/fixtures/runtime_txt_python_3.10")).unwrap(),
-            Some(PythonVersion::new(3, 10, 9))
+            read_version(Path::new("tests/fixtures/python_3.9")).unwrap(),
+            Some(PythonVersion::new(3, 9, 16))
         );
         assert_eq!(
-            read_version(Path::new(
-                "tests/fixtures/runtime_txt_python_version_unavailable"
-            ))
-            .unwrap(),
+            read_version(Path::new("tests/fixtures/runtime_txt_non_existent_version")).unwrap(),
             Some(PythonVersion::new(999, 999, 999))
         );
     }
@@ -226,10 +223,7 @@ mod tests {
     #[test]
     fn read_version_parse_error() {
         assert!(matches!(
-            read_version(Path::new(
-                "tests/fixtures/runtime_txt_python_version_invalid"
-            ))
-            .unwrap_err(),
+            read_version(Path::new("tests/fixtures/runtime_txt_invalid_version")).unwrap_err(),
             RuntimeTxtError::Parse(_)
         ));
     }

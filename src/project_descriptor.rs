@@ -219,7 +219,7 @@ mod tests {
 
     #[test]
     fn read_project_descriptor_function() {
-        let app_dir = Path::new("tests/fixtures/function_template");
+        let app_dir = Path::new("tests/fixtures/salesforce_function_template");
 
         assert_eq!(
             read_project_descriptor(app_dir).unwrap(),
@@ -259,7 +259,7 @@ mod tests {
 
     #[test]
     fn get_salesforce_project_type_function() {
-        let app_dir = Path::new("tests/fixtures/function_template");
+        let app_dir = Path::new("tests/fixtures/salesforce_function_template");
 
         assert_eq!(
             read_salesforce_project_type(app_dir).unwrap(),

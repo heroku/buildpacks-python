@@ -112,7 +112,7 @@ mod tests {
 
     #[test]
     fn is_python_project_valid_project() {
-        assert!(is_python_project(Path::new("tests/fixtures/default")).unwrap());
+        assert!(is_python_project(Path::new("tests/fixtures/pyproject_toml_only")).unwrap());
     }
 
     #[test]
@@ -128,11 +128,8 @@ mod tests {
     #[test]
     fn read_optional_file_valid_file() {
         assert_eq!(
-            read_optional_file(Path::new(
-                "tests/fixtures/runtime_txt_python_3.10/runtime.txt"
-            ))
-            .unwrap(),
-            Some("python-3.10.9\n".to_string())
+            read_optional_file(Path::new("tests/fixtures/python_3.9/runtime.txt")).unwrap(),
+            Some("python-3.9.16\n".to_string())
         );
     }
 

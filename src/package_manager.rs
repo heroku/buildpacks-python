@@ -46,7 +46,8 @@ mod tests {
     #[test]
     fn determine_package_manager_requirements_txt() {
         assert!(matches!(
-            determine_package_manager(Path::new("tests/fixtures/default")).unwrap(),
+            determine_package_manager(Path::new("tests/fixtures/pip_editable_git_compiled"))
+                .unwrap(),
             PackageManager::Pip
         ));
     }
