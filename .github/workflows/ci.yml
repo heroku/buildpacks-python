@@ -63,4 +63,4 @@ jobs:
         uses: buildpacks/github-actions/setup-pack@v5.0.1
       - name: Run integration tests
         # Runs only tests annotated with the `ignore` attribute (which in this repo, are the integration tests).
-        run: cargo test --locked -- --ignored --test-threads 6
+        run: cargo test --locked -- --ignored --test-threads 4
