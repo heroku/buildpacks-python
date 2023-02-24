@@ -17,7 +17,7 @@ mod utils;
 use crate::layers::pip_cache::PipCacheLayer;
 use crate::layers::pip_dependencies::{PipDependenciesLayer, PipDependenciesLayerError};
 use crate::layers::python::{PythonLayer, PythonLayerError};
-use crate::package_manager::{DeterminePackageManagerError, PackageManager};
+use crate::package_manager::{DeterminePackageManagerError, PackageManager, PackagingToolVersions};
 use crate::project_descriptor::ProjectDescriptorError;
 use crate::python_version::PythonVersionError;
 use crate::salesforce_functions::CheckSalesforceFunctionError;
@@ -61,6 +61,7 @@ impl Buildpack for PythonBuildpack {
         log_header("Determining Python version");
         let python_version = python_version::determine_python_version(&context.app_dir)
             .map_err(BuildpackError::PythonVersion)?;
+        let packaging_tool_versions = PackagingToolVersions::default();
 
         // We inherit the current process's env vars, since we want `PATH` and `HOME` to be set
         // so that later commands can find tools like Git in the stack image. Any user-provided
@@ -68,11 +69,13 @@ impl Buildpack for PythonBuildpack {
         let mut command_env = Env::from_current();
 
         // Create the layer containing the Python runtime, and the packages `pip`, `setuptools` and `wheel`.
+        log_header("Installing Python and packaging tools");
         let python_layer = context.handle_layer(
             layer_name!("python"),
             PythonLayer {
                 command_env: &command_env,
                 python_version: &python_version,
+                packaging_tool_versions: &packaging_tool_versions,
             },
         )?;
         command_env = python_layer.env.apply(Scope::Build, &command_env);
@@ -86,6 +89,7 @@ impl Buildpack for PythonBuildpack {
                     layer_name!("pip-cache"),
                     PipCacheLayer {
                         python_version: &python_version,
+                        packaging_tool_versions: &packaging_tool_versions,
                     },
                 )?;
                 let pip_layer = context.handle_layer(

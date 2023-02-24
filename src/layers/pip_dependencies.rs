@@ -108,8 +108,6 @@ impl Layer for PipDependenciesLayer<'_> {
         )
         .map_err(PipDependenciesLayerError::PipInstallCommand)?;
 
-        log_info("Pip install completed");
-
         LayerResultBuilder::new(GenericMetadata::default())
             .env(layer_env)
             .build()

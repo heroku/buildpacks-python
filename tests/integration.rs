@@ -23,7 +23,7 @@ const LATEST_PYTHON_3_11: &str = "3.11.2";
 const DEFAULT_PYTHON_VERSION: &str = LATEST_PYTHON_3_11;
 
 const PIP_VERSION: &str = "23.0.1";
-const SETUPTOOLS_VERSION: &str = "67.3.2";
+const SETUPTOOLS_VERSION: &str = "67.4.0";
 const WHEEL_VERSION: &str = "0.38.4";
 
 const DEFAULT_BUILDER: &str = "heroku/builder:22";
@@ -155,22 +155,16 @@ fn python_version_unspecified() {
                     No Python version specified, using the current default of Python {DEFAULT_PYTHON_VERSION}.
                     To use a different version, see: https://devcenter.heroku.com/articles/python-runtimes
                     
-                    [Installing Python]
-                    Downloading Python {DEFAULT_PYTHON_VERSION}
-                    Python installation successful
-                    
-                    [Installing Pip]
+                    [Installing Python and packaging tools]
+                    Installing Python {DEFAULT_PYTHON_VERSION}
                     Installing pip {PIP_VERSION}, setuptools {SETUPTOOLS_VERSION} and wheel {WHEEL_VERSION}
-                    Installation completed
                     
                     [Installing dependencies using Pip]
-                    Pip cache created
                     Running pip install
                     Collecting typing-extensions==4.4.0
                       Downloading typing_extensions-4.4.0-py3-none-any.whl (26 kB)
                     Installing collected packages: typing-extensions
                     Successfully installed typing-extensions-4.4.0
-                    Pip install completed
                     ===> EXPORTING
                 "}
             );
@@ -234,22 +228,16 @@ fn builds_with_python_version(fixture_path: &str, python_version: &str) {
                 [Determining Python version]
                 Using Python version {python_version} specified in runtime.txt
                 
-                [Installing Python]
-                Downloading Python {python_version}
-                Python installation successful
-                
-                [Installing Pip]
+                [Installing Python and packaging tools]
+                Installing Python {python_version}
                 Installing pip {PIP_VERSION}, setuptools {SETUPTOOLS_VERSION} and wheel {WHEEL_VERSION}
-                Installation completed
                 
                 [Installing dependencies using Pip]
-                Pip cache created
                 Running pip install
                 Collecting typing-extensions==4.4.0
                   Downloading typing_extensions-4.4.0-py3-none-any.whl (26 kB)
                 Installing collected packages: typing-extensions
                 Successfully installed typing-extensions-4.4.0
-                Pip install completed
                 ===> EXPORTING
             "}
         );
@@ -375,7 +363,6 @@ fn pip_invalid_requirement() {
                 context.pack_stdout,
                 &formatdoc! {"
                     [Installing dependencies using Pip]
-                    Pip cache created
                     Running pip install
                 "}
             );
@@ -413,20 +400,17 @@ fn cache_used_for_repeat_builds() {
                     [Determining Python version]
                     Using Python version {LATEST_PYTHON_3_11} specified in runtime.txt
                     
-                    [Installing Python]
-                    Re-using cached Python {LATEST_PYTHON_3_11}
-                    
-                    [Installing Pip]
-                    Re-using cached pip {PIP_VERSION}, setuptools {SETUPTOOLS_VERSION} and wheel {WHEEL_VERSION}
+                    [Installing Python and packaging tools]
+                    Using cached Python {LATEST_PYTHON_3_11}
+                    Using cached pip {PIP_VERSION}, setuptools {SETUPTOOLS_VERSION} and wheel {WHEEL_VERSION}
                     
                     [Installing dependencies using Pip]
-                    Re-using cached pip-cache
+                    Using cached pip download/wheel cache
                     Running pip install
                     Collecting typing-extensions==4.4.0
                       Using cached typing_extensions-4.4.0-py3-none-any.whl (26 kB)
                     Installing collected packages: typing-extensions
                     Successfully installed typing-extensions-4.4.0
-                    Pip install completed
                     ===> EXPORTING
                 "}
             );
@@ -451,26 +435,19 @@ fn cache_discarded_on_python_version_change() {
                     
                     [Determining Python version]
                     Using Python version {LATEST_PYTHON_3_11} specified in runtime.txt
-                    Discarding cached Python {LATEST_PYTHON_3_10}
-                    Discarding cached pip {PIP_VERSION}, setuptools {SETUPTOOLS_VERSION} and wheel {WHEEL_VERSION}
                     
-                    [Installing Python]
-                    Downloading Python {LATEST_PYTHON_3_11}
-                    Python installation successful
-                    
-                    [Installing Pip]
+                    [Installing Python and packaging tools]
+                    Discarding cache since the Python version has changed from {LATEST_PYTHON_3_10} to {LATEST_PYTHON_3_11}
+                    Installing Python {LATEST_PYTHON_3_11}
                     Installing pip {PIP_VERSION}, setuptools {SETUPTOOLS_VERSION} and wheel {WHEEL_VERSION}
-                    Installation completed
                     
                     [Installing dependencies using Pip]
-                    Discarding cached pip-cache
-                    Pip cache created
+                    Discarding cached pip download/wheel cache
                     Running pip install
                     Collecting typing-extensions==4.4.0
                       Downloading typing_extensions-4.4.0-py3-none-any.whl (26 kB)
                     Installing collected packages: typing-extensions
                     Successfully installed typing-extensions-4.4.0
-                    Pip install completed
                     ===> EXPORTING
                 "}
             );
@@ -496,26 +473,57 @@ fn cache_discarded_on_stack_change() {
                     [Determining Python version]
                     No Python version specified, using the current default of Python {DEFAULT_PYTHON_VERSION}.
                     To use a different version, see: https://devcenter.heroku.com/articles/python-runtimes
-                    Discarding cached Python {DEFAULT_PYTHON_VERSION}
-                    Discarding cached pip {PIP_VERSION}, setuptools {SETUPTOOLS_VERSION} and wheel {WHEEL_VERSION}
                     
-                    [Installing Python]
-                    Downloading Python {DEFAULT_PYTHON_VERSION}
-                    Python installation successful
-                    
-                    [Installing Pip]
+                    [Installing Python and packaging tools]
+                    Discarding cache since the stack has changed from heroku-20 to heroku-22
+                    Installing Python {DEFAULT_PYTHON_VERSION}
                     Installing pip {PIP_VERSION}, setuptools {SETUPTOOLS_VERSION} and wheel {WHEEL_VERSION}
-                    Installation completed
                     
                     [Installing dependencies using Pip]
-                    Discarding cached pip-cache
-                    Pip cache created
+                    Discarding cached pip download/wheel cache
                     Running pip install
                     Collecting typing-extensions==4.4.0
                       Downloading typing_extensions-4.4.0-py3-none-any.whl (26 kB)
                     Installing collected packages: typing-extensions
                     Successfully installed typing-extensions-4.4.0
-                    Pip install completed
+                    ===> EXPORTING
+                "}
+            );
+        });
+    });
+}
+
+#[test]
+#[ignore = "integration test"]
+fn cache_discarded_on_multiple_changes() {
+    let config_before = BuildConfig::new("heroku/buildpacks:20", "tests/fixtures/python_3.10");
+    let config_after = BuildConfig::new("heroku/builder:22", "tests/fixtures/python_3.11");
+
+    TestRunner::default().build(config_before, |context| {
+        context.rebuild(config_after, |rebuild_context| {
+            assert_empty!(rebuild_context.pack_stderr);
+            assert_contains!(
+                rebuild_context.pack_stdout,
+                &formatdoc! {"
+                    ===> BUILDING
+                    
+                    [Determining Python version]
+                    Using Python version {LATEST_PYTHON_3_11} specified in runtime.txt
+                    
+                    [Installing Python and packaging tools]
+                    Discarding cache since:
+                     - the stack has changed from heroku-20 to heroku-22
+                     - the Python version has changed from 3.10.10 to 3.11.2
+                    Installing Python {LATEST_PYTHON_3_11}
+                    Installing pip {PIP_VERSION}, setuptools {SETUPTOOLS_VERSION} and wheel {WHEEL_VERSION}
+                    
+                    [Installing dependencies using Pip]
+                    Discarding cached pip download/wheel cache
+                    Running pip install
+                    Collecting typing-extensions==4.4.0
+                      Downloading typing_extensions-4.4.0-py3-none-any.whl (26 kB)
+                    Installing collected packages: typing-extensions
+                    Successfully installed typing-extensions-4.4.0
                     ===> EXPORTING
                 "}
             );
@@ -535,8 +543,6 @@ fn salesforce_function_template() {
             assert_contains!(
                 context.pack_stdout,
                 indoc! {"
-                    Pip install completed
-                    
                     [Validating Salesforce Function]
                     Function passed validation.
                     ===> EXPORTING

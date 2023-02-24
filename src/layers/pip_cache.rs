@@ -1,3 +1,4 @@
+use crate::package_manager::PackagingToolVersions;
 use crate::python_version::PythonVersion;
 use crate::PythonBuildpack;
 use libcnb::build::BuildContext;
@@ -11,13 +12,10 @@ use std::path::Path;
 
 /// Layer containing Pip's cache of HTTP requests/downloads and built package wheels.
 pub(crate) struct PipCacheLayer<'a> {
+    /// The Python version used for this build.
     pub python_version: &'a PythonVersion,
-}
-
-#[derive(Clone, Deserialize, PartialEq, Serialize)]
-pub(crate) struct PipCacheLayerMetadata {
-    python_version: String,
-    stack: StackId,
+    /// The pip, setuptools and wheel versions used for this build.
+    pub packaging_tool_versions: &'a PackagingToolVersions,
 }
 
 impl Layer for PipCacheLayer<'_> {
@@ -37,8 +35,7 @@ impl Layer for PipCacheLayer<'_> {
         context: &BuildContext<Self::Buildpack>,
         _layer_path: &Path,
     ) -> Result<LayerResult<Self::Metadata>, <Self::Buildpack as Buildpack>::Error> {
-        log_info("Pip cache created");
-        let layer_metadata = generate_layer_metadata(&context.stack_id, self.python_version);
+        let layer_metadata = self.generate_layer_metadata(&context.stack_id);
         LayerResultBuilder::new(layer_metadata).build()
     }
 
@@ -47,30 +44,37 @@ impl Layer for PipCacheLayer<'_> {
         context: &BuildContext<Self::Buildpack>,
         layer_data: &LayerData<Self::Metadata>,
     ) -> Result<ExistingLayerStrategy, <Self::Buildpack as Buildpack>::Error> {
-        // TODO: Also invalidate based on time since layer creation?
-        // TODO: Decide what should be logged
-        if layer_data.content_metadata.metadata
-            == generate_layer_metadata(&context.stack_id, self.python_version)
-        {
-            log_info("Re-using cached pip-cache");
+        let cached_metadata = &layer_data.content_metadata.metadata;
+        let new_metadata = &self.generate_layer_metadata(&context.stack_id);
+
+        if cached_metadata == new_metadata {
+            log_info("Using cached pip download/wheel cache");
             Ok(ExistingLayerStrategy::Keep)
         } else {
-            log_info("Discarding cached pip-cache");
+            log_info("Discarding cached pip download/wheel cache");
             Ok(ExistingLayerStrategy::Recreate)
         }
     }
 }
 
-fn generate_layer_metadata(
-    stack_id: &StackId,
-    python_version: &PythonVersion,
-) -> PipCacheLayerMetadata {
-    // TODO: Add timestamp field or similar (maybe not necessary if invalidating on pip/python change?)
-    // TODO: Invalidate on pip version change?
-    PipCacheLayerMetadata {
-        python_version: python_version.to_string(),
-        stack: stack_id.clone(),
+impl<'a> PipCacheLayer<'a> {
+    fn generate_layer_metadata(&self, stack_id: &StackId) -> PipCacheLayerMetadata {
+        PipCacheLayerMetadata {
+            stack: stack_id.clone(),
+            python_version: self.python_version.to_string(),
+            packaging_tool_versions: self.packaging_tool_versions.clone(),
+        }
     }
 }
 
-// TODO: Unit tests for cache invalidation handling?
+/// Metadata stored in the generated layer that allows future builds to determine whether
+/// the cached layer needs to be invalidated or not.
+// Timestamp based cache invalidation isn't used here since the Python/pip/setuptools/wheel
+// versions will change often enough that it isn't worth the added complexity. Ideally pip
+// would support cleaning up its own cache: https://github.com/pypa/pip/issues/6956
+#[derive(Clone, Deserialize, PartialEq, Serialize)]
+pub(crate) struct PipCacheLayerMetadata {
+    stack: StackId,
+    python_version: String,
+    packaging_tool_versions: PackagingToolVersions,
+}

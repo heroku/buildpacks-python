@@ -1,3 +1,4 @@
+use crate::package_manager::PackagingToolVersions;
 use crate::python_version::PythonVersion;
 use crate::utils::{self, CommandError, DownloadUnpackArchiveError};
 use crate::{BuildpackError, PythonBuildpack};
@@ -7,7 +8,7 @@ use libcnb::data::layer_content_metadata::LayerTypes;
 use libcnb::layer::{ExistingLayerStrategy, Layer, LayerData, LayerResult, LayerResultBuilder};
 use libcnb::layer_env::{LayerEnv, ModificationBehavior, Scope};
 use libcnb::{Buildpack, Env};
-use libherokubuildpack::log::{log_header, log_info};
+use libherokubuildpack::log::log_info;
 use serde::{Deserialize, Serialize};
 use std::fs::Permissions;
 use std::os::unix::prelude::PermissionsExt;
@@ -15,25 +16,14 @@ use std::path::{Path, PathBuf};
 use std::process::Command;
 use std::{fs, io};
 
-const PIP_VERSION: &str = "23.0.1";
-const SETUPTOOLS_VERSION: &str = "67.3.2";
-const WHEEL_VERSION: &str = "0.38.4";
-
 /// Layer containing the Python runtime, and the packages `pip`, `setuptools` and `wheel`.
 pub(crate) struct PythonLayer<'a> {
     /// Environment variables inherited from earlier buildpack steps.
     pub command_env: &'a Env,
-    /// The Python version that will be installed.
+    /// The Python version that this layer should install.
     pub python_version: &'a PythonVersion,
-}
-
-#[derive(Clone, Deserialize, PartialEq, Serialize)]
-pub(crate) struct PythonLayerMetadata {
-    stack: StackId,
-    python_version: String,
-    pip_version: String,
-    setuptools_version: String,
-    wheel_version: String,
+    /// The pip, setuptools and wheel versions that this layer should install.
+    pub packaging_tool_versions: &'a PackagingToolVersions,
 }
 
 impl Layer for PythonLayer<'_> {
@@ -53,15 +43,13 @@ impl Layer for PythonLayer<'_> {
         context: &BuildContext<Self::Buildpack>,
         layer_path: &Path,
     ) -> Result<LayerResult<Self::Metadata>, <Self::Buildpack as Buildpack>::Error> {
-        log_header("Installing Python");
-
         // TODO: Move this URL generation somewhere else (ie manifest etc).
         let archive_url = format!(
             "https://heroku-buildpack-python.s3.us-east-1.amazonaws.com/{}/runtimes/python-{}.tar.gz",
             context.stack_id, self.python_version
         );
 
-        log_info(format!("Downloading Python {}", self.python_version));
+        log_info(format!("Installing Python {}", self.python_version));
         utils::download_and_unpack_gzipped_archive(&archive_url, layer_path).map_err(|error| {
             match error {
                 // TODO: Remove this once the Python version is validated against a manifest (at which
@@ -75,7 +63,6 @@ impl Layer for PythonLayer<'_> {
                 other_error => PythonLayerError::DownloadUnpackPythonArchive(other_error),
             }
         })?;
-        log_info("Python installation successful");
 
         let layer_env = generate_layer_env(layer_path, self.python_version);
         let mut command_env = layer_env.apply(Scope::Build, self.command_env);
@@ -87,8 +74,15 @@ impl Layer for PythonLayer<'_> {
         // explicitly set it for the Python invocations within this layer.
         command_env.insert("LD_LIBRARY_PATH", layer_path.join("lib"));
 
-        log_header("Installing Pip");
-        log_info(format!("Installing pip {PIP_VERSION}, setuptools {SETUPTOOLS_VERSION} and wheel {WHEEL_VERSION}"));
+        let PackagingToolVersions {
+            pip_version,
+            setuptools_version,
+            wheel_version,
+        } = self.packaging_tool_versions;
+
+        log_info(format!(
+            "Installing pip {pip_version}, setuptools {setuptools_version} and wheel {wheel_version}"
+        ));
 
         let python_binary = layer_path.join("bin/python");
         let python_stdlib_dir = layer_path.join(format!(
@@ -111,9 +105,9 @@ impl Layer for PythonLayer<'_> {
                     "--no-cache-dir",
                     "--no-input",
                     "--quiet",
-                    format!("pip=={PIP_VERSION}").as_str(),
-                    format!("setuptools=={SETUPTOOLS_VERSION}").as_str(),
-                    format!("wheel=={WHEEL_VERSION}").as_str(),
+                    format!("pip=={pip_version}").as_str(),
+                    format!("setuptools=={setuptools_version}").as_str(),
+                    format!("wheel=={wheel_version}").as_str(),
                 ])
                 .env_clear()
                 .envs(&command_env),
@@ -130,9 +124,7 @@ impl Layer for PythonLayer<'_> {
         fs::set_permissions(site_packages_dir, Permissions::from_mode(0o555))
             .map_err(PythonLayerError::MakeSitePackagesReadOnlyIo)?;
 
-        log_info("Installation completed");
-
-        let layer_metadata = generate_layer_metadata(&context.stack_id, self.python_version);
+        let layer_metadata = self.generate_layer_metadata(&context.stack_id);
         LayerResultBuilder::new(layer_metadata)
             .env(layer_env)
             .build()
@@ -143,40 +135,119 @@ impl Layer for PythonLayer<'_> {
         context: &BuildContext<Self::Buildpack>,
         layer_data: &LayerData<Self::Metadata>,
     ) -> Result<ExistingLayerStrategy, <Self::Buildpack as Buildpack>::Error> {
-        // TODO: Decide what should be logged in the cached case (+more granular reason?)
-        // Worth including what changed not only for cache invalidation, but also
-        // to help debug any issues (eg changed pip version causing issues)
-        let old_metadata = &layer_data.content_metadata.metadata;
-        let new_metadata = generate_layer_metadata(&context.stack_id, self.python_version);
-        if new_metadata == *old_metadata {
-            log_header("Installing Python");
-            log_info(format!(
-                "Re-using cached Python {}",
-                old_metadata.python_version
-            ));
+        let cached_metadata = &layer_data.content_metadata.metadata;
+        let new_metadata = self.generate_layer_metadata(&context.stack_id);
 
-            log_header("Installing Pip");
-            log_info(format!(
-                "Re-using cached pip {}, setuptools {} and wheel {}",
-                new_metadata.pip_version,
-                new_metadata.setuptools_version,
-                new_metadata.wheel_version
-            ));
-
-            Ok(ExistingLayerStrategy::Keep)
+        if let Some(reason) = cache_invalidation_reason(cached_metadata, &new_metadata) {
+            log_info(format!("Discarding cache {reason}"));
+            Ok(ExistingLayerStrategy::Recreate)
         } else {
             log_info(format!(
-                "Discarding cached Python {}",
-                old_metadata.python_version
+                "Using cached Python {}",
+                cached_metadata.python_version
             ));
+            let PackagingToolVersions {
+                pip_version,
+                setuptools_version,
+                wheel_version,
+            } = &cached_metadata.packaging_tool_versions;
             log_info(format!(
-                "Discarding cached pip {}, setuptools {} and wheel {}",
-                old_metadata.pip_version,
-                old_metadata.setuptools_version,
-                old_metadata.wheel_version
+                "Using cached pip {pip_version}, setuptools {setuptools_version} and wheel {wheel_version}"
             ));
-            Ok(ExistingLayerStrategy::Recreate)
+            Ok(ExistingLayerStrategy::Keep)
         }
+    }
+}
+
+impl<'a> PythonLayer<'a> {
+    fn generate_layer_metadata(&self, stack_id: &StackId) -> PythonLayerMetadata {
+        PythonLayerMetadata {
+            stack: stack_id.clone(),
+            python_version: self.python_version.to_string(),
+            packaging_tool_versions: self.packaging_tool_versions.clone(),
+        }
+    }
+}
+
+/// Metadata stored in the generated layer that allows future builds to determine whether
+/// the cached layer needs to be invalidated or not.
+#[derive(Clone, Deserialize, PartialEq, Serialize)]
+pub(crate) struct PythonLayerMetadata {
+    stack: StackId,
+    python_version: String,
+    packaging_tool_versions: PackagingToolVersions,
+}
+
+/// Compare cached layer metadata to the new layer metadata to determine if the cache should
+/// be invalidated, and if so, for what reason.
+fn cache_invalidation_reason(
+    cached_metadata: &PythonLayerMetadata,
+    new_metadata: &PythonLayerMetadata,
+) -> Option<String> {
+    // By destructuring here we ensure that if any additional fields are added to the layer
+    // metadata in the future, it forces them to be used as part of cache invalidation,
+    // otherwise Clippy would report unused variable errors.
+    let PythonLayerMetadata {
+        stack: cached_stack,
+        python_version: cached_python_version,
+        packaging_tool_versions:
+            PackagingToolVersions {
+                pip_version: cached_pip_version,
+                setuptools_version: cached_setuptools_version,
+                wheel_version: cached_wheel_version,
+            },
+    } = cached_metadata;
+
+    let PythonLayerMetadata {
+        stack,
+        python_version,
+        packaging_tool_versions:
+            PackagingToolVersions {
+                pip_version,
+                setuptools_version,
+                wheel_version,
+            },
+    } = new_metadata;
+
+    let mut reasons = Vec::new();
+
+    if cached_stack != stack {
+        reasons.push(format!(
+            "the stack has changed from {cached_stack} to {stack}"
+        ));
+    }
+
+    if cached_python_version != python_version {
+        reasons.push(format!(
+            "the Python version has changed from {cached_python_version} to {python_version}"
+        ));
+    }
+
+    if cached_pip_version != pip_version {
+        reasons.push(format!(
+            "the pip version has changed from {cached_pip_version} to {pip_version}"
+        ));
+    }
+
+    if cached_setuptools_version != setuptools_version {
+        reasons.push(format!(
+            "the setuptools version has changed from {cached_setuptools_version} to {setuptools_version}"
+        ));
+    }
+
+    if cached_wheel_version != wheel_version {
+        reasons.push(format!(
+            "the wheel version has changed from {cached_wheel_version} to {wheel_version}"
+        ));
+    }
+
+    // If there is more than one reason then all are mentioned to hopefully prevent support
+    // tickets where build failures are blamed on a stack upgrade but were actually caused
+    // by the app's Python version being updated at the same time.
+    match reasons.as_slice() {
+        [] => None,
+        [reason] => Some(format!("since {reason}")),
+        reasons => Some(format!("since:\n - {}", reasons.join("\n - "))),
     }
 }
 
@@ -324,19 +395,6 @@ fn bundled_pip_module_path(python_stdlib_dir: &Path) -> io::Result<PathBuf> {
     ))
 }
 
-fn generate_layer_metadata(
-    stack_id: &StackId,
-    python_version: &PythonVersion,
-) -> PythonLayerMetadata {
-    PythonLayerMetadata {
-        stack: stack_id.clone(),
-        python_version: python_version.to_string(),
-        pip_version: PIP_VERSION.to_string(),
-        setuptools_version: SETUPTOOLS_VERSION.to_string(),
-        wheel_version: WHEEL_VERSION.to_string(),
-    }
-}
-
 /// Errors that can occur when installing Python and required packaging tools into a layer.
 #[derive(Debug)]
 pub(crate) enum PythonLayerError {
@@ -358,7 +416,82 @@ impl From<PythonLayerError> for BuildpackError {
 
 #[cfg(test)]
 mod tests {
+    use indoc::indoc;
+    use libcnb::data::stack_id;
+
     use super::*;
+
+    #[test]
+    fn cache_invalidation_reason_unchanged() {
+        let metadata = PythonLayerMetadata {
+            stack: stack_id!("heroku-22"),
+            python_version: "3.11.0".to_string(),
+            packaging_tool_versions: PackagingToolVersions {
+                pip_version: "A.B.C".to_string(),
+                setuptools_version: "D.E.F".to_string(),
+                wheel_version: "G.H.I".to_string(),
+            },
+        };
+        assert_eq!(cache_invalidation_reason(&metadata, &metadata), None);
+    }
+
+    #[test]
+    fn cache_invalidation_reason_single_change() {
+        let cached_metadata = PythonLayerMetadata {
+            stack: stack_id!("heroku-22"),
+            python_version: "3.11.0".to_string(),
+            packaging_tool_versions: PackagingToolVersions {
+                pip_version: "A.B.C".to_string(),
+                setuptools_version: "D.E.F".to_string(),
+                wheel_version: "G.H.I".to_string(),
+            },
+        };
+        let new_metadata = PythonLayerMetadata {
+            python_version: "3.11.1".to_string(),
+            ..cached_metadata.clone()
+        };
+        assert_eq!(
+            cache_invalidation_reason(&cached_metadata, &new_metadata),
+            Some("since the Python version has changed from 3.11.0 to 3.11.1".to_string())
+        );
+    }
+
+    #[test]
+    fn cache_invalidation_reason_all_changed() {
+        let cached_metadata = PythonLayerMetadata {
+            stack: stack_id!("heroku-20"),
+            python_version: "3.9.0".to_string(),
+            packaging_tool_versions: PackagingToolVersions {
+                pip_version: "A.B.C".to_string(),
+                setuptools_version: "D.E.F".to_string(),
+                wheel_version: "G.H.I".to_string(),
+            },
+        };
+        let new_metadata = PythonLayerMetadata {
+            stack: stack_id!("heroku-22"),
+            python_version: "3.11.1".to_string(),
+            packaging_tool_versions: PackagingToolVersions {
+                pip_version: "A.B.C-new".to_string(),
+                setuptools_version: "D.E.F-new".to_string(),
+                wheel_version: "G.H.I-new".to_string(),
+            },
+        };
+        assert_eq!(
+            cache_invalidation_reason(&cached_metadata, &new_metadata),
+            Some(
+                indoc! {"
+                    since:
+                     - the stack has changed from heroku-20 to heroku-22
+                     - the Python version has changed from 3.9.0 to 3.11.1
+                     - the pip version has changed from A.B.C to A.B.C-new
+                     - the setuptools version has changed from D.E.F to D.E.F-new
+                     - the wheel version has changed from G.H.I to G.H.I-new
+                "}
+                .trim()
+                .to_string()
+            )
+        );
+    }
 
     #[test]
     fn python_layer_env() {
