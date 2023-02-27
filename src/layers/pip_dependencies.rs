@@ -64,8 +64,8 @@ impl Layer for PipDependenciesLayer<'_> {
         // the repository around, since the directory is added to the Python path directly (via
         // the `.pth` file created in `site-packages`). By default Pip will store the repository
         // in the current working directory (the app dir), however, we would prefer it to be stored
-        // in the dependencies layer instead for consistency. (Plus if this layer were ever cached,
-        // storing the repository in the app dir would break on repeat-builds).
+        // in the dependencies layer instead for consistency. (Plus if the dependencies layer were
+        // ever cached, storing the repository in the app dir would break on repeat-builds).
         let src_dir = layer_path.join("src");
         fs::create_dir(&src_dir).map_err(PipDependenciesLayerError::CreateSrcDirIo)?;
 

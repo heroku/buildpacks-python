@@ -17,6 +17,19 @@ use std::process::Command;
 use std::{fs, io};
 
 /// Layer containing the Python runtime, and the packages `pip`, `setuptools` and `wheel`.
+///
+/// We install both Python and the packaging tools into the same layer, since:
+///  - We don't want to mix buildpack/packaging dependencies with the app's own dependencies
+///    (for a start, we need pip installed to even install the user's own dependencies, plus
+///    want to keep caching separate), so cannot install the packaging tools into the user
+///    site-packages directory.
+///  - We don't want to install the packaging tools into an arbitrary directory added to
+///    `PYTHONPATH`, since directories added to `PYTHONPATH` take precedence over the Python
+///    stdlib (unlike the system or user site-packages directories), and so can result in hard
+///    to debug stdlib shadowing problems that users won't encounter locally.
+///  - This leaves just the system site-packages directory, which exists within the Python
+///    installation directory and Python does not support moving it elsewhere.
+///  - It matches what both local and official Docker image environments do.
 pub(crate) struct PythonLayer<'a> {
     /// Environment variables inherited from earlier buildpack steps.
     pub command_env: &'a Env,
