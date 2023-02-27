@@ -1,5 +1,6 @@
 use crate::runtime_txt::{self, RuntimeTxtError};
 use indoc::formatdoc;
+use libcnb::data::buildpack::StackId;
 use libherokubuildpack::log::log_info;
 use std::fmt::{self, Display};
 use std::path::Path;
@@ -26,6 +27,13 @@ impl PythonVersion {
             minor,
             patch,
         }
+    }
+
+    pub fn url(&self, stack_id: &StackId) -> String {
+        format!(
+            "https://heroku-buildpack-python.s3.us-east-1.amazonaws.com/{}/runtimes/python-{}.{}.{}.tar.gz",
+            stack_id, self.major, self.minor, self.patch
+        )
     }
 }
 
@@ -69,7 +77,17 @@ pub(crate) enum PythonVersionError {
 
 #[cfg(test)]
 mod tests {
+    use libcnb::data::stack_id;
+
     use super::*;
+
+    #[test]
+    fn python_version_url() {
+        assert_eq!(
+            PythonVersion::new(3, 11, 0).url(&stack_id!("heroku-22")),
+            "https://heroku-buildpack-python.s3.us-east-1.amazonaws.com/heroku-22/runtimes/python-3.11.0.tar.gz"
+        );
+    }
 
     #[test]
     fn determine_python_version_runtime_txt_valid() {

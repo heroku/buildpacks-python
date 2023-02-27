@@ -43,13 +43,9 @@ impl Layer for PythonLayer<'_> {
         context: &BuildContext<Self::Buildpack>,
         layer_path: &Path,
     ) -> Result<LayerResult<Self::Metadata>, <Self::Buildpack as Buildpack>::Error> {
-        // TODO: Move this URL generation somewhere else (ie manifest etc).
-        let archive_url = format!(
-            "https://heroku-buildpack-python.s3.us-east-1.amazonaws.com/{}/runtimes/python-{}.tar.gz",
-            context.stack_id, self.python_version
-        );
-
         log_info(format!("Installing Python {}", self.python_version));
+
+        let archive_url = self.python_version.url(&context.stack_id);
         utils::download_and_unpack_gzipped_archive(&archive_url, layer_path).map_err(|error| {
             match error {
                 // TODO: Remove this once the Python version is validated against a manifest (at which
