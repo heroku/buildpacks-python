@@ -1,4 +1,4 @@
-use crate::package_manager::PackagingToolVersions;
+use crate::packaging_tool_versions::PackagingToolVersions;
 use crate::python_version::PythonVersion;
 use crate::utils::{self, CommandError, DownloadUnpackArchiveError};
 use crate::{BuildpackError, PythonBuildpack};

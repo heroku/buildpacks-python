@@ -1,8 +1,6 @@
 use std::io;
 use std::path::Path;
 
-use serde::{Deserialize, Serialize};
-
 /// A ordered mapping of project filenames to their associated package manager.
 /// Earlier entries will take precedence if a project matches multiple package managers.
 pub(crate) const PACKAGE_MANAGER_FILE_MAPPING: [(&str, PackageManager); 1] =
@@ -39,23 +37,6 @@ pub(crate) fn determine_package_manager(
 pub(crate) enum DeterminePackageManagerError {
     Io(io::Error),
     NoneFound,
-}
-
-#[derive(Clone, Deserialize, PartialEq, Serialize)]
-pub(crate) struct PackagingToolVersions {
-    pub pip_version: String,
-    pub setuptools_version: String,
-    pub wheel_version: String,
-}
-
-impl Default for PackagingToolVersions {
-    fn default() -> Self {
-        Self {
-            pip_version: "23.0.1".to_string(),
-            setuptools_version: "67.4.0".to_string(),
-            wheel_version: "0.38.4".to_string(),
-        }
-    }
 }
 
 #[cfg(test)]

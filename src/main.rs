@@ -8,6 +8,7 @@
 mod errors;
 mod layers;
 mod package_manager;
+mod packaging_tool_versions;
 mod project_descriptor;
 mod python_version;
 mod runtime_txt;
@@ -17,7 +18,8 @@ mod utils;
 use crate::layers::pip_cache::PipCacheLayer;
 use crate::layers::pip_dependencies::{PipDependenciesLayer, PipDependenciesLayerError};
 use crate::layers::python::{PythonLayer, PythonLayerError};
-use crate::package_manager::{DeterminePackageManagerError, PackageManager, PackagingToolVersions};
+use crate::package_manager::{DeterminePackageManagerError, PackageManager};
+use crate::packaging_tool_versions::PackagingToolVersions;
 use crate::project_descriptor::ProjectDescriptorError;
 use crate::python_version::PythonVersionError;
 use crate::salesforce_functions::CheckSalesforceFunctionError;
