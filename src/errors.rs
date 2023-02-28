@@ -106,7 +106,7 @@ fn on_python_version_error(error: PythonVersionError) {
                 "reading the (optional) runtime.txt file",
                 &io_error,
             ),
-            // TODO: Write the supported Python versions inline, instead of linking out to Dev Center.
+            // TODO: (W-12613425) Write the supported Python versions inline, instead of linking out to Dev Center.
             RuntimeTxtError::Parse(ParseRuntimeTxtError { cleaned_contents }) => {
                 let PythonVersion {
                     major,
@@ -192,7 +192,7 @@ fn on_python_layer_error(error: PythonLayerError) {
             &io_error,
         ),
         // This error will change once the Python version is validated against a manifest.
-        // TODO: Write the supported Python versions inline, instead of linking out to Dev Center.
+        // TODO: (W-12613425) Write the supported Python versions inline, instead of linking out to Dev Center.
         PythonLayerError::PythonArchiveNotFound {
             python_version,
             stack,

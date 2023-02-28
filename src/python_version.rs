@@ -60,7 +60,7 @@ pub(crate) fn determine_python_version(
         return Ok(runtime_txt_version);
     }
 
-    // TODO: Write this content inline, instead of linking out to Dev Center.
+    // TODO: (W-12613425) Write this content inline, instead of linking out to Dev Center.
     // Also adjust wording to mention pinning as a use-case, not just using a different version.
     log_info(formatdoc! {"
         No Python version specified, using the current default of Python {DEFAULT_PYTHON_VERSION}.
