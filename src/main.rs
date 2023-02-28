@@ -151,8 +151,10 @@ impl From<BuildpackError> for libcnb::Error<BuildpackError> {
 
 buildpack_main!(PythonBuildpack);
 
+// The integration tests are imported into the crate so that they can have access to private
+// APIs and constants, saving having to (a) run a dual binary/library crate, (b) expose APIs
+// publicly for things only used for testing. See:
+// https://doc.rust-lang.org/reference/items/modules.html#the-path-attribute
 #[cfg(test)]
-mod tests {
-    // Suppress warnings due to the `unused_crate_dependencies` lint not handling integration tests well.
-    use libcnb_test as _;
-}
+#[path = "../tests/integration/mod.rs"]
+mod integration_tests;
