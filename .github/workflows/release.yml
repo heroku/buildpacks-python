@@ -1,0 +1,74 @@
+name: Release Buildpack
+
+on:
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+env:
+  BUILDPACK_DOCKER_REPO: docker.io/heroku/buildpack-python
+  CARGO_TERM_COLOR: always
+
+jobs:
+  # Releases the buildpack to Docker Hub and registers it with the CNB Buildpack Registry.
+  # This release process intentionally does not create a .cnb file release for now, since
+  # there are currently no use-cases that need it for Python.
+  release:
+    name: Release heroku/python
+    runs-on: ubuntu-latest
+    steps:
+      # Setup
+      - name: Checkout
+        uses: actions/checkout@v3
+      - name: Install musl-tools
+        run: sudo apt-get install musl-tools --no-install-recommends
+      - name: Update Rust toolchain
+        run: rustup update
+      - name: Install Rust linux-musl target
+        run: rustup target add x86_64-unknown-linux-musl
+      - name: Rust Cache
+        uses: Swatinem/rust-cache@v2.2.1
+      - name: Install libcnb-cargo
+        run: cargo install libcnb-cargo
+      - name: Install Pack CLI
+        uses: buildpacks/github-actions/setup-pack@v5.0.1
+      - name: Install yj and crane
+        uses: buildpacks/github-actions/setup-tools@v5.0.1
+      - name: Login to Docker Hub
+        uses: docker/login-action@v2
+        with:
+          registry: docker.io
+          username: ${{ secrets.DOCKER_HUB_USER }}
+          password: ${{ secrets.DOCKER_HUB_TOKEN }}
+
+      # Build
+      - name: Compile the buildpack
+        run: cargo libcnb package --release
+
+      # Publish
+      - name: Read buildpack metadata
+        run: |
+          echo "buildpack_id=$(yj -t < buildpack.toml | jq -r .buildpack.id)" >> $GITHUB_ENV
+          echo "buildpack_version=$(yj -t < buildpack.toml | jq -r .buildpack.version)" >> $GITHUB_ENV
+      - name: Publish the buildpack to Docker Hub
+        run: pack buildpack package --path target/buildpack/release/heroku_python --publish "${{ env.BUILDPACK_DOCKER_REPO }}:${{ env.buildpack_version }}"
+      - name: Calculate the buildpack image digest
+        run: echo "buildpack_digest=$(crane digest ${{ env.BUILDPACK_DOCKER_REPO }}:${{ env.buildpack_version }})" >> $GITHUB_ENV
+      - name: Register the new version with the CNB Buildpack Registry
+        uses: docker://ghcr.io/buildpacks/actions/registry/request-add-entry:5.0.1
+        with:
+          token: ${{ secrets.CNB_REGISTRY_RELEASE_BOT_GITHUB_TOKEN }}
+          id: ${{ env.buildpack_id }}
+          version: ${{ env.buildpack_version }}
+          address: ${{ env.BUILDPACK_DOCKER_REPO }}@${{ env.buildpack_digest }}
+      - name: Create GitHub release
+        uses: actions/create-release@v1
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          tag_name: v${{ env.buildpack_version }}
+          release_name: v${{ env.buildpack_version }}
+          body: |
+            See the [CHANGELOG](./CHANGELOG.md) for details.
+          draft: false
