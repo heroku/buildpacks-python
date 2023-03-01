@@ -1,5 +1,3 @@
-// runtime.txt parsing
-
 use crate::integration_tests::{
     builder, DEFAULT_PYTHON_VERSION, LATEST_PYTHON_3_10, LATEST_PYTHON_3_11, LATEST_PYTHON_3_7,
     LATEST_PYTHON_3_8, LATEST_PYTHON_3_9,

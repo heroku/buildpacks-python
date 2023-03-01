@@ -2,6 +2,8 @@ use serde::{Deserialize, Serialize};
 
 /// The versions of various packaging tools used during the build.
 /// These are always installed, and are independent of the chosen package manager.
+/// Strings are unused instead of a semver version, since these packages don't use
+/// semver, and we never introspect the version parts anyway.
 #[derive(Clone, Deserialize, PartialEq, Serialize)]
 pub(crate) struct PackagingToolVersions {
     pub pip_version: String,

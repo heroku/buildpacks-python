@@ -30,6 +30,7 @@ impl PythonVersion {
     }
 
     pub fn url(&self, stack_id: &StackId) -> String {
+        // TODO: (W-11474658) Switch to tracking versions/URLs via a manifest file.
         format!(
             "https://heroku-buildpack-python.s3.us-east-1.amazonaws.com/{}/runtimes/python-{}.{}.{}.tar.gz",
             stack_id, self.major, self.minor, self.patch
