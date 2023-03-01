@@ -200,7 +200,7 @@ mod tests {
         );
         assert_eq!(
             read_version(Path::new("tests/fixtures/runtime_txt_non_existent_version")).unwrap(),
-            Some(PythonVersion::new(999, 999, 999))
+            Some(PythonVersion::new(999, 888, 777))
         );
     }
 

@@ -340,7 +340,7 @@ fn generate_layer_env(layer_path: &Path, python_version: &PythonVersion) -> Laye
         //
         // One option to solve all of the above, would be to delete the `.pyc` files from the image
         // at the end of the buildpack's build phase, however:
-        //   - This means they need to be regenerated at app start boot, slowing boot times.
+        //   - This means they need to be regenerated at app boot, slowing boot times.
         //     (For a simple Django project on a Perf-M, boot time increases from ~0.5s to ~1.5s.)
         //   - If any other later buildpack runs any of the Python files added by this buildpack, then
         //     the timestamp based `.pyc` files will be created again, re-introducing non-determinism.
@@ -425,10 +425,9 @@ impl From<PythonLayerError> for BuildpackError {
 
 #[cfg(test)]
 mod tests {
+    use super::*;
     use indoc::indoc;
     use libcnb::data::stack_id;
-
-    use super::*;
 
     #[test]
     fn cache_invalidation_reason_unchanged() {

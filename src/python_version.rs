@@ -77,9 +77,8 @@ pub(crate) enum PythonVersionError {
 
 #[cfg(test)]
 mod tests {
-    use libcnb::data::stack_id;
-
     use super::*;
+    use libcnb::data::stack_id;
 
     #[test]
     fn python_version_url() {
@@ -98,7 +97,7 @@ mod tests {
         assert_eq!(
             determine_python_version(Path::new("tests/fixtures/runtime_txt_non_existent_version"))
                 .unwrap(),
-            PythonVersion::new(999, 999, 999)
+            PythonVersion::new(999, 888, 777)
         );
     }
 

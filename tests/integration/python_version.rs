@@ -125,7 +125,7 @@ fn runtime_txt_invalid_version() {
 fn runtime_txt_non_existent_version() {
     rejects_non_existent_python_version(
         "tests/fixtures/runtime_txt_non_existent_version",
-        "999.999.999",
+        "999.888.777",
     );
 }
 
