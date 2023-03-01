@@ -51,6 +51,12 @@ jobs:
         run: |
           echo "buildpack_id=$(yj -t < buildpack.toml | jq -r .buildpack.id)" >> $GITHUB_ENV
           echo "buildpack_version=$(yj -t < buildpack.toml | jq -r .buildpack.version)" >> $GITHUB_ENV
+      - name: Check version is unique on Docker Hub
+        run: |
+          if docker manifest inspect "${{ env.BUILDPACK_DOCKER_REPO }}:${{ env.buildpack_version }}" > /dev/null; then
+            echo "Duplicate version found on Docker Hub ${{ env.BUILDPACK_DOCKER_REPO }}:${{ env.buildpack_version }}"
+            exit 1
+          fi
       - name: Publish the buildpack to Docker Hub
         run: pack buildpack package --path target/buildpack/release/heroku_python --publish "${{ env.BUILDPACK_DOCKER_REPO }}:${{ env.buildpack_version }}"
       - name: Calculate the buildpack image digest
