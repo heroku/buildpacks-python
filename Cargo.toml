@@ -1,0 +1,24 @@
+[package]
+name = "python-buildpack"
+version = "0.0.0"
+edition = "2021"
+rust-version = "1.67"
+publish = false
+
+[dependencies]
+# The default `miniz_oxide` flate2 backend has poor performance in debug/under QEMU:
+# https://github.com/rust-lang/flate2-rs/issues/297
+# Ideally we'd use the fastest `zlib-ng` backend, however it fails to cross-compile:
+# https://github.com/rust-lang/libz-sys/issues/93
+# As such we have to use the next best alternate backend, which is `zlib`.
+flate2 = { version = "1", default-features = false, features = ["zlib"] }
+indoc = "2"
+libcnb = "0.11"
+libherokubuildpack = { version = "0.11", default-features = false, features = ["log"] }
+serde = "1"
+tar = "0.4"
+toml = "0.7"
+ureq = { version = "2", default-features = false, features = ["tls"] }
+
+[dev-dependencies]
+libcnb-test = "0.11"

@@ -1,0 +1,19 @@
+api = "0.8"
+
+[buildpack]
+id = "heroku/python"
+version = "0.1.0"
+name = "Python"
+homepage = "https://github.com/heroku/buildpacks-python"
+description = "Heroku's official Python Cloud Native Buildpack."
+keywords = ["python", "heroku"]
+clear-env = true
+
+[[buildpack.licenses]]
+type = "BSD-3-Clause"
+
+[[stacks]]
+id = "heroku-20"
+
+[[stacks]]
+id = "heroku-22"
