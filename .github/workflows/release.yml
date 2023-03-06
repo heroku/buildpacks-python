@@ -68,13 +68,14 @@ jobs:
           id: ${{ env.buildpack_id }}
           version: ${{ env.buildpack_version }}
           address: ${{ env.BUILDPACK_DOCKER_REPO }}@${{ env.buildpack_digest }}
-      - name: Create GitHub release
-        uses: actions/create-release@v1
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        with:
-          tag_name: v${{ env.buildpack_version }}
-          release_name: v${{ env.buildpack_version }}
-          body: |
-            See the [CHANGELOG](./CHANGELOG.md) for details.
-          draft: false
+      # Skipped for now since the step fails due to IP allowlisting.
+      # - name: Create GitHub release
+      #   uses: actions/create-release@v1
+      #   env:
+      #     GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      #   with:
+      #     tag_name: v${{ env.buildpack_version }}
+      #     release_name: v${{ env.buildpack_version }}
+      #     body: |
+      #       See the [CHANGELOG](./CHANGELOG.md) for details.
+      #     draft: false
