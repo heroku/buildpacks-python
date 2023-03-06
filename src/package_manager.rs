@@ -1,7 +1,7 @@
 use std::io;
 use std::path::Path;
 
-/// A ordered mapping of project filenames to their associated package manager.
+/// An ordered mapping of project filenames to their associated package manager.
 /// Earlier entries will take precedence if a project matches multiple package managers.
 pub(crate) const PACKAGE_MANAGER_FILE_MAPPING: [(&str, PackageManager); 1] =
     [("requirements.txt", PackageManager::Pip)];
