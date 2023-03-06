@@ -15,7 +15,7 @@ impl Default for PackagingToolVersions {
     fn default() -> Self {
         Self {
             pip_version: "23.0.1".to_string(),
-            setuptools_version: "67.4.0".to_string(),
+            setuptools_version: "67.5.0".to_string(),
             wheel_version: "0.38.4".to_string(),
         }
     }
