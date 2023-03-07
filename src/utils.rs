@@ -71,7 +71,7 @@ pub(crate) enum DownloadUnpackArchiveError {
 }
 
 /// A helper for running an external process using [`Command`], that checks the exit
-/// status of the process was non-zero.
+/// status of the process was non-zero. Stdout and stderr are streamed to the user.
 pub(crate) fn run_command(command: &mut Command) -> Result<(), CommandError> {
     command
         .status()
