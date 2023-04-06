@@ -16,7 +16,7 @@ jobs:
   # there are currently no use-cases that need it for Python.
   release:
     name: Release heroku/python
-    runs-on: ubuntu-latest
+    runs-on: pub-hk-ubuntu-22.04-large
     steps:
       # Setup
       - name: Checkout
@@ -68,14 +68,13 @@ jobs:
           id: ${{ env.buildpack_id }}
           version: ${{ env.buildpack_version }}
           address: ${{ env.BUILDPACK_DOCKER_REPO }}@${{ env.buildpack_digest }}
-      # Skipped for now since the step fails due to IP allowlisting.
-      # - name: Create GitHub release
-      #   uses: actions/create-release@v1
-      #   env:
-      #     GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-      #   with:
-      #     tag_name: v${{ env.buildpack_version }}
-      #     release_name: v${{ env.buildpack_version }}
-      #     body: |
-      #       See the [CHANGELOG](./CHANGELOG.md) for details.
-      #     draft: false
+      - name: Create GitHub release
+        uses: actions/create-release@v1
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          tag_name: v${{ env.buildpack_version }}
+          release_name: v${{ env.buildpack_version }}
+          body: |
+            See the [CHANGELOG](./CHANGELOG.md) for details.
+          draft: false
