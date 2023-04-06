@@ -12,8 +12,8 @@ mod salesforce_functions;
 const LATEST_PYTHON_3_7: &str = "3.7.16";
 const LATEST_PYTHON_3_8: &str = "3.8.16";
 const LATEST_PYTHON_3_9: &str = "3.9.16";
-const LATEST_PYTHON_3_10: &str = "3.10.10";
-const LATEST_PYTHON_3_11: &str = "3.11.2";
+const LATEST_PYTHON_3_10: &str = "3.10.11";
+const LATEST_PYTHON_3_11: &str = "3.11.3";
 const DEFAULT_PYTHON_VERSION: &str = LATEST_PYTHON_3_11;
 
 const DEFAULT_BUILDER: &str = "heroku/builder:22";
