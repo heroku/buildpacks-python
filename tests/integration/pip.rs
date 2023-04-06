@@ -210,7 +210,7 @@ fn cache_discarded_on_multiple_changes() {
                     [Installing Python and packaging tools]
                     Discarding cache since:
                      - the stack has changed from heroku-20 to heroku-22
-                     - the Python version has changed from 3.10.10 to 3.11.2
+                     - the Python version has changed from {LATEST_PYTHON_3_10} to {LATEST_PYTHON_3_11}
                     Installing Python {LATEST_PYTHON_3_11}
                     Installing pip {pip_version}, setuptools {setuptools_version} and wheel {wheel_version}
                     

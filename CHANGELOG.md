@@ -7,6 +7,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Changed
+
+- The default Python version is now 3.11.3 (previously 3.11.2).
 
 ## [0.1.0] - 2023-03-06
 
