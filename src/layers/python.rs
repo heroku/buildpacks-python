@@ -315,6 +315,19 @@ fn generate_layer_env(layer_path: &Path, python_version: &PythonVersion) -> Laye
             "PKG_CONFIG_PATH",
             ":",
         )
+        // Our Python runtime is relocated (installed into a different location to which is was
+        // originally compiled) which Python itself handles well, since it recalculates its actual
+        // location at startup:
+        // https://docs.python.org/3.11/library/sys_path_init.html
+        // However, the uWSGI package uses the wrong `sysconfig` APIs so tries to reference the old
+        // compile location, unless we override that by setting `PYTHONHOME`:
+        // https://github.com/unbit/uwsgi/issues/2525
+        .chainable_insert(
+            Scope::All,
+            ModificationBehavior::Override,
+            "PYTHONHOME",
+            layer_path,
+        )
         // Disable Python's output buffering to ensure logs aren't dropped if an app crashes.
         .chainable_insert(
             Scope::All,
@@ -520,6 +533,7 @@ mod tests {
                 ("LANG", "C.UTF-8"),
                 ("PIP_DISABLE_PIP_VERSION_CHECK", "1"),
                 ("PKG_CONFIG_PATH", "/layers/python/lib/pkgconfig"),
+                ("PYTHONHOME", "/layers/python"),
                 ("PYTHONUNBUFFERED", "1"),
                 ("SOURCE_DATE_EPOCH", "315532801"),
             ]
@@ -531,6 +545,7 @@ mod tests {
                 ("LANG", "C.UTF-8"),
                 ("PIP_DISABLE_PIP_VERSION_CHECK", "1"),
                 ("PKG_CONFIG_PATH", "/layers/python/lib/pkgconfig"),
+                ("PYTHONHOME", "/layers/python"),
                 ("PYTHONUNBUFFERED", "1"),
             ]
         );
@@ -543,6 +558,7 @@ mod tests {
         base_env.insert("LANG", "this-should-be-overridden");
         base_env.insert("PIP_DISABLE_PIP_VERSION_CHECK", "this-should-be-overridden");
         base_env.insert("PKG_CONFIG_PATH", "/base");
+        base_env.insert("PYTHONHOME", "this-should-be-overridden");
         base_env.insert("PYTHONUNBUFFERED", "this-should-be-overridden");
         base_env.insert("SOURCE_DATE_EPOCH", "this-should-be-preserved");
 
@@ -563,6 +579,7 @@ mod tests {
                 ("LANG", "C.UTF-8"),
                 ("PIP_DISABLE_PIP_VERSION_CHECK", "1"),
                 ("PKG_CONFIG_PATH", "/layers/python/lib/pkgconfig:/base"),
+                ("PYTHONHOME", "/layers/python"),
                 ("PYTHONUNBUFFERED", "1"),
                 ("SOURCE_DATE_EPOCH", "this-should-be-preserved"),
             ]
@@ -574,6 +591,7 @@ mod tests {
                 ("LANG", "C.UTF-8"),
                 ("PIP_DISABLE_PIP_VERSION_CHECK", "1"),
                 ("PKG_CONFIG_PATH", "/layers/python/lib/pkgconfig:/base"),
+                ("PYTHONHOME", "/layers/python"),
                 ("PYTHONUNBUFFERED", "1"),
                 ("SOURCE_DATE_EPOCH", "this-should-be-preserved"),
             ]
