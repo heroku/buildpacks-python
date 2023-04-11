@@ -2,7 +2,7 @@ api = "0.8"
 
 [buildpack]
 id = "heroku/python"
-version = "0.1.0"
+version = "0.2.0"
 name = "Python"
 homepage = "https://github.com/heroku/buildpacks-python"
 description = "Heroku's official Python Cloud Native Buildpack."
