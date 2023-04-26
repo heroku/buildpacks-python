@@ -86,7 +86,7 @@ fn cache_used_for_repeat_builds() {
                     [Installing dependencies using Pip]
                     Using cached pip download/wheel cache
                     Running pip install
-                    Collecting typing-extensions==4.4.0
+                    Collecting typing-extensions==4.4.0 (from -r requirements.txt (line 2))
                       Using cached typing_extensions-4.4.0-py3-none-any.whl (26 kB)
                     Installing collected packages: typing-extensions
                     Successfully installed typing-extensions-4.4.0
@@ -129,7 +129,7 @@ fn cache_discarded_on_python_version_change() {
                     [Installing dependencies using Pip]
                     Discarding cached pip download/wheel cache
                     Running pip install
-                    Collecting typing-extensions==4.4.0
+                    Collecting typing-extensions==4.4.0 (from -r requirements.txt (line 2))
                       Downloading typing_extensions-4.4.0-py3-none-any.whl (26 kB)
                     Installing collected packages: typing-extensions
                     Successfully installed typing-extensions-4.4.0
@@ -173,7 +173,7 @@ fn cache_discarded_on_stack_change() {
                     [Installing dependencies using Pip]
                     Discarding cached pip download/wheel cache
                     Running pip install
-                    Collecting typing-extensions==4.4.0
+                    Collecting typing-extensions==4.4.0 (from -r requirements.txt (line 2))
                       Downloading typing_extensions-4.4.0-py3-none-any.whl (26 kB)
                     Installing collected packages: typing-extensions
                     Successfully installed typing-extensions-4.4.0
@@ -217,7 +217,7 @@ fn cache_discarded_on_multiple_changes() {
                     [Installing dependencies using Pip]
                     Discarding cached pip download/wheel cache
                     Running pip install
-                    Collecting typing-extensions==4.4.0
+                    Collecting typing-extensions==4.4.0 (from -r requirements.txt (line 2))
                       Downloading typing_extensions-4.4.0-py3-none-any.whl (26 kB)
                     Installing collected packages: typing-extensions
                     Successfully installed typing-extensions-4.4.0
