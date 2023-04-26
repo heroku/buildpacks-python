@@ -7,6 +7,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Removed
+
+- Removed support for Salesforce Functions. ([#83](https://github.com/heroku/buildpacks-python/pull/83))
 
 ## [0.5.0] - 2023-07-24
 
