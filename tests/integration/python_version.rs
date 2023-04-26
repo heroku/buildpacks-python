@@ -34,7 +34,7 @@ fn python_version_unspecified() {
                     
                     [Installing dependencies using Pip]
                     Running pip install
-                    Collecting typing-extensions==4.4.0
+                    Collecting typing-extensions==4.4.0 (from -r requirements.txt (line 2))
                       Downloading typing_extensions-4.4.0-py3-none-any.whl (26 kB)
                     Installing collected packages: typing-extensions
                     Successfully installed typing-extensions-4.4.0
@@ -155,7 +155,7 @@ fn builds_with_python_version(fixture_path: &str, python_version: &str) {
                 
                 [Installing dependencies using Pip]
                 Running pip install
-                Collecting typing-extensions==4.4.0
+                Collecting typing-extensions==4.4.0 (from -r requirements.txt (line 2))
                   Downloading typing_extensions-4.4.0-py3-none-any.whl (26 kB)
                 Installing collected packages: typing-extensions
                 Successfully installed typing-extensions-4.4.0

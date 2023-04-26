@@ -35,11 +35,6 @@ impl Layer for PipDependenciesLayer<'_> {
         //   time consuming part of performing a pip install: downloading the dependencies and then
         //   generating wheels (for any packages that use compiled components but don't distribute
         //   pre-built wheels matching the current Python version).
-        // - The only case where the Pip wheel cache doesn't help, is for projects that use
-        //   hash-checking mode and so are affected by this Pip issue:
-        //   https://github.com/pypa/pip/issues/5037
-        //   ...however, the limitation should really be fixed upstream, and this mode is rarely
-        //   used in practice.
         //
         // Longer term, the best option for projects that want no-op deterministic installs will
         // be to use Poetry instead of Pip (once the buildpack supports Poetry).
