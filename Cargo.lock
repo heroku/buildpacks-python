@@ -590,8 +590,8 @@ version = "0.11.5"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "4e4fd7573558173267930e31446da65a0275770bde88847cad4b4cf9a6ff8375"
 dependencies = [
- "libcnb-data",
- "libcnb-proc-macros",
+ "libcnb-data 0.11.5",
+ "libcnb-proc-macros 0.11.5",
  "serde",
  "thiserror",
  "toml",
@@ -604,7 +604,20 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "8c0112478d479c8900929894426818bea8e769ce923536a58baac719d3ca4dcb"
 dependencies = [
  "fancy-regex",
- "libcnb-proc-macros",
+ "libcnb-proc-macros 0.11.5",
+ "serde",
+ "thiserror",
+ "toml",
+]
+
+[[package]]
+name = "libcnb-data"
+version = "0.12.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "6e8840246c7aced3307fa193edc5d26482f92f992986a33860b6b3b523a67975"
+dependencies = [
+ "fancy-regex",
+ "libcnb-proc-macros 0.12.0",
  "serde",
  "thiserror",
  "toml",
@@ -612,12 +625,12 @@ dependencies = [
 
 [[package]]
 name = "libcnb-package"
-version = "0.11.5"
+version = "0.12.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "aacd18d358a1078cf48f518ef8398c504f8d4fc691ba2e8773bafa1a71d66b59"
+checksum = "27205236a28660f7395598a3f65afb9315de8ce3054c39375b0be673fa6288e7"
 dependencies = [
  "cargo_metadata",
- "libcnb-data",
+ "libcnb-data 0.12.0",
  "toml",
  "which",
 ]
@@ -635,16 +648,28 @@ dependencies = [
 ]
 
 [[package]]
-name = "libcnb-test"
-version = "0.11.5"
+name = "libcnb-proc-macros"
+version = "0.12.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "f86e8c1847c8ba3c37e30841ee241887203110f4373731e7967706ab77c42b7d"
+checksum = "c9e31cc93a20d00f1d54ecb55dcff681669871e6d8a8b63ac0320e77fca1987c"
+dependencies = [
+ "cargo_metadata",
+ "fancy-regex",
+ "quote",
+ "syn 2.0.14",
+]
+
+[[package]]
+name = "libcnb-test"
+version = "0.12.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "ff3f26e5f4ad90ea4036618dcba858c567f8c46a281daa72856eab3be0972885"
 dependencies = [
  "bollard",
  "cargo_metadata",
  "fastrand",
  "fs_extra",
- "libcnb-data",
+ "libcnb-data 0.12.0",
  "libcnb-package",
  "serde",
  "tempfile",
