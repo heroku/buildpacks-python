@@ -586,25 +586,12 @@ checksum = "3304a64d199bb964be99741b7a14d26972741915b3649639149b2479bb46f4b5"
 
 [[package]]
 name = "libcnb"
-version = "0.11.5"
+version = "0.12.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "4e4fd7573558173267930e31446da65a0275770bde88847cad4b4cf9a6ff8375"
+checksum = "027cd4a736600564c4e7aebf124eabb9d7dc622bcfeefb414cc7c4c7d7ac6595"
 dependencies = [
- "libcnb-data 0.11.5",
- "libcnb-proc-macros 0.11.5",
- "serde",
- "thiserror",
- "toml",
-]
-
-[[package]]
-name = "libcnb-data"
-version = "0.11.5"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "8c0112478d479c8900929894426818bea8e769ce923536a58baac719d3ca4dcb"
-dependencies = [
- "fancy-regex",
- "libcnb-proc-macros 0.11.5",
+ "libcnb-data",
+ "libcnb-proc-macros",
  "serde",
  "thiserror",
  "toml",
@@ -617,7 +604,7 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "6e8840246c7aced3307fa193edc5d26482f92f992986a33860b6b3b523a67975"
 dependencies = [
  "fancy-regex",
- "libcnb-proc-macros 0.12.0",
+ "libcnb-proc-macros",
  "serde",
  "thiserror",
  "toml",
@@ -630,21 +617,9 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "27205236a28660f7395598a3f65afb9315de8ce3054c39375b0be673fa6288e7"
 dependencies = [
  "cargo_metadata",
- "libcnb-data 0.12.0",
+ "libcnb-data",
  "toml",
  "which",
-]
-
-[[package]]
-name = "libcnb-proc-macros"
-version = "0.11.5"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "5930cea22615255081c0c44b902e6e8b37a824ebe1374a7c7d52724d5b7d6e4e"
-dependencies = [
- "cargo_metadata",
- "fancy-regex",
- "quote",
- "syn 1.0.109",
 ]
 
 [[package]]
@@ -669,7 +644,7 @@ dependencies = [
  "cargo_metadata",
  "fastrand",
  "fs_extra",
- "libcnb-data 0.12.0",
+ "libcnb-data",
  "libcnb-package",
  "serde",
  "tempfile",
