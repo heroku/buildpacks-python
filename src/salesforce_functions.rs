@@ -52,9 +52,9 @@ pub(crate) fn check_function(command_env: &Env) -> Result<(), CheckSalesforceFun
 pub(crate) fn launch_config() -> Launch {
     LaunchBuilder::new()
         .process(
-            // TODO: Stop running via bash once direct processes support env var interpolation:
+            // TODO: Stop running via bash once the launcher supports env var interpolation:
             // https://github.com/buildpacks/rfcs/issues/258
-            ProcessBuilder::new(process_type!("web"), "bash")
+            ProcessBuilder::new(process_type!("web"), ["bash"])
                 .args([
                     "-c",
                     &[
@@ -73,7 +73,6 @@ pub(crate) fn launch_config() -> Launch {
                     .join(" "),
                 ])
                 .default(true)
-                .direct(true)
                 .build(),
         )
         .build()
