@@ -14,7 +14,7 @@ publish = false
 flate2 = { version = "1", default-features = false, features = ["zlib"] }
 indoc = "2"
 libcnb = "0.11"
-libherokubuildpack = { version = "0.11", default-features = false, features = ["log"] }
+libherokubuildpack = { version = "0.12", default-features = false, features = ["log"] }
 serde = "1"
 tar = "0.4"
 toml = "0.7"
