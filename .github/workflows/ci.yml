@@ -61,6 +61,14 @@ jobs:
         uses: Swatinem/rust-cache@v2.2.1
       - name: Install Pack CLI
         uses: buildpacks/github-actions/setup-pack@v5.1.0
-      - name: Run integration tests
-        # Runs only tests annotated with the `ignore` attribute (which in this repo, are the integration tests).
+      - name: Pull builder image
+        run: docker pull ${{ env.INTEGRATION_TEST_CNB_BUILDER }}
+      # The integration tests are annotated with the `ignore` attribute, allowing us to run
+      # only those and not the unit tests, via the `--ignored` option. On the latest stack
+      # we run all integration tests, but on older stacks we only run stack-specific tests.
+      - name: Run integration tests (all tests)
+        if: matrix.builder == 'builder:22'
         run: cargo test --locked -- --ignored --test-threads 5
+      - name: Run integration tests (stack-specific tests only)
+        if: matrix.builder != 'builder:22'
+        run: cargo test --locked -- --ignored --test-threads 5 'python_version::'

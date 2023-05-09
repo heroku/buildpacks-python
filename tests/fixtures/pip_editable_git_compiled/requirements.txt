@@ -2,8 +2,7 @@
 #  - Git from the stack image can be found (ie: the system PATH has been correctly propagated to pip).
 #  - The editable mode repository clone is saved into the dependencies layer (via the `--src` option).
 #
-# The psycopg2 package is used instead of a pure Python package, in order to test that:
-#  - The Python headers can be found in the `include/pythonX.Y/` directory of the Python layer.
-#  - Headers/libraries from the stack image can be found (in this case, for libpq-dev).
+# A C-based package is used instead of a pure Python package, in order to test that the
+# Python headers can be found in the `include/pythonX.Y/` directory of the Python layer.
 
--e git+https://github.com/psycopg/psycopg2@2_9_5#egg=psycopg2
+-e git+https://github.com/pypa/wheel@0.40.0#egg=extension.dist&subdirectory=tests/testdata/extension.dist
