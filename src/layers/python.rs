@@ -146,11 +146,9 @@ impl Layer for PythonLayer<'_> {
     ) -> Result<ExistingLayerStrategy, <Self::Buildpack as Buildpack>::Error> {
         let cached_metadata = &layer_data.content_metadata.metadata;
         let new_metadata = self.generate_layer_metadata(&context.stack_id);
+        let cache_invalidation_reasons = cache_invalidation_reasons(cached_metadata, &new_metadata);
 
-        if let Some(reason) = cache_invalidation_reason(cached_metadata, &new_metadata) {
-            log_info(format!("Discarding cache {reason}"));
-            Ok(ExistingLayerStrategy::Recreate)
-        } else {
+        if cache_invalidation_reasons.is_empty() {
             log_info(format!(
                 "Using cached Python {}",
                 cached_metadata.python_version
@@ -164,6 +162,12 @@ impl Layer for PythonLayer<'_> {
                 "Using cached pip {pip_version}, setuptools {setuptools_version} and wheel {wheel_version}"
             ));
             Ok(ExistingLayerStrategy::Keep)
+        } else {
+            log_info(format!(
+                "Discarding cache since:\n - {}",
+                cache_invalidation_reasons.join("\n - ")
+            ));
+            Ok(ExistingLayerStrategy::Recreate)
         }
     }
 }
@@ -187,12 +191,14 @@ pub(crate) struct PythonLayerMetadata {
     packaging_tool_versions: PackagingToolVersions,
 }
 
-/// Compare cached layer metadata to the new layer metadata to determine if the cache should
-/// be invalidated, and if so, for what reason.
-fn cache_invalidation_reason(
+/// Compare cached layer metadata to the new layer metadata to determine if the cache should be
+/// invalidated, and if so, for what reason(s). If there is more than one reason then all are
+/// returned, to prevent support tickets such as those where build failures are blamed on a stack
+/// upgrade but were actually caused by the app's Python version being updated at the same time.
+fn cache_invalidation_reasons(
     cached_metadata: &PythonLayerMetadata,
     new_metadata: &PythonLayerMetadata,
-) -> Option<String> {
+) -> Vec<String> {
     // By destructuring here we ensure that if any additional fields are added to the layer
     // metadata in the future, it forces them to be used as part of cache invalidation,
     // otherwise Clippy would report unused variable errors.
@@ -222,42 +228,35 @@ fn cache_invalidation_reason(
 
     if cached_stack != stack {
         reasons.push(format!(
-            "the stack has changed from {cached_stack} to {stack}"
+            "The stack has changed from {cached_stack} to {stack}"
         ));
     }
 
     if cached_python_version != python_version {
         reasons.push(format!(
-            "the Python version has changed from {cached_python_version} to {python_version}"
+            "The Python version has changed from {cached_python_version} to {python_version}"
         ));
     }
 
     if cached_pip_version != pip_version {
         reasons.push(format!(
-            "the pip version has changed from {cached_pip_version} to {pip_version}"
+            "The pip version has changed from {cached_pip_version} to {pip_version}"
         ));
     }
 
     if cached_setuptools_version != setuptools_version {
         reasons.push(format!(
-            "the setuptools version has changed from {cached_setuptools_version} to {setuptools_version}"
+            "The setuptools version has changed from {cached_setuptools_version} to {setuptools_version}"
         ));
     }
 
     if cached_wheel_version != wheel_version {
         reasons.push(format!(
-            "the wheel version has changed from {cached_wheel_version} to {wheel_version}"
+            "The wheel version has changed from {cached_wheel_version} to {wheel_version}"
         ));
     }
 
-    // If there is more than one reason then all are mentioned to hopefully prevent support
-    // tickets where build failures are blamed on a stack upgrade but were actually caused
-    // by the app's Python version being updated at the same time.
-    match reasons.as_slice() {
-        [] => None,
-        [reason] => Some(format!("since {reason}")),
-        reasons => Some(format!("since:\n - {}", reasons.join("\n - "))),
-    }
+    reasons
 }
 
 /// Environment variables that will be set by this layer.
@@ -439,11 +438,10 @@ impl From<PythonLayerError> for BuildpackError {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use indoc::indoc;
     use libcnb::data::stack_id;
 
     #[test]
-    fn cache_invalidation_reason_unchanged() {
+    fn cache_invalidation_reasons_unchanged() {
         let metadata = PythonLayerMetadata {
             stack: stack_id!("heroku-22"),
             python_version: "3.11.0".to_string(),
@@ -453,11 +451,14 @@ mod tests {
                 wheel_version: "G.H.I".to_string(),
             },
         };
-        assert_eq!(cache_invalidation_reason(&metadata, &metadata), None);
+        assert_eq!(
+            cache_invalidation_reasons(&metadata, &metadata),
+            Vec::<String>::new()
+        );
     }
 
     #[test]
-    fn cache_invalidation_reason_single_change() {
+    fn cache_invalidation_reasons_single_change() {
         let cached_metadata = PythonLayerMetadata {
             stack: stack_id!("heroku-22"),
             python_version: "3.11.0".to_string(),
@@ -472,13 +473,13 @@ mod tests {
             ..cached_metadata.clone()
         };
         assert_eq!(
-            cache_invalidation_reason(&cached_metadata, &new_metadata),
-            Some("since the Python version has changed from 3.11.0 to 3.11.1".to_string())
+            cache_invalidation_reasons(&cached_metadata, &new_metadata),
+            vec!["The Python version has changed from 3.11.0 to 3.11.1"]
         );
     }
 
     #[test]
-    fn cache_invalidation_reason_all_changed() {
+    fn cache_invalidation_reasons_all_changed() {
         let cached_metadata = PythonLayerMetadata {
             stack: stack_id!("heroku-20"),
             python_version: "3.9.0".to_string(),
@@ -498,19 +499,14 @@ mod tests {
             },
         };
         assert_eq!(
-            cache_invalidation_reason(&cached_metadata, &new_metadata),
-            Some(
-                indoc! {"
-                    since:
-                     - the stack has changed from heroku-20 to heroku-22
-                     - the Python version has changed from 3.9.0 to 3.11.1
-                     - the pip version has changed from A.B.C to A.B.C-new
-                     - the setuptools version has changed from D.E.F to D.E.F-new
-                     - the wheel version has changed from G.H.I to G.H.I-new
-                "}
-                .trim()
-                .to_string()
-            )
+            cache_invalidation_reasons(&cached_metadata, &new_metadata),
+            vec![
+                "The stack has changed from heroku-20 to heroku-22",
+                "The Python version has changed from 3.9.0 to 3.11.1",
+                "The pip version has changed from A.B.C to A.B.C-new",
+                "The setuptools version has changed from D.E.F to D.E.F-new",
+                "The wheel version has changed from G.H.I to G.H.I-new"
+            ]
         );
     }
 

@@ -122,7 +122,8 @@ fn cache_discarded_on_python_version_change() {
                     Using Python version {LATEST_PYTHON_3_11} specified in runtime.txt
                     
                     [Installing Python and packaging tools]
-                    Discarding cache since the Python version has changed from {LATEST_PYTHON_3_10} to {LATEST_PYTHON_3_11}
+                    Discarding cache since:
+                     - The Python version has changed from {LATEST_PYTHON_3_10} to {LATEST_PYTHON_3_11}
                     Installing Python {LATEST_PYTHON_3_11}
                     Installing pip {pip_version}, setuptools {setuptools_version} and wheel {wheel_version}
                     
@@ -166,7 +167,8 @@ fn cache_discarded_on_stack_change() {
                     To use a different version, see: https://devcenter.heroku.com/articles/python-runtimes
                     
                     [Installing Python and packaging tools]
-                    Discarding cache since the stack has changed from heroku-20 to heroku-22
+                    Discarding cache since:
+                     - The stack has changed from heroku-20 to heroku-22
                     Installing Python {DEFAULT_PYTHON_VERSION}
                     Installing pip {pip_version}, setuptools {setuptools_version} and wheel {wheel_version}
                     
@@ -209,8 +211,8 @@ fn cache_discarded_on_multiple_changes() {
                     
                     [Installing Python and packaging tools]
                     Discarding cache since:
-                     - the stack has changed from heroku-20 to heroku-22
-                     - the Python version has changed from {LATEST_PYTHON_3_10} to {LATEST_PYTHON_3_11}
+                     - The stack has changed from heroku-20 to heroku-22
+                     - The Python version has changed from {LATEST_PYTHON_3_10} to {LATEST_PYTHON_3_11}
                     Installing Python {LATEST_PYTHON_3_11}
                     Installing pip {pip_version}, setuptools {setuptools_version} and wheel {wheel_version}
                     
