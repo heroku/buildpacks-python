@@ -9,6 +9,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Changed
 
+- The default Python version is now 3.11.4 (previously 3.11.3). ([#45](https://github.com/heroku/buildpacks-python/pull/45))
 - Updated setuptools from 67.7.2 to 67.8.0. ([#43](https://github.com/heroku/buildpacks-python/pull/43))
 - Updated libcnb from 0.11.5 to 0.12.0. ([#35](https://github.com/heroku/buildpacks-python/pull/35))
 - The buildpack now implements Buildpack API 0.9 instead of 0.8, and so requires `lifecycle` 0.15.x or newer. ([#35](https://github.com/heroku/buildpacks-python/pull/35))

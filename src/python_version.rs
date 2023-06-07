@@ -9,7 +9,7 @@ use std::path::Path;
 pub(crate) const DEFAULT_PYTHON_VERSION: PythonVersion = PythonVersion {
     major: 3,
     minor: 11,
-    patch: 3,
+    patch: 4,
 };
 
 /// Representation of a specific Python `X.Y.Z` version.
@@ -92,8 +92,8 @@ mod tests {
     #[test]
     fn determine_python_version_runtime_txt_valid() {
         assert_eq!(
-            determine_python_version(Path::new("tests/fixtures/python_3.9")).unwrap(),
-            PythonVersion::new(3, 9, 16)
+            determine_python_version(Path::new("tests/fixtures/python_3.7")).unwrap(),
+            PythonVersion::new(3, 7, 17)
         );
         assert_eq!(
             determine_python_version(Path::new("tests/fixtures/runtime_txt_non_existent_version"))

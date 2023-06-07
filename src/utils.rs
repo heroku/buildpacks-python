@@ -128,8 +128,8 @@ mod tests {
     #[test]
     fn read_optional_file_valid_file() {
         assert_eq!(
-            read_optional_file(Path::new("tests/fixtures/python_3.9/runtime.txt")).unwrap(),
-            Some("python-3.9.16\n".to_string())
+            read_optional_file(Path::new("tests/fixtures/python_3.7/runtime.txt")).unwrap(),
+            Some("python-3.7.17\n".to_string())
         );
     }
 

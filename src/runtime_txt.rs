@@ -195,8 +195,8 @@ mod tests {
     #[test]
     fn read_version_valid_runtime_txt() {
         assert_eq!(
-            read_version(Path::new("tests/fixtures/python_3.9")).unwrap(),
-            Some(PythonVersion::new(3, 9, 16))
+            read_version(Path::new("tests/fixtures/python_3.7")).unwrap(),
+            Some(PythonVersion::new(3, 7, 17))
         );
         assert_eq!(
             read_version(Path::new("tests/fixtures/runtime_txt_non_existent_version")).unwrap(),
