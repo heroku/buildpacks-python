@@ -552,6 +552,12 @@ dependencies = [
 ]
 
 [[package]]
+name = "lazy_static"
+version = "1.4.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "e2abad23fbc42b3700f2f279844dc832adb2b2eb069b2df918f455c4e18cc646"
+
+[[package]]
 name = "libc"
 version = "0.2.146"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -559,12 +565,12 @@ checksum = "f92be4933c13fd498862a9e02a3055f8a8d9c039ce33db97306fd5a6caa7f29b"
 
 [[package]]
 name = "libcnb"
-version = "0.12.0"
+version = "0.13.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "027cd4a736600564c4e7aebf124eabb9d7dc622bcfeefb414cc7c4c7d7ac6595"
+checksum = "39d5e0e5f0ea6fe91d867457289d88c4f56631e37fac072d11676ff970715012"
 dependencies = [
- "libcnb-data",
- "libcnb-proc-macros",
+ "libcnb-data 0.13.0",
+ "libcnb-proc-macros 0.13.0",
  "serde",
  "thiserror",
  "toml",
@@ -577,10 +583,24 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "6e8840246c7aced3307fa193edc5d26482f92f992986a33860b6b3b523a67975"
 dependencies = [
  "fancy-regex",
- "libcnb-proc-macros",
+ "libcnb-proc-macros 0.12.0",
  "serde",
  "thiserror",
  "toml",
+]
+
+[[package]]
+name = "libcnb-data"
+version = "0.13.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "631bda3e80115baf38894609cde58b796d3b3fc0f47cca369321c230df53d563"
+dependencies = [
+ "fancy-regex",
+ "libcnb-proc-macros 0.13.0",
+ "serde",
+ "thiserror",
+ "toml",
+ "uriparse",
 ]
 
 [[package]]
@@ -590,7 +610,7 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "27205236a28660f7395598a3f65afb9315de8ce3054c39375b0be673fa6288e7"
 dependencies = [
  "cargo_metadata",
- "libcnb-data",
+ "libcnb-data 0.12.0",
  "toml",
  "which",
 ]
@@ -608,6 +628,18 @@ dependencies = [
 ]
 
 [[package]]
+name = "libcnb-proc-macros"
+version = "0.13.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "1ab33c1d63ffd280516abc7ada744fc1b653a888c439f5e2962d5371d0aecaf7"
+dependencies = [
+ "cargo_metadata",
+ "fancy-regex",
+ "quote",
+ "syn",
+]
+
+[[package]]
 name = "libcnb-test"
 version = "0.12.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -617,7 +649,7 @@ dependencies = [
  "cargo_metadata",
  "fastrand",
  "fs_extra",
- "libcnb-data",
+ "libcnb-data 0.12.0",
  "libcnb-package",
  "serde",
  "tempfile",
@@ -1251,6 +1283,16 @@ dependencies = [
  "rustls-webpki",
  "url",
  "webpki-roots",
+]
+
+[[package]]
+name = "uriparse"
+version = "0.6.4"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "0200d0fc04d809396c2ad43f3c95da3582a2556eba8d453c1087f4120ee352ff"
+dependencies = [
+ "fnv",
+ "lazy_static",
 ]
 
 [[package]]
