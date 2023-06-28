@@ -17,3 +17,8 @@ id = "heroku-20"
 
 [[stacks]]
 id = "heroku-22"
+
+[metadata]
+[metadata.release]
+[metadata.release.docker]
+repository = "docker.io/heroku/buildpack-python"
