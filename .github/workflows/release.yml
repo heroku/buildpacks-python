@@ -28,7 +28,7 @@ jobs:
       - name: Install Rust linux-musl target
         run: rustup target add x86_64-unknown-linux-musl
       - name: Rust Cache
-        uses: Swatinem/rust-cache@v2.5.0
+        uses: Swatinem/rust-cache@v2.5.1
       - name: Install libcnb-cargo
         run: cargo install libcnb-cargo
       - name: Install Pack CLI
