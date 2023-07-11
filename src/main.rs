@@ -66,10 +66,10 @@ impl Buildpack for PythonBuildpack {
         let packaging_tool_versions = PackagingToolVersions::default();
 
         // We inherit the current process's env vars, since we want `PATH` and `HOME` from the OS
-        // to be set, so that later commands can find tools like Git in the stack image. We exclude
-        // user-provided env vars (by setting `clear-env` to true in `buildpack.toml`) to prevent an
-        // app's env vars from breaking internal buildpack commands. Any buildpack steps that need
-        // user-provided env vars must explicitly retrieve them via `context.platform.env`.
+        // to be set (so that later commands can find tools like Git in the stack image), along
+        // with previous-buildpack or user-provided env vars (so that features like env vars in
+        // in requirements files work). We protect against broken user-provided env vars by
+        // making sure that buildpack env vars take precedence in layers envs and command usage.
         let mut command_env = Env::from_current();
 
         // Create the layer containing the Python runtime, and the packages `pip`, `setuptools` and `wheel`.
