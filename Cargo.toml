@@ -16,7 +16,7 @@ indoc = "2"
 libcnb = "0.13"
 libherokubuildpack = { version = "0.13", default-features = false, features = ["log"] }
 serde = "1"
-tar = "0.4"
+tar = { version = "0.4", default-features = false }
 toml = "0.7"
 ureq = { version = "2", default-features = false, features = ["tls"] }
 
