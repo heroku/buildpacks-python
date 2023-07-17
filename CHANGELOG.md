@@ -9,6 +9,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Changed
 
+- Updated pip from 23.1.2 to 23.2. ([#67](https://github.com/heroku/buildpacks-python/pull/67))
 - Updated setuptools from 67.8.0 to 68.0.0. ([#51](https://github.com/heroku/buildpacks-python/pull/51))
 
 ## [0.4.0] - 2023-06-07

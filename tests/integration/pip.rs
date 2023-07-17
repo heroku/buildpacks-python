@@ -33,10 +33,12 @@ fn pip_basic_install_and_cache_reuse() {
                 
                 [Installing dependencies using Pip]
                 Running pip install
-                Collecting typing-extensions==4.4.0 (from -r requirements.txt (line 2))
-                  Downloading typing_extensions-4.4.0-py3-none-any.whl (26 kB)
+                Collecting typing-extensions==4.7.1 (from -r requirements.txt (line 2))
+                  Obtaining dependency information for typing-extensions==4.7.1 from https://files.pythonhosted.org/packages/ec/6b/63cc3df74987c36fe26157ee12e09e8f9db4de771e0f3404263117e75b95/typing_extensions-4.7.1-py3-none-any.whl.metadata
+                  Downloading typing_extensions-4.7.1-py3-none-any.whl.metadata (3.1 kB)
+                Downloading typing_extensions-4.7.1-py3-none-any.whl (33 kB)
                 Installing collected packages: typing-extensions
-                Successfully installed typing-extensions-4.4.0
+                Successfully installed typing-extensions-4.7.1
                 ===> EXPORTING
             "}
         );
@@ -59,7 +61,7 @@ fn pip_basic_install_and_cache_reuse() {
                 ----------------- -------
                 pip               {pip_version}
                 setuptools        {setuptools_version}
-                typing_extensions 4.4.0
+                typing_extensions 4.7.1
                 wheel             {wheel_version}
                 Defaulting to user installation because normal site-packages is not writeable
                 Requirement already satisfied: typing-extensions in /layers/heroku_python/dependencies/lib/"
@@ -84,10 +86,12 @@ fn pip_basic_install_and_cache_reuse() {
                     [Installing dependencies using Pip]
                     Using cached pip download/wheel cache
                     Running pip install
-                    Collecting typing-extensions==4.4.0 (from -r requirements.txt (line 2))
-                      Using cached typing_extensions-4.4.0-py3-none-any.whl (26 kB)
+                    Collecting typing-extensions==4.7.1 (from -r requirements.txt (line 2))
+                      Obtaining dependency information for typing-extensions==4.7.1 from https://files.pythonhosted.org/packages/ec/6b/63cc3df74987c36fe26157ee12e09e8f9db4de771e0f3404263117e75b95/typing_extensions-4.7.1-py3-none-any.whl.metadata
+                      Using cached typing_extensions-4.7.1-py3-none-any.whl.metadata (3.1 kB)
+                    Using cached typing_extensions-4.7.1-py3-none-any.whl (33 kB)
                     Installing collected packages: typing-extensions
-                    Successfully installed typing-extensions-4.4.0
+                    Successfully installed typing-extensions-4.7.1
                     ===> EXPORTING
                 "}
             );
@@ -137,10 +141,12 @@ fn pip_cache_invalidation_and_metadata_compatibility() {
                         [Installing dependencies using Pip]
                         Discarding cached pip download/wheel cache
                         Running pip install
-                        Collecting typing-extensions==4.4.0 (from -r requirements.txt (line 2))
-                          Downloading typing_extensions-4.4.0-py3-none-any.whl (26 kB)
+                        Collecting typing-extensions==4.7.1 (from -r requirements.txt (line 2))
+                          Obtaining dependency information for typing-extensions==4.7.1 from https://files.pythonhosted.org/packages/ec/6b/63cc3df74987c36fe26157ee12e09e8f9db4de771e0f3404263117e75b95/typing_extensions-4.7.1-py3-none-any.whl.metadata
+                          Downloading typing_extensions-4.7.1-py3-none-any.whl.metadata (3.1 kB)
+                        Downloading typing_extensions-4.7.1-py3-none-any.whl (33 kB)
                         Installing collected packages: typing-extensions
-                        Successfully installed typing-extensions-4.4.0
+                        Successfully installed typing-extensions-4.7.1
                         ===> EXPORTING
                     "}
                 );
