@@ -76,9 +76,17 @@ fn builds_with_python_version(fixture_path: &str, python_version: &str) {
     } = PackagingToolVersions::default();
 
     let mut config = BuildConfig::new(builder(), fixture_path);
-    // Checks that potentially broken user-provided env vars are not being passed unfiltered to
-    // subprocesses we launch (such as `pip install`), thanks to `clear-env` in `buildpack.toml`.
-    config.env("PYTHONHOME", "/invalid-path");
+    // Checks that potentially broken user-provided env vars don't take precedence over those
+    // set by this buildpack and break running Python. These are based on the env vars that
+    // used to be set by `bin/release` by very old versions of the classic Python buildpack:
+    // https://github.com/heroku/heroku-buildpack-python/blob/27abdfe7d7ad104dabceb45641415251e965671c/bin/release#L11-L18
+    config.envs([
+        ("LD_LIBRARY_PATH", "/invalid-path"),
+        ("LIBRARY_PATH", "/invalid-path"),
+        ("PATH", "/invalid-path"),
+        ("PYTHONHOME", "/invalid-path"),
+        ("PYTHONPATH", "/invalid-path"),
+    ]);
 
     TestRunner::default().build(config, |context| {
         assert_empty!(context.pack_stderr);

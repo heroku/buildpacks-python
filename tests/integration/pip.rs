@@ -156,6 +156,7 @@ fn pip_cache_invalidation_and_metadata_compatibility() {
 }
 
 // This tests that:
+//  - Requirements file env var interpolation works (ie: user-provided env vars have been propagated to pip).
 //  - Git from the stack image can be found (ie: the system PATH has been correctly propagated to pip).
 //  - The editable mode repository clone is saved into the dependencies layer not the app dir.
 //  - Compiling a source distribution package (as opposed to a pre-built wheel) works.
@@ -164,7 +165,8 @@ fn pip_cache_invalidation_and_metadata_compatibility() {
 #[ignore = "integration test"]
 fn pip_editable_git_compiled() {
     TestRunner::default().build(
-        BuildConfig::new(builder(), "tests/fixtures/pip_editable_git_compiled"),
+        BuildConfig::new(builder(), "tests/fixtures/pip_editable_git_compiled")
+            .env("WHEEL_PACKAGE_URL", "https://github.com/pypa/wheel"),
         |context| {
             assert_contains!(
                 context.pack_stdout,
