@@ -12,6 +12,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - User-provided environment variables are now propagated to subprocesses such as `pip install`. ([#65](https://github.com/heroku/buildpacks-python/pull/65))
 - Updated pip from 23.1.2 to 23.2.1. ([#67](https://github.com/heroku/buildpacks-python/pull/67) and [#76](https://github.com/heroku/buildpacks-python/pull/76))
 - Updated setuptools from 67.8.0 to 68.0.0. ([#51](https://github.com/heroku/buildpacks-python/pull/51))
+- Updated wheel from 0.40.0 to 0.41.0. ([#78](https://github.com/heroku/buildpacks-python/pull/78))
 
 ## [0.4.0] - 2023-06-07
 
