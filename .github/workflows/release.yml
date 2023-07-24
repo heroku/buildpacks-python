@@ -14,7 +14,7 @@ jobs:
 
   package:
     name: ${{ matrix.buildpack_id }}
-    needs: [ detect ]
+    needs: [detect]
     strategy:
       fail-fast: false
       matrix:
@@ -28,7 +28,7 @@ jobs:
 
   publish-docker:
     name: ${{ matrix.buildpack_id }}
-    needs: [ detect, package ]
+    needs: [detect, package]
     strategy:
       fail-fast: false
       matrix:
@@ -45,7 +45,7 @@ jobs:
 
   publish-github:
     name: ${{ matrix.buildpack_id }}
-    needs: [ detect, package ]
+    needs: [detect, package]
     strategy:
       fail-fast: false
       matrix:
@@ -57,7 +57,7 @@ jobs:
 
   publish-cnb:
     name: ${{ matrix.buildpack_id }}
-    needs: [ detect, publish-docker ]
+    needs: [detect, publish-docker]
     strategy:
       fail-fast: false
       matrix:
@@ -72,7 +72,7 @@ jobs:
 
   update-builder:
     name: Update Builder
-    needs: [ detect, publish-docker, publish-cnb, publish-github ]
+    needs: [detect, publish-docker, publish-cnb, publish-github]
     uses: heroku/languages-github-actions/.github/workflows/_buildpacks-release-update-builder.yml@main
     with:
       app_id: ${{ vars.LINGUIST_GH_APP_ID }}
