@@ -62,7 +62,7 @@ jobs:
       - name: Calculate the buildpack image digest
         run: echo "buildpack_digest=$(crane digest ${{ env.BUILDPACK_DOCKER_REPO }}:${{ env.buildpack_version }})" >> $GITHUB_ENV
       - name: Register the new version with the CNB Buildpack Registry
-        uses: docker://ghcr.io/buildpacks/actions/registry/request-add-entry:5.3.0
+        uses: docker://ghcr.io/buildpacks/actions/registry/request-add-entry:5.2.0
         with:
           token: ${{ secrets.CNB_REGISTRY_RELEASE_BOT_GITHUB_TOKEN }}
           id: ${{ env.buildpack_id }}
