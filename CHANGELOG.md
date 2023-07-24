@@ -7,6 +7,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+
+## [0.5.0] - 2023-07-24
+
 ### Changed
 
 - User-provided environment variables are now propagated to subprocesses such as `pip install`. ([#65](https://github.com/heroku/buildpacks-python/pull/65))
@@ -48,7 +51,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - Initial implementation. ([#3](https://github.com/heroku/buildpacks-python/pull/3))
 
-[unreleased]: https://github.com/heroku/buildpacks-python/compare/v0.4.0...HEAD
+[unreleased]: https://github.com/heroku/buildpacks-python/compare/v0.5.0...HEAD
+[0.5.0]: https://github.com/heroku/buildpacks-python/compare/v0.4.0...v0.5.0
 [0.4.0]: https://github.com/heroku/buildpacks-python/compare/v0.3.0...v0.4.0
 [0.3.0]: https://github.com/heroku/buildpacks-python/compare/v0.2.0...v0.3.0
 [0.2.0]: https://github.com/heroku/buildpacks-python/compare/v0.1.0...v0.2.0
