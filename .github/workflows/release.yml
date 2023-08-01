@@ -3,79 +3,14 @@ name: Release Buildpacks
 on:
   workflow_dispatch:
 
-permissions:
-  contents: write
-  pull-requests: write
-
 jobs:
-  detect:
-    name: Detecting Buildpacks
-    uses: heroku/languages-github-actions/.github/workflows/_buildpacks-release-detect.yml@main
-
-  package:
-    name: ${{ matrix.buildpack_id }}
-    needs: [detect]
-    strategy:
-      fail-fast: false
-      matrix:
-        include: ${{ fromJSON(needs.detect.outputs.buildpacks) }}
-    uses: heroku/languages-github-actions/.github/workflows/_buildpacks-release-package.yml@main
-    with:
-      buildpack_id: ${{ matrix.buildpack_id }}
-      buildpack_dir: ${{ matrix.buildpack_dir }}
-      buildpack_version: ${{ matrix.buildpack_version }}
-      buildpack_artifact_prefix: ${{ matrix.buildpack_artifact_prefix }}
-
-  publish-docker:
-    name: ${{ matrix.buildpack_id }}
-    needs: [detect, package]
-    strategy:
-      fail-fast: false
-      matrix:
-        include: ${{ fromJSON(needs.detect.outputs.buildpacks) }}
-    uses: heroku/languages-github-actions/.github/workflows/_buildpacks-release-publish-docker.yml@main
-    with:
-      buildpack_id: ${{ matrix.buildpack_id }}
-      buildpack_version: ${{ matrix.buildpack_version }}
-      buildpack_artifact_prefix: ${{ matrix.buildpack_artifact_prefix }}
-      docker_repository: ${{ matrix.docker_repository }}
-    secrets:
-      docker_hub_user: ${{ secrets.DOCKER_HUB_USER }}
-      docker_hub_token: ${{ secrets.DOCKER_HUB_TOKEN }}
-
-  publish-github:
-    name: ${{ matrix.buildpack_id }}
-    needs: [detect, package]
-    strategy:
-      fail-fast: false
-      matrix:
-        include: ${{ fromJSON(needs.detect.outputs.buildpacks) }}
-    uses: heroku/languages-github-actions/.github/workflows/_buildpacks-release-publish-github.yml@main
-    with:
-      buildpack_version: ${{ matrix.buildpack_version }}
-      buildpack_artifact_prefix: ${{ matrix.buildpack_artifact_prefix }}
-
-  publish-cnb:
-    name: ${{ matrix.buildpack_id }}
-    needs: [detect, publish-docker]
-    strategy:
-      fail-fast: false
-      matrix:
-        include: ${{ fromJSON(needs.detect.outputs.buildpacks) }}
-    uses: heroku/languages-github-actions/.github/workflows/_buildpacks-release-publish-cnb-registry.yml@main
-    with:
-      buildpack_id: ${{ matrix.buildpack_id }}
-      buildpack_version: ${{ matrix.buildpack_version }}
-      docker_repository: ${{ matrix.docker_repository }}
-    secrets:
-      cnb_registry_token: ${{ secrets.CNB_REGISTRY_RELEASE_BOT_GITHUB_TOKEN }}
-
-  update-builder:
-    name: Update Builder
-    needs: [detect, publish-docker, publish-cnb, publish-github]
-    uses: heroku/languages-github-actions/.github/workflows/_buildpacks-release-update-builder.yml@main
+  release:
+    name: Release
+    uses: heroku/languages-github-actions/.github/workflows/_buildpacks-release.yml@main
     with:
       app_id: ${{ vars.LINGUIST_GH_APP_ID }}
-      buildpack_version: ${{ needs.detect.outputs.version }}
     secrets:
       app_private_key: ${{ secrets.LINGUIST_GH_PRIVATE_KEY }}
+      cnb_registry_token: ${{ secrets.CNB_REGISTRY_RELEASE_BOT_GITHUB_TOKEN }}
+      docker_hub_user: ${{ secrets.DOCKER_HUB_USER }}
+      docker_hub_token: ${{ secrets.DOCKER_HUB_TOKEN }}
