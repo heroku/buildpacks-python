@@ -8,6 +8,11 @@ updates:
       - "dependencies"
       - "rust"
       - "skip changelog"
+    groups:
+      libcnb:
+        patterns:
+          - "libcnb*"
+          - "libherokubuildpack"
   - package-ecosystem: "github-actions"
     directory: "/"
     schedule:

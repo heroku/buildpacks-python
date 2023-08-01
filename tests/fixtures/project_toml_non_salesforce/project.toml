@@ -1,8 +1,0 @@
-[_]
-schema-version = "0.2"
-
-[io.buildpacks]
-builder = "my-builder"
-
-[com.example]
-key = "value"

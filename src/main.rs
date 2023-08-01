@@ -9,10 +9,8 @@ mod errors;
 mod layers;
 mod package_manager;
 mod packaging_tool_versions;
-mod project_descriptor;
 mod python_version;
 mod runtime_txt;
-mod salesforce_functions;
 mod utils;
 
 use crate::layers::pip_cache::PipCacheLayer;
@@ -20,9 +18,7 @@ use crate::layers::pip_dependencies::{PipDependenciesLayer, PipDependenciesLayer
 use crate::layers::python::{PythonLayer, PythonLayerError};
 use crate::package_manager::{DeterminePackageManagerError, PackageManager};
 use crate::packaging_tool_versions::PackagingToolVersions;
-use crate::project_descriptor::ProjectDescriptorError;
 use crate::python_version::PythonVersionError;
-use crate::salesforce_functions::CheckSalesforceFunctionError;
 use libcnb::build::{BuildContext, BuildResult, BuildResultBuilder};
 use libcnb::data::layer_name;
 use libcnb::detect::{DetectContext, DetectResult, DetectResultBuilder};
@@ -55,8 +51,6 @@ impl Buildpack for PythonBuildpack {
     fn build(&self, context: BuildContext<Self>) -> libcnb::Result<BuildResult, Self::Error> {
         // We perform all project analysis up front, so the build can fail early if the config is invalid.
         // TODO: Add a "Build config" header and list all config in one place?
-        let is_function = salesforce_functions::is_function_project(&context.app_dir)
-            .map_err(BuildpackError::ProjectDescriptor)?;
         let package_manager = package_manager::determine_package_manager(&context.app_dir)
             .map_err(BuildpackError::DeterminePackageManager)?;
 
@@ -66,10 +60,10 @@ impl Buildpack for PythonBuildpack {
         let packaging_tool_versions = PackagingToolVersions::default();
 
         // We inherit the current process's env vars, since we want `PATH` and `HOME` from the OS
-        // to be set, so that later commands can find tools like Git in the stack image. We exclude
-        // user-provided env vars (by setting `clear-env` to true in `buildpack.toml`) to prevent an
-        // app's env vars from breaking internal buildpack commands. Any buildpack steps that need
-        // user-provided env vars must explicitly retrieve them via `context.platform.env`.
+        // to be set (so that later commands can find tools like Git in the stack image), along
+        // with previous-buildpack or user-provided env vars (so that features like env vars in
+        // in requirements files work). We protect against broken user-provided env vars by
+        // making sure that buildpack env vars take precedence in layers envs and command usage.
         let mut command_env = Env::from_current();
 
         // Create the layer containing the Python runtime, and the packages `pip`, `setuptools` and `wheel`.
@@ -86,7 +80,7 @@ impl Buildpack for PythonBuildpack {
 
         // Create the layers for the application dependencies and package manager cache.
         // In the future support will be added for package managers other than pip.
-        let dependencies_layer_env = match package_manager {
+        match package_manager {
             PackageManager::Pip => {
                 log_header("Installing dependencies using Pip");
                 let pip_cache_layer = context.handle_layer(
@@ -106,20 +100,8 @@ impl Buildpack for PythonBuildpack {
                 pip_layer.env
             }
         };
-        command_env = dependencies_layer_env.apply(Scope::Build, &command_env);
 
-        if is_function {
-            log_header("Validating Salesforce Function");
-            salesforce_functions::check_function(&command_env)
-                .map_err(BuildpackError::CheckSalesforceFunction)?;
-            log_info("Function passed validation.");
-
-            BuildResultBuilder::new()
-                .launch(salesforce_functions::launch_config())
-                .build()
-        } else {
-            BuildResultBuilder::new().build()
-        }
+        BuildResultBuilder::new().build()
     }
 
     fn on_error(&self, error: libcnb::Error<Self::Error>) {
@@ -129,16 +111,12 @@ impl Buildpack for PythonBuildpack {
 
 #[derive(Debug)]
 pub(crate) enum BuildpackError {
-    /// Errors running the `sf-functions-python check` command.
-    CheckSalesforceFunction(CheckSalesforceFunctionError),
     /// IO errors when performing buildpack detection.
     DetectIo(io::Error),
     /// Errors determining which Python package manager to use for a project.
     DeterminePackageManager(DeterminePackageManagerError),
     /// Errors installing the project's dependencies into a layer using Pip.
     PipDependenciesLayer(PipDependenciesLayerError),
-    /// Errors reading and parsing a `project.toml` file.
-    ProjectDescriptor(ProjectDescriptorError),
     /// Errors installing Python and required packaging tools into a layer.
     PythonLayer(PythonLayerError),
     /// Errors determining which Python version to use for a project.

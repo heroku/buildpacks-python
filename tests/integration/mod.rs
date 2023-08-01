@@ -7,7 +7,6 @@ mod detect;
 mod package_manager;
 mod pip;
 mod python_version;
-mod salesforce_functions;
 
 const LATEST_PYTHON_3_7: &str = "3.7.17";
 const LATEST_PYTHON_3_8: &str = "3.8.17";

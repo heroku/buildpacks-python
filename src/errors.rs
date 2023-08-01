@@ -1,10 +1,8 @@
 use crate::layers::pip_dependencies::PipDependenciesLayerError;
 use crate::layers::python::PythonLayerError;
 use crate::package_manager::DeterminePackageManagerError;
-use crate::project_descriptor::ProjectDescriptorError;
 use crate::python_version::{PythonVersion, PythonVersionError, DEFAULT_PYTHON_VERSION};
 use crate::runtime_txt::{ParseRuntimeTxtError, RuntimeTxtError};
-use crate::salesforce_functions::{CheckSalesforceFunctionError, FUNCTION_RUNTIME_PROGRAM_NAME};
 use crate::utils::{CommandError, DownloadUnpackArchiveError};
 use crate::BuildpackError;
 use indoc::{formatdoc, indoc};
@@ -42,7 +40,6 @@ pub(crate) fn on_error(error: libcnb::Error<BuildpackError>) {
 
 fn on_buildpack_error(error: BuildpackError) {
     match error {
-        BuildpackError::CheckSalesforceFunction(error) => on_check_salesforce_function_error(error),
         BuildpackError::DetectIo(io_error) => log_io_error(
             "Unable to complete buildpack detection",
             "determining if the Python buildpack should be run for this application",
@@ -50,27 +47,8 @@ fn on_buildpack_error(error: BuildpackError) {
         ),
         BuildpackError::DeterminePackageManager(error) => on_determine_package_manager_error(error),
         BuildpackError::PipDependenciesLayer(error) => on_pip_dependencies_layer_error(error),
-        BuildpackError::ProjectDescriptor(error) => on_project_descriptor_error(error),
         BuildpackError::PythonLayer(error) => on_python_layer_error(error),
         BuildpackError::PythonVersion(error) => on_python_version_error(error),
-    };
-}
-
-fn on_project_descriptor_error(error: ProjectDescriptorError) {
-    match error {
-        ProjectDescriptorError::Io(io_error) => log_io_error(
-            "Unable to read project.toml",
-            "reading the (optional) project.toml file",
-            &io_error,
-        ),
-        ProjectDescriptorError::Parse(toml_error) => log_error(
-            "Invalid project.toml",
-            formatdoc! {"
-                A parsing/validation error error occurred whilst loading the project.toml file.
-                
-                Details: {toml_error}
-            "},
-        ),
     };
 }
 
@@ -236,42 +214,6 @@ fn on_pip_dependencies_layer_error(error: PipDependenciesLayerError) {
                 "},
             ),
         },
-    };
-}
-
-fn on_check_salesforce_function_error(error: CheckSalesforceFunctionError) {
-    match error {
-        CheckSalesforceFunctionError::Io(io_error) => log_io_error(
-            "Unable to run the Salesforce Functions self-check command",
-            &format!("running the '{FUNCTION_RUNTIME_PROGRAM_NAME} check' command"),
-            &io_error,
-        ),
-        CheckSalesforceFunctionError::NonZeroExitStatus(output) => log_error(
-            "The Salesforce Functions self-check failed",
-            formatdoc! {"
-                The '{FUNCTION_RUNTIME_PROGRAM_NAME} check' command failed ({exit_status}), indicating
-                there is a problem with the Python Salesforce Function in this project.
-                
-                Details:
-                {stderr}
-                ",
-                exit_status = output.status,
-                stderr = String::from_utf8_lossy(&output.stderr),
-            },
-        ),
-        CheckSalesforceFunctionError::ProgramNotFound => log_error(
-            "The Salesforce Functions package is not installed",
-            formatdoc! {"
-                The '{FUNCTION_RUNTIME_PROGRAM_NAME}' program that is required for Python Salesforce
-                Functions could not be found.
-
-                Check that the 'salesforce-functions' Python package is listed as a
-                dependency in 'requirements.txt'.
-                
-                If this project is not intended to be a Salesforce Function, remove the
-                'type = \"function\"' declaration from 'project.toml' to skip this check.
-            "},
-        ),
     };
 }
 

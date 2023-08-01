@@ -321,6 +321,8 @@ fn generate_layer_env(layer_path: &Path, python_version: &PythonVersion) -> Laye
         // However, the uWSGI package uses the wrong `sysconfig` APIs so tries to reference the old
         // compile location, unless we override that by setting `PYTHONHOME`:
         // https://github.com/unbit/uwsgi/issues/2525
+        // In addition, some legacy apps have `PYTHONHOME` set to an invalid value, so if we did not
+        // set it explicitly here, Python would fail to run both during the build and at runtime.
         .chainable_insert(
             Scope::All,
             ModificationBehavior::Override,
