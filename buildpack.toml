@@ -20,5 +20,5 @@ id = "heroku-22"
 
 [metadata]
 [metadata.release]
-[metadata.release.docker]
+[metadata.release.image]
 repository = "docker.io/heroku/buildpack-python"
