@@ -13,10 +13,6 @@ on:
           - minor
           - patch
 
-permissions:
-  contents: write
-  pull-requests: write
-
 jobs:
   prepare-release:
     uses: heroku/languages-github-actions/.github/workflows/_buildpacks-prepare-release.yml@main
