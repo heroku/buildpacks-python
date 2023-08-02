@@ -1,4 +1,4 @@
-name: Prepare Buildpack Releases
+name: Prepare Buildpack Release
 
 on:
   workflow_dispatch:
@@ -6,7 +6,7 @@ on:
       bump:
         description: "Bump"
         required: true
-        default: 'patch'
+        default: "patch"
         type: choice
         options:
           - major
