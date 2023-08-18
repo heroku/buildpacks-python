@@ -13,11 +13,13 @@ publish = false
 # As such we have to use the next best alternate backend, which is `zlib`.
 flate2 = { version = "1", default-features = false, features = ["zlib"] }
 indoc = "2"
-libcnb = "0.14"
-libherokubuildpack = { version = "0.14", default-features = false, features = ["log"] }
+# libcnb has a much bigger impact on buildpack behaviour than any other dependencies,
+# so it's pinned to an exact version to isolate it from lockfile refreshes.
+libcnb = "=0.14.0"
+libherokubuildpack = { version = "=0.14.0", default-features = false, features = ["log"] }
 serde = "1"
 tar = { version = "0.4", default-features = false }
 ureq = { version = "2", default-features = false, features = ["tls"] }
 
 [dev-dependencies]
-libcnb-test = "0.14"
+libcnb-test = "=0.14.0"
