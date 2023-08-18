@@ -13,11 +13,11 @@ publish = false
 # As such we have to use the next best alternate backend, which is `zlib`.
 flate2 = { version = "1", default-features = false, features = ["zlib"] }
 indoc = "2"
-libcnb = "0.13"
-libherokubuildpack = { version = "0.13", default-features = false, features = ["log"] }
+libcnb = "0.14"
+libherokubuildpack = { version = "0.14", default-features = false, features = ["log"] }
 serde = "1"
 tar = { version = "0.4", default-features = false }
 ureq = { version = "2", default-features = false, features = ["tls"] }
 
 [dev-dependencies]
-libcnb-test = "0.13"
+libcnb-test = "0.14"
