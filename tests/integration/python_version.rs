@@ -93,18 +93,12 @@ fn builds_with_python_version(fixture_path: &str, python_version: &str) {
         assert_contains!(
             context.pack_stdout,
             &formatdoc! {"
-                ===> BUILDING
-                
                 [Determining Python version]
                 Using Python version {python_version} specified in runtime.txt
                 
                 [Installing Python and packaging tools]
                 Installing Python {python_version}
                 Installing pip {pip_version}, setuptools {setuptools_version} and wheel {wheel_version}
-                
-                [Installing dependencies using Pip]
-                Running pip install
-                ===> EXPORTING
             "}
         );
         // There's no sensible default process type we can set for Python apps.

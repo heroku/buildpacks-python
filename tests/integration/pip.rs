@@ -21,8 +21,6 @@ fn pip_basic_install_and_cache_reuse() {
         assert_contains!(
             context.pack_stdout,
             &formatdoc! {"
-                ===> BUILDING
-                
                 [Determining Python version]
                 No Python version specified, using the current default of Python {DEFAULT_PYTHON_VERSION}.
                 To use a different version, see: https://devcenter.heroku.com/articles/python-runtimes
@@ -39,7 +37,6 @@ fn pip_basic_install_and_cache_reuse() {
                 Downloading typing_extensions-4.7.1-py3-none-any.whl (33 kB)
                 Installing collected packages: typing-extensions
                 Successfully installed typing-extensions-4.7.1
-                ===> EXPORTING
             "}
         );
 
@@ -73,8 +70,6 @@ fn pip_basic_install_and_cache_reuse() {
             assert_contains!(
                 rebuild_context.pack_stdout,
                 &formatdoc! {"
-                    ===> BUILDING
-                    
                     [Determining Python version]
                     No Python version specified, using the current default of Python {DEFAULT_PYTHON_VERSION}.
                     To use a different version, see: https://devcenter.heroku.com/articles/python-runtimes
@@ -92,7 +87,6 @@ fn pip_basic_install_and_cache_reuse() {
                     Using cached typing_extensions-4.7.1-py3-none-any.whl (33 kB)
                     Installing collected packages: typing-extensions
                     Successfully installed typing-extensions-4.7.1
-                    ===> EXPORTING
                 "}
             );
         });
@@ -123,8 +117,6 @@ fn pip_cache_invalidation_and_metadata_compatibility() {
                 assert_contains!(
                     rebuild_context.pack_stdout,
                     &formatdoc! {"
-                        ===> BUILDING
-                        
                         [Determining Python version]
                         No Python version specified, using the current default of Python {DEFAULT_PYTHON_VERSION}.
                         To use a different version, see: https://devcenter.heroku.com/articles/python-runtimes
@@ -147,7 +139,6 @@ fn pip_cache_invalidation_and_metadata_compatibility() {
                         Downloading typing_extensions-4.7.1-py3-none-any.whl (33 kB)
                         Installing collected packages: typing-extensions
                         Successfully installed typing-extensions-4.7.1
-                        ===> EXPORTING
                     "}
                 );
             });
