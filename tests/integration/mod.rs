@@ -9,10 +9,10 @@ mod pip;
 mod python_version;
 
 const LATEST_PYTHON_3_7: &str = "3.7.17";
-const LATEST_PYTHON_3_8: &str = "3.8.17";
-const LATEST_PYTHON_3_9: &str = "3.9.17";
-const LATEST_PYTHON_3_10: &str = "3.10.12";
-const LATEST_PYTHON_3_11: &str = "3.11.4";
+const LATEST_PYTHON_3_8: &str = "3.8.18";
+const LATEST_PYTHON_3_9: &str = "3.9.18";
+const LATEST_PYTHON_3_10: &str = "3.10.13";
+const LATEST_PYTHON_3_11: &str = "3.11.5";
 const DEFAULT_PYTHON_VERSION: &str = LATEST_PYTHON_3_11;
 
 const DEFAULT_BUILDER: &str = "heroku/builder:22";
