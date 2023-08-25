@@ -7,6 +7,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Changed
+
+- Updated the default Python version from 3.11.4 to 3.11.5. ([#101](https://github.com/heroku/buildpacks-python/pull/101))
+
 ### Removed
 
 - Removed support for Salesforce Functions. ([#83](https://github.com/heroku/buildpacks-python/pull/83))
@@ -24,7 +28,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Changed
 
-- The default Python version is now 3.11.4 (previously 3.11.3). ([#45](https://github.com/heroku/buildpacks-python/pull/45))
+- Updated the default Python version from 3.11.3 to 3.11.4. ([#45](https://github.com/heroku/buildpacks-python/pull/45))
 - Updated setuptools from 67.7.2 to 67.8.0. ([#43](https://github.com/heroku/buildpacks-python/pull/43))
 - Updated libcnb from 0.11.5 to 0.12.0. ([#35](https://github.com/heroku/buildpacks-python/pull/35))
 - The buildpack now implements Buildpack API 0.9 instead of 0.8, and so requires `lifecycle` 0.15.x or newer. ([#35](https://github.com/heroku/buildpacks-python/pull/35))
@@ -40,7 +44,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Changed
 
-- The default Python version is now 3.11.3 (previously 3.11.2). ([#22](https://github.com/heroku/buildpacks-python/pull/22))
+- Updated the default Python version from 3.11.2 to 3.11.3. ([#22](https://github.com/heroku/buildpacks-python/pull/22))
 - Updated setuptools from 67.5.0 to 67.6.1. ([#24](https://github.com/heroku/buildpacks-python/pull/24))
 - Updated wheel from 0.38.4 to 0.40.0. ([#24](https://github.com/heroku/buildpacks-python/pull/24))
 
