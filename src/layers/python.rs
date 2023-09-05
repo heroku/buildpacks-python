@@ -1,6 +1,6 @@
 use crate::packaging_tool_versions::PackagingToolVersions;
 use crate::python_version::PythonVersion;
-use crate::utils::{self, CommandError, DownloadUnpackArchiveError};
+use crate::utils::{self, DownloadUnpackArchiveError, StreamedCommandError};
 use crate::{BuildpackError, PythonBuildpack};
 use libcnb::build::BuildContext;
 use libcnb::data::buildpack::StackId;
@@ -105,7 +105,7 @@ impl Layer for PythonLayer<'_> {
         let bundled_pip_module_path = bundled_pip_module_path(&python_stdlib_dir)
             .map_err(PythonLayerError::LocateBundledPipIo)?;
 
-        utils::run_command(
+        utils::run_command_and_stream_output(
             Command::new(python_binary)
                 .args([
                     &bundled_pip_module_path.to_string_lossy(),
@@ -421,7 +421,7 @@ fn bundled_pip_module_path(python_stdlib_dir: &Path) -> io::Result<PathBuf> {
 /// Errors that can occur when installing Python and required packaging tools into a layer.
 #[derive(Debug)]
 pub(crate) enum PythonLayerError {
-    BootstrapPipCommand(CommandError),
+    BootstrapPipCommand(StreamedCommandError),
     DownloadUnpackPythonArchive(DownloadUnpackArchiveError),
     LocateBundledPipIo(io::Error),
     MakeSitePackagesReadOnlyIo(io::Error),

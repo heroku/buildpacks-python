@@ -1,6 +1,6 @@
 use flate2::read::GzDecoder;
 use std::path::Path;
-use std::process::{Command, ExitStatus};
+use std::process::{Command, ExitStatus, Output};
 use std::{fs, io};
 use tar::Archive;
 
@@ -70,26 +70,53 @@ pub(crate) enum DownloadUnpackArchiveError {
     Request(ureq::Error),
 }
 
-/// A helper for running an external process using [`Command`], that checks the exit
-/// status of the process was non-zero. Stdout and stderr are streamed to the user.
-pub(crate) fn run_command(command: &mut Command) -> Result<(), CommandError> {
+/// A helper for running an external process using [`Command`], that streams stdout/stderr
+/// to the user and checks that the exit status of the process was non-zero.
+pub(crate) fn run_command_and_stream_output(
+    command: &mut Command,
+) -> Result<(), StreamedCommandError> {
     command
         .status()
-        .map_err(CommandError::Io)
+        .map_err(StreamedCommandError::Io)
         .and_then(|exit_status| {
             if exit_status.success() {
                 Ok(())
             } else {
-                Err(CommandError::NonZeroExitStatus(exit_status))
+                Err(StreamedCommandError::NonZeroExitStatus(exit_status))
             }
         })
 }
 
-/// Errors that can occur when running an external process using `run_command`.
+/// A helper for running an external process using [`Command`], that captures stdout/stderr
+/// and checks that the exit status of the process was non-zero.
+#[allow(dead_code)]
+pub(crate) fn run_command_and_capture_output(
+    command: &mut Command,
+) -> Result<Output, CapturedCommandError> {
+    command
+        .output()
+        .map_err(CapturedCommandError::Io)
+        .and_then(|output| {
+            if output.status.success() {
+                Ok(output)
+            } else {
+                Err(CapturedCommandError::NonZeroExitStatus(output))
+            }
+        })
+}
+
+/// Errors that can occur when running an external process using `run_command_and_stream_output`.
 #[derive(Debug)]
-pub(crate) enum CommandError {
+pub(crate) enum StreamedCommandError {
     Io(io::Error),
     NonZeroExitStatus(ExitStatus),
+}
+
+/// Errors that can occur when running an external process using `run_command_and_capture_output`.
+#[derive(Debug)]
+pub(crate) enum CapturedCommandError {
+    Io(io::Error),
+    NonZeroExitStatus(Output),
 }
 
 /// Convert a [`libcnb::Env`] to a sorted vector of key-value string slice tuples, for easier

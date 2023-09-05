@@ -1,4 +1,4 @@
-use crate::utils::{self, CommandError};
+use crate::utils::{self, StreamedCommandError};
 use crate::{BuildpackError, PythonBuildpack};
 use libcnb::build::BuildContext;
 use libcnb::data::layer_content_metadata::LayerTypes;
@@ -66,7 +66,7 @@ impl Layer for PipDependenciesLayer<'_> {
 
         log_info("Running pip install");
 
-        utils::run_command(
+        utils::run_command_and_stream_output(
             Command::new("pip")
                 .args([
                     "install",
@@ -136,7 +136,7 @@ fn generate_layer_env(layer_path: &Path) -> LayerEnv {
 #[derive(Debug)]
 pub(crate) enum PipDependenciesLayerError {
     CreateSrcDirIo(io::Error),
-    PipInstallCommand(CommandError),
+    PipInstallCommand(StreamedCommandError),
 }
 
 impl From<PipDependenciesLayerError> for BuildpackError {
