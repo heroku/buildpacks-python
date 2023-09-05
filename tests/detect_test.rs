@@ -1,4 +1,4 @@
-use crate::integration_tests::builder;
+use crate::tests::builder;
 use indoc::indoc;
 use libcnb_test::{assert_contains, BuildConfig, PackResult, TestRunner};
 

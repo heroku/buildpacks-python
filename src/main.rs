@@ -133,8 +133,8 @@ buildpack_main!(PythonBuildpack);
 
 // The integration tests are imported into the crate so that they can have access to private
 // APIs and constants, saving having to (a) run a dual binary/library crate, (b) expose APIs
-// publicly for things only used for testing. See:
-// https://doc.rust-lang.org/reference/items/modules.html#the-path-attribute
+// publicly for things only used for testing. To prevent the tests from being imported twice,
+// automatic integration test discovery is disabled using `autotests = false` in Cargo.toml.
 #[cfg(test)]
-#[path = "../tests/integration/mod.rs"]
-mod integration_tests;
+#[path = "../tests/mod.rs"]
+mod tests;
