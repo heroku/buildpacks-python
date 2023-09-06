@@ -3,7 +3,7 @@ use crate::layers::python::PythonLayerError;
 use crate::package_manager::DeterminePackageManagerError;
 use crate::python_version::{PythonVersion, PythonVersionError, DEFAULT_PYTHON_VERSION};
 use crate::runtime_txt::{ParseRuntimeTxtError, RuntimeTxtError};
-use crate::utils::{CommandError, DownloadUnpackArchiveError};
+use crate::utils::{DownloadUnpackArchiveError, StreamedCommandError};
 use crate::BuildpackError;
 use indoc::{formatdoc, indoc};
 use libherokubuildpack::log::log_error;
@@ -120,12 +120,12 @@ fn on_python_version_error(error: PythonVersionError) {
 fn on_python_layer_error(error: PythonLayerError) {
     match error {
         PythonLayerError::BootstrapPipCommand(error) => match error {
-            CommandError::Io(io_error) => log_io_error(
+            StreamedCommandError::Io(io_error) => log_io_error(
                 "Unable to bootstrap pip",
                 "running the command to install pip, setuptools and wheel",
                 &io_error,
             ),
-            CommandError::NonZeroExitStatus(exit_status) => log_error(
+            StreamedCommandError::NonZeroExitStatus(exit_status) => log_error(
                 "Unable to bootstrap pip",
                 formatdoc! {"
                     The command to install pip, setuptools and wheel did not exit successfully ({exit_status}).
@@ -197,14 +197,14 @@ fn on_pip_dependencies_layer_error(error: PipDependenciesLayerError) {
             &io_error,
         ),
         PipDependenciesLayerError::PipInstallCommand(error) => match error {
-            CommandError::Io(io_error) => log_io_error(
+            StreamedCommandError::Io(io_error) => log_io_error(
                 "Unable to install dependencies using pip",
                 "running the 'pip install' command to install the application's dependencies",
                 &io_error,
             ),
             // TODO: Add more suggestions here as to causes (eg network, invalid requirements.txt,
             // package broken or not compatible with version of Python, missing system dependencies etc)
-            CommandError::NonZeroExitStatus(exit_status) => log_error(
+            StreamedCommandError::NonZeroExitStatus(exit_status) => log_error(
                 "Unable to install dependencies using pip",
                 formatdoc! {"
                     The 'pip install' command to install the application's dependencies from
