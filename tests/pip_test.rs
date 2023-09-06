@@ -1,5 +1,5 @@
-use crate::integration_tests::{builder, DEFAULT_PYTHON_VERSION};
 use crate::packaging_tool_versions::PackagingToolVersions;
+use crate::tests::{builder, DEFAULT_PYTHON_VERSION};
 use indoc::{formatdoc, indoc};
 use libcnb_test::{
     assert_contains, assert_empty, BuildConfig, BuildpackReference, PackResult, TestRunner,

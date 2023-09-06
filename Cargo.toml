@@ -1,9 +1,11 @@
 [package]
 name = "python-buildpack"
 version = "0.0.0"
+publish = false
 edition = "2021"
 rust-version = "1.67"
-publish = false
+# Disable automatic integration test discovery, since we import them in main.rs (see comment there).
+autotests = false
 
 [dependencies]
 # The default `miniz_oxide` flate2 backend has poor performance in debug/under QEMU:

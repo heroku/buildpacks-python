@@ -1,8 +1,8 @@
-use crate::integration_tests::{
+use crate::packaging_tool_versions::PackagingToolVersions;
+use crate::tests::{
     builder, DEFAULT_PYTHON_VERSION, LATEST_PYTHON_3_10, LATEST_PYTHON_3_11, LATEST_PYTHON_3_7,
     LATEST_PYTHON_3_8, LATEST_PYTHON_3_9,
 };
-use crate::packaging_tool_versions::PackagingToolVersions;
 use indoc::{formatdoc, indoc};
 use libcnb_test::{assert_contains, assert_empty, BuildConfig, PackResult, TestRunner};
 

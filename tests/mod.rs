@@ -1,12 +1,14 @@
 //! All integration tests are skipped by default (using the `ignore` attribute),
-//! since performing builds is slow. To run the tests use: `cargo test -- --ignored`
+//! since performing builds is slow. To run them use: `cargo test -- --ignored`.
+//! These tests are not run via automatic integration test discovery, but instead are
+//! imported in main.rs so that they have access to private APIs (see comment in main.rs).
 
 use std::env;
 
-mod detect;
-mod package_manager;
-mod pip;
-mod python_version;
+mod detect_test;
+mod package_manager_test;
+mod pip_test;
+mod python_version_test;
 
 const LATEST_PYTHON_3_7: &str = "3.7.17";
 const LATEST_PYTHON_3_8: &str = "3.8.18";
