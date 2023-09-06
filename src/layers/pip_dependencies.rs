@@ -47,7 +47,7 @@ impl Layer for PipDependenciesLayer<'_> {
 
     fn create(
         &self,
-        _context: &BuildContext<Self::Buildpack>,
+        context: &BuildContext<Self::Buildpack>,
         layer_path: &Path,
     ) -> Result<LayerResult<Self::Metadata>, <Self::Buildpack as Buildpack>::Error> {
         let layer_env = generate_layer_env(layer_path);
@@ -98,6 +98,7 @@ impl Layer for PipDependenciesLayer<'_> {
                     "--src",
                     &src_dir.to_string_lossy(),
                 ])
+                .current_dir(&context.app_dir)
                 .env_clear()
                 .envs(&command_env),
         )
