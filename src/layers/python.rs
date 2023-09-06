@@ -118,6 +118,7 @@ impl Layer for PythonLayer<'_> {
                     format!("setuptools=={setuptools_version}").as_str(),
                     format!("wheel=={wheel_version}").as_str(),
                 ])
+                .current_dir(&context.app_dir)
                 .env_clear()
                 .envs(&command_env),
         )
