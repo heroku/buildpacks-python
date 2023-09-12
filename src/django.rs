@@ -100,7 +100,10 @@ mod tests {
 
     #[test]
     fn has_management_script_django_project() {
-        assert!(has_management_script(Path::new("tests/fixtures/django_collectstatic")).unwrap());
+        assert!(has_management_script(Path::new(
+            "tests/fixtures/django_staticfiles_latest_django"
+        ))
+        .unwrap());
     }
 
     #[test]

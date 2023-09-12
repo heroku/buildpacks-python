@@ -6,9 +6,11 @@ use libcnb_test::{assert_contains, assert_empty, BuildConfig, PackResult, TestRu
 // them when the Django app is nested inside a subdirectory (such as in backend+frontend monorepos).
 #[test]
 #[ignore = "integration test"]
-fn django_collectstatic() {
+fn django_staticfiles_latest_django() {
     TestRunner::default().build(
-        BuildConfig::new(builder(), "tests/fixtures/django_collectstatic"),
+        BuildConfig::new(builder(), "tests/fixtures/django_staticfiles_latest_django")
+            // Tests that env vars are passed to the 'manage.py' script invocations.
+            .env("EXPECTED_ENV_VAR", "1"),
         |context| {
             assert_empty!(context.pack_stderr);
             assert_contains!(
@@ -18,6 +20,31 @@ fn django_collectstatic() {
                     Running 'manage.py collectstatic'
                     
                     1 static file symlinked to '/workspace/backend/staticfiles'.
+                "}
+            );
+        },
+    );
+}
+
+// This tests the oldest Django version that works on Python 3.9 (which is the
+// oldest Python that is available on all of our supported builders).
+#[test]
+#[ignore = "integration test"]
+fn django_staticfiles_legacy_django() {
+    TestRunner::default().build(
+        BuildConfig::new(builder(), "tests/fixtures/django_staticfiles_legacy_django"),
+        |context| {
+            assert_empty!(context.pack_stderr);
+            assert_contains!(
+                context.pack_stdout,
+                indoc! {"
+                    Successfully installed Django-1.8.19
+                    
+                    [Generating Django static files]
+                    Running 'manage.py collectstatic'
+                    Linking '/workspace/testapp/static/robots.txt'
+                    
+                    1 static file symlinked to '/workspace/staticfiles'.
                 "}
             );
         },
