@@ -270,7 +270,7 @@ fn on_django_collectstatic_error(error: DjangoCollectstaticError) {
             StreamedCommandError::NonZeroExitStatus(exit_status) => log_error(
                 "Unable to generate Django static files",
                 formatdoc! {"
-                    The 'python manage.py collectstatic --link --no-input' Django management
+                    The 'python manage.py collectstatic --link --noinput' Django management
                     command to generate static files failed ({exit_status}).
                     
                     This is most likely due an issue in your application code or Django

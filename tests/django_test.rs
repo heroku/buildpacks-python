@@ -126,7 +126,7 @@ fn django_staticfiles_misconfigured() {
                 context.pack_stderr,
                 indoc! {"
                     [Error: Unable to generate Django static files]
-                    The 'python manage.py collectstatic --link --no-input' Django management
+                    The 'python manage.py collectstatic --link --noinput' Django management
                     command to generate static files failed (exit status: 1).
                     
                     This is most likely due an issue in your application code or Django

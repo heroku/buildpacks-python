@@ -44,7 +44,8 @@ pub(crate) fn run_django_collectstatic(
                 MANAGEMENT_SCRIPT_NAME,
                 "collectstatic",
                 "--link",
-                "--no-input",
+                // Using `--noinput` instead of `--no-input` since the latter requires Django 1.9+.
+                "--noinput",
             ])
             .current_dir(app_dir)
             .env_clear()
