@@ -1,9 +1,10 @@
+use crate::django::DjangoCollectstaticError;
 use crate::layers::pip_dependencies::PipDependenciesLayerError;
 use crate::layers::python::PythonLayerError;
 use crate::package_manager::DeterminePackageManagerError;
 use crate::python_version::{PythonVersion, PythonVersionError, DEFAULT_PYTHON_VERSION};
 use crate::runtime_txt::{ParseRuntimeTxtError, RuntimeTxtError};
-use crate::utils::{DownloadUnpackArchiveError, StreamedCommandError};
+use crate::utils::{CapturedCommandError, DownloadUnpackArchiveError, StreamedCommandError};
 use crate::BuildpackError;
 use indoc::{formatdoc, indoc};
 use libherokubuildpack::log::log_error;
@@ -46,6 +47,8 @@ fn on_buildpack_error(error: BuildpackError) {
             &io_error,
         ),
         BuildpackError::DeterminePackageManager(error) => on_determine_package_manager_error(error),
+        BuildpackError::DjangoCollectstatic(error) => on_django_collectstatic_error(error),
+        BuildpackError::DjangoDetection(error) => on_django_detection_error(&error),
         BuildpackError::PipDependenciesLayer(error) => on_pip_dependencies_layer_error(error),
         BuildpackError::PythonLayer(error) => on_python_layer_error(error),
         BuildpackError::PythonVersion(error) => on_python_version_error(error),
@@ -211,6 +214,76 @@ fn on_pip_dependencies_layer_error(error: PipDependenciesLayerError) {
                     'requirements.txt' failed ({exit_status}).
                     
                     See the log output above for more information.
+                "},
+            ),
+        },
+    };
+}
+
+fn on_django_detection_error(error: &io::Error) {
+    log_io_error(
+        "Unable to determine if this is a Django-based app",
+        "checking if the 'django-admin' command exists",
+        error,
+    );
+}
+
+fn on_django_collectstatic_error(error: DjangoCollectstaticError) {
+    match error {
+        DjangoCollectstaticError::CheckCollectstaticCommandExists(error) => match error {
+            CapturedCommandError::Io(io_error) => log_io_error(
+                "Unable to inspect Django configuration",
+                "running 'python manage.py help collectstatic' to inspect the Django configuration",
+                &io_error,
+            ),
+            CapturedCommandError::NonZeroExitStatus(output) => log_error(
+                "Unable to inspect Django configuration",
+                formatdoc! {"
+                    The 'python manage.py help collectstatic' Django management command
+                    (used to check whether Django's static files feature is enabled)
+                    failed ({exit_status}).
+                    
+                    Details:
+                    
+                    {stderr}
+                    
+                    This indicates there is a problem with your application code or Django
+                    configuration. Try running the 'manage.py' script locally to see if the
+                    same error occurs.
+                    ",
+                    exit_status = &output.status,
+                    stderr = String::from_utf8_lossy(&output.stderr)
+                },
+            ),
+        },
+        DjangoCollectstaticError::CheckManagementScriptExists(io_error) => log_io_error(
+            "Unable to inspect Django configuration",
+            "checking if the 'manage.py' script exists",
+            &io_error,
+        ),
+        DjangoCollectstaticError::CollectstaticCommand(error) => match error {
+            StreamedCommandError::Io(io_error) => log_io_error(
+                "Unable to generate Django static files",
+                "running 'python manage.py collectstatic' to generate Django static files",
+                &io_error,
+            ),
+            StreamedCommandError::NonZeroExitStatus(exit_status) => log_error(
+                "Unable to generate Django static files",
+                formatdoc! {"
+                    The 'python manage.py collectstatic --link --no-input' Django management
+                    command to generate static files failed ({exit_status}).
+                    
+                    This is most likely due an issue in your application code or Django
+                    configuration. See the log output above for more information.
+                    
+                    If you are using the WhiteNoise package to optimize the serving of static
+                    files with Django (recommended), check that your app is using the Django
+                    config options shown here:
+                    https://whitenoise.readthedocs.io/en/stable/django.html
+                    
+                    Or, if you do not need to use static files in your app, disable the
+                    Django static files feature by removing 'django.contrib.staticfiles'
+                    from 'INSTALLED_APPS' in your app's Django configuration.
                 "},
             ),
         },
