@@ -70,7 +70,7 @@ fn has_collectstatic_command(
             .envs(command_env),
     )
     .map_or_else(
-        |err| match err {
+        |error| match error {
             // We need to differentiate between the command not existing (due to the staticfiles app
             // not being installed) and the Django config or mange.py script being broken. Ideally
             // we'd inspect the output of `manage.py help --commands` but that command unhelpfully
@@ -80,7 +80,7 @@ fn has_collectstatic_command(
             {
                 Ok(false)
             }
-            _ => Err(err),
+            _ => Err(error),
         },
         |_| Ok(true),
     )
