@@ -62,7 +62,7 @@ impl Layer for PipDependenciesLayer<'_> {
         // in the dependencies layer instead for consistency. (Plus if the dependencies layer were
         // ever cached, storing the repository in the app dir would break on repeat-builds).
         let src_dir = layer_path.join("src");
-        fs::create_dir(&src_dir).map_err(PipDependenciesLayerError::CreateSrcDirIo)?;
+        fs::create_dir(&src_dir).map_err(PipDependenciesLayerError::CreateSrcDir)?;
 
         log_info("Running pip install");
 
@@ -136,7 +136,7 @@ fn generate_layer_env(layer_path: &Path) -> LayerEnv {
 /// Errors that can occur when installing the project's dependencies into a layer using Pip.
 #[derive(Debug)]
 pub(crate) enum PipDependenciesLayerError {
-    CreateSrcDirIo(io::Error),
+    CreateSrcDir(io::Error),
     PipInstallCommand(StreamedCommandError),
 }
 

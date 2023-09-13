@@ -41,11 +41,7 @@ pub(crate) fn on_error(error: libcnb::Error<BuildpackError>) {
 
 fn on_buildpack_error(error: BuildpackError) {
     match error {
-        BuildpackError::DetectIo(io_error) => log_io_error(
-            "Unable to complete buildpack detection",
-            "determining if the Python buildpack should be run for this application",
-            &io_error,
-        ),
+        BuildpackError::BuildpackDetection(error) => on_buildpack_detection_error(&error),
         BuildpackError::DeterminePackageManager(error) => on_determine_package_manager_error(error),
         BuildpackError::DjangoCollectstatic(error) => on_django_collectstatic_error(error),
         BuildpackError::DjangoDetection(error) => on_django_detection_error(&error),
@@ -55,9 +51,17 @@ fn on_buildpack_error(error: BuildpackError) {
     };
 }
 
+fn on_buildpack_detection_error(error: &io::Error) {
+    log_io_error(
+        "Unable to complete buildpack detection",
+        "determining if the Python buildpack should be run for this application",
+        error,
+    );
+}
+
 fn on_determine_package_manager_error(error: DeterminePackageManagerError) {
     match error {
-        DeterminePackageManagerError::Io(io_error) => log_io_error(
+        DeterminePackageManagerError::CheckFileExists(io_error) => log_io_error(
             "Unable to determine the package manager",
             "determining which Python package manager to use for this project",
             &io_error,
@@ -82,11 +86,6 @@ fn on_determine_package_manager_error(error: DeterminePackageManagerError) {
 fn on_python_version_error(error: PythonVersionError) {
     match error {
         PythonVersionError::RuntimeTxt(error) => match error {
-            RuntimeTxtError::Io(io_error) => log_io_error(
-                "Unable to read runtime.txt",
-                "reading the (optional) runtime.txt file",
-                &io_error,
-            ),
             // TODO: (W-12613425) Write the supported Python versions inline, instead of linking out to Dev Center.
             RuntimeTxtError::Parse(ParseRuntimeTxtError { cleaned_contents }) => {
                 let PythonVersion {
@@ -116,6 +115,11 @@ fn on_python_version_error(error: PythonVersionError) {
                     "},
                 );
             }
+            RuntimeTxtError::Read(io_error) => log_io_error(
+                "Unable to read runtime.txt",
+                "reading the (optional) runtime.txt file",
+                &io_error,
+            ),
         },
     };
 }
@@ -145,11 +149,6 @@ fn on_python_layer_error(error: PythonLayerError) {
             ),
         },
         PythonLayerError::DownloadUnpackPythonArchive(error) => match error {
-            DownloadUnpackArchiveError::Io(io_error) => log_io_error(
-                "Unable to unpack the Python archive",
-                "unpacking the downloaded Python runtime archive and writing it to disk",
-                &io_error,
-            ),
             DownloadUnpackArchiveError::Request(ureq_error) => log_error(
                 "Unable to download Python",
                 formatdoc! {"
@@ -161,13 +160,18 @@ fn on_python_layer_error(error: PythonLayerError) {
                     Details: {ureq_error}
                 "},
             ),
+            DownloadUnpackArchiveError::Unpack(io_error) => log_io_error(
+                "Unable to unpack the Python archive",
+                "unpacking the downloaded Python runtime archive and writing it to disk",
+                &io_error,
+            ),
         },
-        PythonLayerError::LocateBundledPipIo(io_error) => log_io_error(
+        PythonLayerError::LocateBundledPip(io_error) => log_io_error(
             "Unable to locate the bundled copy of pip",
             "locating the pip wheel file bundled inside the Python 'ensurepip' module",
             &io_error,
         ),
-        PythonLayerError::MakeSitePackagesReadOnlyIo(io_error) => log_io_error(
+        PythonLayerError::MakeSitePackagesReadOnly(io_error) => log_io_error(
             "Unable to make site-packages directory read-only",
             "modifying the permissions on Python's 'site-packages' directory",
             &io_error,
@@ -194,7 +198,7 @@ fn on_python_layer_error(error: PythonLayerError) {
 
 fn on_pip_dependencies_layer_error(error: PipDependenciesLayerError) {
     match error {
-        PipDependenciesLayerError::CreateSrcDirIo(io_error) => log_io_error(
+        PipDependenciesLayerError::CreateSrcDir(io_error) => log_io_error(
             "Unable to create 'src' directory required for pip install",
             "creating the 'src' directory in the pip layer, prior to running pip install",
             &io_error,

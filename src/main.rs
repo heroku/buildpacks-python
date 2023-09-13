@@ -42,7 +42,7 @@ impl Buildpack for PythonBuildpack {
         // but we first need a better understanding of real-world use-cases, so that we can work
         // out how best to support them without sacrificing existing error handling UX (such as
         // wanting to show a clear error when requirements.txt is missing).
-        if utils::is_python_project(&context.app_dir).map_err(BuildpackError::DetectIo)? {
+        if utils::is_python_project(&context.app_dir).map_err(BuildpackError::BuildpackDetection)? {
             DetectResultBuilder::pass().build()
         } else {
             log_info("No Python project files found (such as requirements.txt).");
@@ -123,7 +123,7 @@ impl Buildpack for PythonBuildpack {
 #[derive(Debug)]
 pub(crate) enum BuildpackError {
     /// IO errors when performing buildpack detection.
-    DetectIo(io::Error),
+    BuildpackDetection(io::Error),
     /// Errors determining which Python package manager to use for a project.
     DeterminePackageManager(DeterminePackageManagerError),
     /// Errors running the Django collectstatic command.

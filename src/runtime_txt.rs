@@ -12,7 +12,7 @@ pub(crate) fn read_version(app_dir: &Path) -> Result<Option<PythonVersion>, Runt
     let runtime_txt_path = app_dir.join("runtime.txt");
 
     utils::read_optional_file(&runtime_txt_path)
-        .map_err(RuntimeTxtError::Io)?
+        .map_err(RuntimeTxtError::Read)?
         .map(|contents| parse(&contents).map_err(RuntimeTxtError::Parse))
         .transpose()
 }
@@ -52,8 +52,8 @@ fn parse(contents: &str) -> Result<PythonVersion, ParseRuntimeTxtError> {
 /// Errors that can occur when reading and parsing a `runtime.txt` file.
 #[derive(Debug)]
 pub(crate) enum RuntimeTxtError {
-    Io(io::Error),
     Parse(ParseRuntimeTxtError),
+    Read(io::Error),
 }
 
 /// Errors that can occur when parsing the contents of a `runtime.txt` file.
@@ -216,7 +216,7 @@ mod tests {
     fn read_version_io_error() {
         assert!(matches!(
             read_version(Path::new("tests/fixtures/empty/.gitkeep")).unwrap_err(),
-            RuntimeTxtError::Io(_)
+            RuntimeTxtError::Read(_)
         ));
     }
 
