@@ -23,7 +23,7 @@ pub(crate) fn determine_package_manager(
         if app_dir
             .join(filename)
             .try_exists()
-            .map_err(DeterminePackageManagerError::Io)?
+            .map_err(DeterminePackageManagerError::CheckFileExists)?
         {
             return Ok(package_manager);
         }
@@ -35,7 +35,7 @@ pub(crate) fn determine_package_manager(
 /// Errors that can occur when determining which Python package manager to use for a project.
 #[derive(Debug)]
 pub(crate) enum DeterminePackageManagerError {
-    Io(io::Error),
+    CheckFileExists(io::Error),
     NoneFound,
 }
 

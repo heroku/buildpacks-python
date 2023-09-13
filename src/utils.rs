@@ -60,14 +60,14 @@ pub(crate) fn download_and_unpack_gzipped_archive(
     let gzip_decoder = GzDecoder::new(response.into_reader());
     Archive::new(gzip_decoder)
         .unpack(destination)
-        .map_err(DownloadUnpackArchiveError::Io)
+        .map_err(DownloadUnpackArchiveError::Unpack)
 }
 
 /// Errors that can occur when downloading and unpacking an archive using `download_and_unpack_gzipped_archive`.
 #[derive(Debug)]
 pub(crate) enum DownloadUnpackArchiveError {
-    Io(io::Error),
     Request(ureq::Error),
+    Unpack(io::Error),
 }
 
 /// A helper for running an external process using [`Command`], that streams stdout/stderr
@@ -89,7 +89,6 @@ pub(crate) fn run_command_and_stream_output(
 
 /// A helper for running an external process using [`Command`], that captures stdout/stderr
 /// and checks that the exit status of the process was non-zero.
-#[allow(dead_code)]
 pub(crate) fn run_command_and_capture_output(
     command: &mut Command,
 ) -> Result<Output, CapturedCommandError> {

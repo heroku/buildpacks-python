@@ -103,7 +103,7 @@ impl Layer for PythonLayer<'_> {
         // Python bundles Pip within its standard library, which we can use to install our chosen
         // pip version from PyPI, saving us from having to download the usual pip bootstrap script.
         let bundled_pip_module_path = bundled_pip_module_path(&python_stdlib_dir)
-            .map_err(PythonLayerError::LocateBundledPipIo)?;
+            .map_err(PythonLayerError::LocateBundledPip)?;
 
         utils::run_command_and_stream_output(
             Command::new(python_binary)
@@ -132,7 +132,7 @@ impl Layer for PythonLayer<'_> {
         // user installs in such cases:
         // https://github.com/pypa/pip/blob/23.0/src/pip/_internal/commands/install.py#L715-L773
         fs::set_permissions(site_packages_dir, Permissions::from_mode(0o555))
-            .map_err(PythonLayerError::MakeSitePackagesReadOnlyIo)?;
+            .map_err(PythonLayerError::MakeSitePackagesReadOnly)?;
 
         let layer_metadata = self.generate_layer_metadata(&context.stack_id);
         LayerResultBuilder::new(layer_metadata)
@@ -424,8 +424,8 @@ fn bundled_pip_module_path(python_stdlib_dir: &Path) -> io::Result<PathBuf> {
 pub(crate) enum PythonLayerError {
     BootstrapPipCommand(StreamedCommandError),
     DownloadUnpackPythonArchive(DownloadUnpackArchiveError),
-    LocateBundledPipIo(io::Error),
-    MakeSitePackagesReadOnlyIo(io::Error),
+    LocateBundledPip(io::Error),
+    MakeSitePackagesReadOnly(io::Error),
     PythonArchiveNotFound {
         python_version: PythonVersion,
         stack: StackId,
