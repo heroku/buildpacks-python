@@ -5,6 +5,7 @@
 #![allow(clippy::large_enum_variant)]
 #![allow(clippy::result_large_err)]
 
+mod django;
 mod errors;
 mod layers;
 mod package_manager;
@@ -13,6 +14,7 @@ mod python_version;
 mod runtime_txt;
 mod utils;
 
+use crate::django::DjangoCollectstaticError;
 use crate::layers::pip_cache::PipCacheLayer;
 use crate::layers::pip_dependencies::{PipDependenciesLayer, PipDependenciesLayerError};
 use crate::layers::python::{PythonLayer, PythonLayerError};
@@ -80,7 +82,7 @@ impl Buildpack for PythonBuildpack {
 
         // Create the layers for the application dependencies and package manager cache.
         // In the future support will be added for package managers other than pip.
-        match package_manager {
+        let (dependencies_layer_dir, dependencies_layer_env) = match package_manager {
             PackageManager::Pip => {
                 log_header("Installing dependencies using Pip");
                 let pip_cache_layer = context.handle_layer(
@@ -97,9 +99,18 @@ impl Buildpack for PythonBuildpack {
                         pip_cache_dir: pip_cache_layer.path,
                     },
                 )?;
-                pip_layer.env
+                (pip_layer.path, pip_layer.env)
             }
         };
+        command_env = dependencies_layer_env.apply(Scope::Build, &command_env);
+
+        if django::is_django_installed(&dependencies_layer_dir)
+            .map_err(BuildpackError::DjangoDetection)?
+        {
+            log_header("Generating Django static files");
+            django::run_django_collectstatic(&context.app_dir, &command_env)
+                .map_err(BuildpackError::DjangoCollectstatic)?;
+        }
 
         BuildResultBuilder::new().build()
     }
@@ -115,6 +126,10 @@ pub(crate) enum BuildpackError {
     DetectIo(io::Error),
     /// Errors determining which Python package manager to use for a project.
     DeterminePackageManager(DeterminePackageManagerError),
+    /// Errors running the Django collectstatic command.
+    DjangoCollectstatic(DjangoCollectstaticError),
+    /// IO errors when detecting whether Django is installed.
+    DjangoDetection(io::Error),
     /// Errors installing the project's dependencies into a layer using Pip.
     PipDependenciesLayer(PipDependenciesLayerError),
     /// Errors installing Python and required packaging tools into a layer.
