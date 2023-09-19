@@ -7,6 +7,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.7.0] - 2023-09-19
+
 ### Added
 
 - Django's `collectstatic` command is now automatically run for Django apps that use static files. ([#108](https://github.com/heroku/buildpacks-python/pull/108))
@@ -64,7 +66,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - Initial implementation. ([#3](https://github.com/heroku/buildpacks-python/pull/3))
 
-[unreleased]: https://github.com/heroku/buildpacks-python/compare/v0.6.0...HEAD
+[unreleased]: https://github.com/heroku/buildpacks-python/compare/v0.7.0...HEAD
+[0.7.0]: https://github.com/heroku/buildpacks-python/compare/v0.6.0...v0.7.0
 [0.6.0]: https://github.com/heroku/buildpacks-python/compare/v0.5.0...v0.6.0
 [0.5.0]: https://github.com/heroku/buildpacks-python/compare/v0.4.0...v0.5.0
 [0.4.0]: https://github.com/heroku/buildpacks-python/compare/v0.3.0...v0.4.0
