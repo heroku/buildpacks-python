@@ -45,7 +45,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        builder: ["builder:22", "buildpacks:20"]
+        builder: ["builder:22", "builder:20"]
     env:
       INTEGRATION_TEST_CNB_BUILDER: heroku/${{ matrix.builder }}
     steps:
