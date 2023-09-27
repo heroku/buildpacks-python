@@ -34,7 +34,7 @@ fn python_3_7() {
     // Python 3.7 is only available on Heroku-20 and older.
     let fixture = "tests/fixtures/python_3.7";
     match builder().as_str() {
-        "heroku/buildpacks:20" => builds_with_python_version(fixture, LATEST_PYTHON_3_7),
+        "heroku/builder:20" => builds_with_python_version(fixture, LATEST_PYTHON_3_7),
         _ => rejects_non_existent_python_version(fixture, LATEST_PYTHON_3_7),
     };
 }
@@ -45,7 +45,7 @@ fn python_3_8() {
     // Python 3.8 is only available on Heroku-20 and older.
     let fixture = "tests/fixtures/python_3.8";
     match builder().as_str() {
-        "heroku/buildpacks:20" => builds_with_python_version(fixture, LATEST_PYTHON_3_8),
+        "heroku/builder:20" => builds_with_python_version(fixture, LATEST_PYTHON_3_8),
         _ => rejects_non_existent_python_version(fixture, LATEST_PYTHON_3_8),
     };
 }
@@ -187,7 +187,7 @@ fn rejects_non_existent_python_version(fixture_path: &str, python_version: &str)
         BuildConfig::new(&builder, fixture_path).expected_pack_result(PackResult::Failure),
         |context| {
             let expected_stack = match builder.as_str() {
-                "heroku/buildpacks:20" => "heroku-20",
+                "heroku/builder:20" => "heroku-20",
                 "heroku/builder:22" => "heroku-22",
                 _ => unimplemented!("Unknown builder!"),
             };
