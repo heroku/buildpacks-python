@@ -1,7 +1,7 @@
 use crate::packaging_tool_versions::PackagingToolVersions;
 use crate::tests::{
-    builder, DEFAULT_PYTHON_VERSION, LATEST_PYTHON_3_10, LATEST_PYTHON_3_11, LATEST_PYTHON_3_7,
-    LATEST_PYTHON_3_8, LATEST_PYTHON_3_9,
+    builder, DEFAULT_PYTHON_VERSION, LATEST_PYTHON_3_10, LATEST_PYTHON_3_11, LATEST_PYTHON_3_12,
+    LATEST_PYTHON_3_7, LATEST_PYTHON_3_8, LATEST_PYTHON_3_9,
 };
 use indoc::{formatdoc, indoc};
 use libcnb_test::{assert_contains, assert_empty, BuildConfig, PackResult, TestRunner};
@@ -66,6 +66,12 @@ fn python_3_10() {
 #[ignore = "integration test"]
 fn python_3_11() {
     builds_with_python_version("tests/fixtures/python_3.11", LATEST_PYTHON_3_11);
+}
+
+#[test]
+#[ignore = "integration test"]
+fn python_3_12() {
+    builds_with_python_version("tests/fixtures/python_3.12", LATEST_PYTHON_3_12);
 }
 
 fn builds_with_python_version(fixture_path: &str, python_version: &str) {
