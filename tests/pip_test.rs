@@ -32,7 +32,6 @@ fn pip_basic_install_and_cache_reuse() {
                 [Installing dependencies using Pip]
                 Running pip install
                 Collecting typing-extensions==4.7.1 (from -r requirements.txt (line 2))
-                  Obtaining dependency information for typing-extensions==4.7.1 from https://files.pythonhosted.org/packages/ec/6b/63cc3df74987c36fe26157ee12e09e8f9db4de771e0f3404263117e75b95/typing_extensions-4.7.1-py3-none-any.whl.metadata
                   Downloading typing_extensions-4.7.1-py3-none-any.whl.metadata (3.1 kB)
                 Downloading typing_extensions-4.7.1-py3-none-any.whl (33 kB)
                 Installing collected packages: typing-extensions
@@ -82,7 +81,6 @@ fn pip_basic_install_and_cache_reuse() {
                     Using cached pip download/wheel cache
                     Running pip install
                     Collecting typing-extensions==4.7.1 (from -r requirements.txt (line 2))
-                      Obtaining dependency information for typing-extensions==4.7.1 from https://files.pythonhosted.org/packages/ec/6b/63cc3df74987c36fe26157ee12e09e8f9db4de771e0f3404263117e75b95/typing_extensions-4.7.1-py3-none-any.whl.metadata
                       Using cached typing_extensions-4.7.1-py3-none-any.whl.metadata (3.1 kB)
                     Using cached typing_extensions-4.7.1-py3-none-any.whl (33 kB)
                     Installing collected packages: typing-extensions
@@ -134,7 +132,6 @@ fn pip_cache_invalidation_and_metadata_compatibility() {
                         Discarding cached pip download/wheel cache
                         Running pip install
                         Collecting typing-extensions==4.7.1 (from -r requirements.txt (line 2))
-                          Obtaining dependency information for typing-extensions==4.7.1 from https://files.pythonhosted.org/packages/ec/6b/63cc3df74987c36fe26157ee12e09e8f9db4de771e0f3404263117e75b95/typing_extensions-4.7.1-py3-none-any.whl.metadata
                           Downloading typing_extensions-4.7.1-py3-none-any.whl.metadata (3.1 kB)
                         Downloading typing_extensions-4.7.1-py3-none-any.whl (33 kB)
                         Installing collected packages: typing-extensions
