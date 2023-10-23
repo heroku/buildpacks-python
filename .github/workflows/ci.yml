@@ -71,4 +71,4 @@ jobs:
         run: cargo test --locked -- --ignored --test-threads 5
       - name: Run integration tests (stack-specific tests only)
         if: matrix.builder != 'builder:22'
-        run: cargo test --locked -- --ignored --test-threads 5 'python_version::'
+        run: cargo test --locked -- --ignored --test-threads 5 'python_version_test::'
