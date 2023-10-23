@@ -11,6 +11,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - Updated pip from 23.2.1 to 23.3.1. ([#131](https://github.com/heroku/buildpacks-python/pull/131))
 - Updated wheel from 0.41.0 to 0.41.2. ([#100](https://github.com/heroku/buildpacks-python/pull/100))
+- Updated buildpack display name and description. ([#135](https://github.com/heroku/buildpack-python/pull/135))
 
 ## [0.7.1] - 2023-10-02
 
