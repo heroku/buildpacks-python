@@ -7,6 +7,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Changed
+
+- Updated wheel from 0.41.2 to 0.41.3. ([#137](https://github.com/heroku/buildpacks-python/pull/137))
+
 ## [0.7.2] - 2023-10-24
 
 ### Changed
