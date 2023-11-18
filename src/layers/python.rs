@@ -32,11 +32,11 @@ use std::{fs, io};
 ///  - It matches what both local and official Docker image environments do.
 pub(crate) struct PythonLayer<'a> {
     /// Environment variables inherited from earlier buildpack steps.
-    pub command_env: &'a Env,
+    pub(crate) command_env: &'a Env,
     /// The Python version that this layer should install.
-    pub python_version: &'a PythonVersion,
+    pub(crate) python_version: &'a PythonVersion,
     /// The pip, setuptools and wheel versions that this layer should install.
-    pub packaging_tool_versions: &'a PackagingToolVersions,
+    pub(crate) packaging_tool_versions: &'a PackagingToolVersions,
 }
 
 impl Layer for PythonLayer<'_> {

@@ -15,13 +15,13 @@ pub(crate) const DEFAULT_PYTHON_VERSION: PythonVersion = PythonVersion {
 /// Representation of a specific Python `X.Y.Z` version.
 #[derive(Clone, Debug, PartialEq)]
 pub(crate) struct PythonVersion {
-    pub major: u16,
-    pub minor: u16,
-    pub patch: u16,
+    pub(crate) major: u16,
+    pub(crate) minor: u16,
+    pub(crate) patch: u16,
 }
 
 impl PythonVersion {
-    pub fn new(major: u16, minor: u16, patch: u16) -> Self {
+    pub(crate) fn new(major: u16, minor: u16, patch: u16) -> Self {
         Self {
             major,
             minor,
@@ -29,7 +29,7 @@ impl PythonVersion {
         }
     }
 
-    pub fn url(&self, stack_id: &StackId) -> String {
+    pub(crate) fn url(&self, stack_id: &StackId) -> String {
         // TODO: (W-11474658) Switch to tracking versions/URLs via a manifest file.
         format!(
             "https://heroku-buildpack-python.s3.us-east-1.amazonaws.com/{}/runtimes/python-{}.{}.{}.tar.gz",
