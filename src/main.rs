@@ -1,10 +1,3 @@
-#![warn(clippy::pedantic)]
-#![warn(unused_crate_dependencies)]
-// Prevent warnings caused by the large size of `ureq::Error` in error enums,
-// where it is not worth boxing since the enum size doesn't affect performance.
-#![allow(clippy::large_enum_variant)]
-#![allow(clippy::result_large_err)]
-
 mod django;
 mod errors;
 mod layers;
