@@ -3,9 +3,19 @@ name = "python-buildpack"
 version = "0.0.0"
 publish = false
 edition = "2021"
-rust-version = "1.67"
+rust-version = "1.74"
 # Disable automatic integration test discovery, since we import them in main.rs (see comment there).
 autotests = false
+
+[lints.rust]
+unused_crate_dependencies = "warn"
+
+[lints.clippy]
+pedantic = "warn"
+# Prevent warnings caused by the large size of `ureq::Error` in error enums,
+# where it is not worth boxing since the enum size doesn't affect performance.
+large_enum_variant = "allow"
+result_large_err = "allow"
 
 [dependencies]
 # The default `miniz_oxide` flate2 backend has poor performance in debug/under QEMU:
