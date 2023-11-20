@@ -14,9 +14,9 @@ use std::{fs, io};
 /// Layer containing the application's Python dependencies, installed using Pip.
 pub(crate) struct PipDependenciesLayer<'a> {
     /// Environment variables inherited from earlier buildpack steps.
-    pub command_env: &'a Env,
+    pub(crate) command_env: &'a Env,
     /// The path to the Pip cache directory, which is stored in another layer since it isn't needed at runtime.
-    pub pip_cache_dir: PathBuf,
+    pub(crate) pip_cache_dir: PathBuf,
 }
 
 impl Layer for PipDependenciesLayer<'_> {

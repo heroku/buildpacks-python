@@ -59,7 +59,7 @@ pub(crate) enum RuntimeTxtError {
 /// Errors that can occur when parsing the contents of a `runtime.txt` file.
 #[derive(Debug, PartialEq)]
 pub(crate) struct ParseRuntimeTxtError {
-    pub cleaned_contents: String,
+    pub(crate) cleaned_contents: String,
 }
 
 #[cfg(test)]

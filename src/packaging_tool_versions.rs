@@ -10,9 +10,9 @@ const WHEEL_REQUIREMENT: &str = include_str!("../requirements/wheel.txt");
 /// semver, and we never introspect the version parts anyway.
 #[derive(Clone, Deserialize, PartialEq, Serialize)]
 pub(crate) struct PackagingToolVersions {
-    pub pip_version: String,
-    pub setuptools_version: String,
-    pub wheel_version: String,
+    pub(crate) pip_version: String,
+    pub(crate) setuptools_version: String,
+    pub(crate) wheel_version: String,
 }
 
 impl Default for PackagingToolVersions {

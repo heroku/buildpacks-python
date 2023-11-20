@@ -8,10 +8,14 @@ rust-version = "1.74"
 autotests = false
 
 [lints.rust]
+unreachable_pub = "warn"
+unsafe_code = "warn"
 unused_crate_dependencies = "warn"
 
 [lints.clippy]
+panic_in_result_fn = "warn"
 pedantic = "warn"
+unwrap_used = "warn"
 # Prevent warnings caused by the large size of `ureq::Error` in error enums,
 # where it is not worth boxing since the enum size doesn't affect performance.
 large_enum_variant = "allow"

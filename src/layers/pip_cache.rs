@@ -13,9 +13,9 @@ use std::path::Path;
 /// Layer containing Pip's cache of HTTP requests/downloads and built package wheels.
 pub(crate) struct PipCacheLayer<'a> {
     /// The Python version used for this build.
-    pub python_version: &'a PythonVersion,
+    pub(crate) python_version: &'a PythonVersion,
     /// The pip, setuptools and wheel versions used for this build.
-    pub packaging_tool_versions: &'a PackagingToolVersions,
+    pub(crate) packaging_tool_versions: &'a PackagingToolVersions,
 }
 
 impl Layer for PipCacheLayer<'_> {
