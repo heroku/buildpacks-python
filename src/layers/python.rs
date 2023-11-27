@@ -477,7 +477,7 @@ mod tests {
         };
         assert_eq!(
             cache_invalidation_reasons(&cached_metadata, &new_metadata),
-            vec!["The Python version has changed from 3.11.0 to 3.11.1"]
+            ["The Python version has changed from 3.11.0 to 3.11.1"]
         );
     }
 
@@ -503,7 +503,7 @@ mod tests {
         };
         assert_eq!(
             cache_invalidation_reasons(&cached_metadata, &new_metadata),
-            vec![
+            [
                 "The stack has changed from heroku-20 to heroku-22",
                 "The Python version has changed from 3.9.0 to 3.11.1",
                 "The pip version has changed from A.B.C to A.B.C-new",
@@ -527,7 +527,7 @@ mod tests {
         // Remember to force invalidation of the cached layer if these env vars ever change.
         assert_eq!(
             utils::environment_as_sorted_vector(&layer_env.apply_to_empty(Scope::Build)),
-            vec![
+            [
                 ("CPATH", "/layers/python/include/python3.9"),
                 ("LANG", "C.UTF-8"),
                 ("PIP_DISABLE_PIP_VERSION_CHECK", "1"),
@@ -539,7 +539,7 @@ mod tests {
         );
         assert_eq!(
             utils::environment_as_sorted_vector(&layer_env.apply_to_empty(Scope::Launch)),
-            vec![
+            [
                 ("CPATH", "/layers/python/include/python3.9"),
                 ("LANG", "C.UTF-8"),
                 ("PIP_DISABLE_PIP_VERSION_CHECK", "1"),
@@ -573,7 +573,7 @@ mod tests {
         // Remember to force invalidation of the cached layer if these env vars ever change.
         assert_eq!(
             utils::environment_as_sorted_vector(&layer_env.apply(Scope::Build, &base_env)),
-            vec![
+            [
                 ("CPATH", "/layers/python/include/python3.11:/base"),
                 ("LANG", "C.UTF-8"),
                 ("PIP_DISABLE_PIP_VERSION_CHECK", "1"),
@@ -585,7 +585,7 @@ mod tests {
         );
         assert_eq!(
             utils::environment_as_sorted_vector(&layer_env.apply(Scope::Launch, &base_env)),
-            vec![
+            [
                 ("CPATH", "/layers/python/include/python3.11:/base"),
                 ("LANG", "C.UTF-8"),
                 ("PIP_DISABLE_PIP_VERSION_CHECK", "1"),

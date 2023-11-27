@@ -159,11 +159,11 @@ mod tests {
 
         assert_eq!(
             utils::environment_as_sorted_vector(&layer_env.apply(Scope::Build, &base_env)),
-            vec![("PYTHONUSERBASE", "/layers/dependencies")]
+            [("PYTHONUSERBASE", "/layers/dependencies")]
         );
         assert_eq!(
             utils::environment_as_sorted_vector(&layer_env.apply(Scope::Launch, &base_env)),
-            vec![("PYTHONUSERBASE", "/layers/dependencies")]
+            [("PYTHONUSERBASE", "/layers/dependencies")]
         );
     }
 }

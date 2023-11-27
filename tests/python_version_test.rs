@@ -146,6 +146,26 @@ fn builds_with_python_version(fixture_path: &str, python_version: &str) {
 
 #[test]
 #[ignore = "integration test"]
+fn runtime_txt_io_error() {
+    TestRunner::default().build(
+        BuildConfig::new(builder(), "tests/fixtures/runtime_txt_invalid_unicode")
+            .expected_pack_result(PackResult::Failure),
+        |context| {
+            assert_contains!(
+                context.pack_stderr,
+                &formatdoc! {"
+                    [Error: Unable to read runtime.txt]
+                    An unexpected error occurred whilst reading the (optional) runtime.txt file.
+                    
+                    Details: I/O Error: stream did not contain valid UTF-8
+                "}
+            );
+        },
+    );
+}
+
+#[test]
+#[ignore = "integration test"]
 fn runtime_txt_invalid_version() {
     TestRunner::default().build(
         BuildConfig::new(builder(), "tests/fixtures/runtime_txt_invalid_version")

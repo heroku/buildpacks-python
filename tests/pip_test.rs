@@ -106,7 +106,7 @@ fn pip_cache_invalidation_and_metadata_compatibility() {
     let config = BuildConfig::new(builder(), "tests/fixtures/pip_basic");
 
     TestRunner::default().build(
-        config.clone().buildpacks(vec![BuildpackReference::Other(
+        config.clone().buildpacks([BuildpackReference::Other(
             "docker://docker.io/heroku/buildpack-python:0.1.0".to_string(),
         )]),
         |context| {
