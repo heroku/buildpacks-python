@@ -218,6 +218,10 @@ mod tests {
             read_version(Path::new("tests/fixtures/empty/.gitkeep")).unwrap_err(),
             RuntimeTxtError::Read(_)
         ));
+        assert!(matches!(
+            read_version(Path::new("tests/fixtures/runtime_txt_invalid_unicode")).unwrap_err(),
+            RuntimeTxtError::Read(_)
+        ));
     }
 
     #[test]
