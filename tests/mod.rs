@@ -17,7 +17,7 @@ const LATEST_PYTHON_3_9: &str = "3.9.18";
 const LATEST_PYTHON_3_10: &str = "3.10.13";
 const LATEST_PYTHON_3_11: &str = "3.11.6";
 const LATEST_PYTHON_3_12: &str = "3.12.0";
-const DEFAULT_PYTHON_VERSION: &str = LATEST_PYTHON_3_11;
+const DEFAULT_PYTHON_VERSION: &str = LATEST_PYTHON_3_12;
 
 const DEFAULT_BUILDER: &str = "heroku/builder:22";
 

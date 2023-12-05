@@ -8,8 +8,8 @@ use std::path::Path;
 /// The Python version that will be installed if the project does not specify an explicit version.
 pub(crate) const DEFAULT_PYTHON_VERSION: PythonVersion = PythonVersion {
     major: 3,
-    minor: 11,
-    patch: 6,
+    minor: 12,
+    patch: 0,
 };
 
 /// Representation of a specific Python `X.Y.Z` version.
