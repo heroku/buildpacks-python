@@ -9,7 +9,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Changed
 
-- Changed the default Python version from 3.11 to 3.12. ([#152](https://github.com/heroku/buildpacks-python/pull/152))
+- Updated the default Python version from 3.11.6 to 3.12.1. ([#152](https://github.com/heroku/buildpacks-python/pull/152) and [#154](https://github.com/heroku/buildpacks-python/pull/154))
 - Updated wheel from 0.41.3 to 0.42.0. ([#150](https://github.com/heroku/buildpacks-python/pull/150))
 
 ## [0.7.3] - 2023-11-06
