@@ -8,6 +8,7 @@ const WHEEL_REQUIREMENT: &str = include_str!("../requirements/wheel.txt");
 /// These are always installed, and are independent of the chosen package manager.
 /// Strings are used instead of a semver version, since these packages don't use
 /// semver, and we never introspect the version parts anyway.
+#[allow(clippy::struct_field_names)]
 #[derive(Clone, Deserialize, PartialEq, Serialize)]
 pub(crate) struct PackagingToolVersions {
     pub(crate) pip_version: String,
