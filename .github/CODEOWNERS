@@ -1,1 +1,10 @@
+# Default to requesting pull request reviews from the Heroku Languages team.
 * @heroku/languages
+
+# However, request review from the language owner instead for files that are updated
+# by Dependabot or release automation, to reduce team review request noise.
+buildpack.toml @edmorley
+CHANGELOG.md @edmorley
+Cargo.toml @edmorley
+Cargo.lock @edmorley
+/requirements/ @edmorley
