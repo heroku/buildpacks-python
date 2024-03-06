@@ -1,4 +1,4 @@
-# Contributing Guide for Heroku Cloud Native Buildpacks
+# Contributing to Heroku Cloud Native Buildpacks
 
 This page lists the operational governance model of this project, as well as
 the recommendations and requirements for how to best contribute to Heroku
