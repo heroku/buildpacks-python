@@ -31,14 +31,22 @@ docker run --rm -it -e "PORT=8080" -p 8080:8080 sample-app
 
 ## Application Requirements
 
-A `requirements.txt` must be present at the root of your application's repository.
+A `requirements.txt` file must be present at the root of your application's repository.
 
 ## Configuration
 
-To specify your python version, you also need a `runtime.txt` file - unless you are using the default Python runtime version.
+### Python Version
 
-Alternatively, you can provide a `setup.py` file, or a `Pipfile`.
-Using `pipenv` will generate `runtime.txt` at build time if one of the field `python_version` or `python_full_version` is specified in the `requires` section of your `Pipfile`.
+By default, the buildpack will install the latest version of Python 3.12.
+
+To install a different version, add a `runtime.txt` file to your app’s root directory that declares the exact version number to use:
+
+```term
+$ cat runtime.txt
+python-3.12.2
+```
+
+In the future this buildpack will also support specifying the Python version via a `.python-version` file (see [#6](https://github.com/heroku/buildpacks-python/issues/6)).
 
 ## Contributing
 
