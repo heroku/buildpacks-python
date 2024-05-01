@@ -2,10 +2,12 @@ use crate::packaging_tool_versions::PackagingToolVersions;
 use crate::python_version::PythonVersion;
 use crate::PythonBuildpack;
 use libcnb::build::BuildContext;
-use libcnb::data::buildpack::StackId;
 use libcnb::data::layer_content_metadata::LayerTypes;
-use libcnb::layer::{ExistingLayerStrategy, Layer, LayerData, LayerResult, LayerResultBuilder};
-use libcnb::Buildpack;
+use libcnb::generic::GenericMetadata;
+use libcnb::layer::{
+    ExistingLayerStrategy, Layer, LayerData, LayerResult, LayerResultBuilder, MetadataMigration,
+};
+use libcnb::{Buildpack, Target};
 use libherokubuildpack::log::log_info;
 use serde::{Deserialize, Serialize};
 use std::path::Path;
@@ -31,21 +33,21 @@ impl Layer for PipCacheLayer<'_> {
     }
 
     fn create(
-        &self,
+        &mut self,
         context: &BuildContext<Self::Buildpack>,
         _layer_path: &Path,
     ) -> Result<LayerResult<Self::Metadata>, <Self::Buildpack as Buildpack>::Error> {
-        let layer_metadata = self.generate_layer_metadata(&context.stack_id);
+        let layer_metadata = self.generate_layer_metadata(&context.target);
         LayerResultBuilder::new(layer_metadata).build()
     }
 
     fn existing_layer_strategy(
-        &self,
+        &mut self,
         context: &BuildContext<Self::Buildpack>,
         layer_data: &LayerData<Self::Metadata>,
     ) -> Result<ExistingLayerStrategy, <Self::Buildpack as Buildpack>::Error> {
         let cached_metadata = &layer_data.content_metadata.metadata;
-        let new_metadata = &self.generate_layer_metadata(&context.stack_id);
+        let new_metadata = &self.generate_layer_metadata(&context.target);
 
         if cached_metadata == new_metadata {
             log_info("Using cached pip download/wheel cache");
@@ -55,12 +57,23 @@ impl Layer for PipCacheLayer<'_> {
             Ok(ExistingLayerStrategy::Recreate)
         }
     }
+
+    fn migrate_incompatible_metadata(
+        &mut self,
+        _context: &BuildContext<Self::Buildpack>,
+        _metadata: &GenericMetadata,
+    ) -> Result<MetadataMigration<Self::Metadata>, <Self::Buildpack as Buildpack>::Error> {
+        log_info("Discarding cached pip download/wheel cache");
+        Ok(MetadataMigration::RecreateLayer)
+    }
 }
 
 impl<'a> PipCacheLayer<'a> {
-    fn generate_layer_metadata(&self, stack_id: &StackId) -> PipCacheLayerMetadata {
+    fn generate_layer_metadata(&self, target: &Target) -> PipCacheLayerMetadata {
         PipCacheLayerMetadata {
-            stack: stack_id.clone(),
+            arch: target.arch.clone(),
+            distro_name: target.distro_name.clone(),
+            distro_version: target.distro_version.clone(),
             python_version: self.python_version.to_string(),
             packaging_tool_versions: self.packaging_tool_versions.clone(),
         }
@@ -73,8 +86,11 @@ impl<'a> PipCacheLayer<'a> {
 // versions will change often enough that it isn't worth the added complexity. Ideally pip
 // would support cleaning up its own cache: https://github.com/pypa/pip/issues/6956
 #[derive(Clone, Deserialize, PartialEq, Serialize)]
+#[serde(deny_unknown_fields)]
 pub(crate) struct PipCacheLayerMetadata {
-    stack: StackId,
+    arch: String,
+    distro_name: String,
+    distro_version: String,
     python_version: String,
     packaging_tool_versions: PackagingToolVersions,
 }

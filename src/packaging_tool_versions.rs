@@ -10,6 +10,7 @@ const WHEEL_REQUIREMENT: &str = include_str!("../requirements/wheel.txt");
 /// semver, and we never introspect the version parts anyway.
 #[allow(clippy::struct_field_names)]
 #[derive(Clone, Deserialize, PartialEq, Serialize)]
+#[serde(deny_unknown_fields)]
 pub(crate) struct PackagingToolVersions {
     pub(crate) pip_version: String,
     pub(crate) setuptools_version: String,

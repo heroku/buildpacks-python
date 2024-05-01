@@ -1,6 +1,6 @@
 use crate::runtime_txt::{self, RuntimeTxtError};
 use indoc::formatdoc;
-use libcnb::data::buildpack::StackId;
+use libcnb::Target;
 use libherokubuildpack::log::log_info;
 use std::fmt::{self, Display};
 use std::path::Path;
@@ -29,11 +29,21 @@ impl PythonVersion {
         }
     }
 
-    pub(crate) fn url(&self, stack_id: &StackId) -> String {
-        // TODO: (W-11474658) Switch to tracking versions/URLs via a manifest file.
+    // TODO: (W-11474658) Switch to tracking versions/URLs via a manifest file.
+    pub(crate) fn url(&self, target: &Target) -> String {
+        let Self {
+            major,
+            minor,
+            patch,
+        } = self;
+        let Target {
+            arch,
+            distro_name,
+            distro_version,
+            ..
+        } = target;
         format!(
-            "https://heroku-buildpack-python.s3.us-east-1.amazonaws.com/{}/runtimes/python-{}.{}.{}.tar.gz",
-            stack_id, self.major, self.minor, self.patch
+            "https://heroku-buildpack-python.s3.us-east-1.amazonaws.com/python-{major}.{minor}.{patch}-{distro_name}-{distro_version}-{arch}.tar.zst"
         )
     }
 }
@@ -79,13 +89,28 @@ pub(crate) enum PythonVersionError {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use libcnb::data::stack_id;
 
     #[test]
     fn python_version_url() {
         assert_eq!(
-            PythonVersion::new(3, 11, 0).url(&stack_id!("heroku-22")),
-            "https://heroku-buildpack-python.s3.us-east-1.amazonaws.com/heroku-22/runtimes/python-3.11.0.tar.gz"
+            PythonVersion::new(3, 11, 0).url(&Target {
+                os: "linux".to_string(),
+                arch: "amd64".to_string(),
+                arch_variant: None,
+                distro_name: "ubuntu".to_string(),
+                distro_version: "22.04".to_string()
+            }),
+            "https://heroku-buildpack-python.s3.us-east-1.amazonaws.com/python-3.11.0-ubuntu-22.04-amd64.tar.zst"
+        );
+        assert_eq!(
+            PythonVersion::new(3, 12, 2).url(&Target {
+                os: "linux".to_string(),
+                arch: "arm64".to_string(),
+                arch_variant: None,
+                distro_name: "ubuntu".to_string(),
+                distro_version: "24.04".to_string()
+            }),
+            "https://heroku-buildpack-python.s3.us-east-1.amazonaws.com/python-3.12.2-ubuntu-24.04-arm64.tar.zst"
         );
     }
 

@@ -58,7 +58,7 @@ impl Buildpack for PythonBuildpack {
         let packaging_tool_versions = PackagingToolVersions::default();
 
         // We inherit the current process's env vars, since we want `PATH` and `HOME` from the OS
-        // to be set (so that later commands can find tools like Git in the stack image), along
+        // to be set (so that later commands can find tools like Git in the base image), along
         // with previous-buildpack or user-provided env vars (so that features like env vars in
         // in requirements files work). We protect against broken user-provided env vars by
         // making sure that buildpack env vars take precedence in layers envs and command usage.

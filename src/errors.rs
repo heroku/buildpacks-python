@@ -178,13 +178,11 @@ fn on_python_layer_error(error: PythonLayerError) {
         ),
         // This error will change once the Python version is validated against a manifest.
         // TODO: (W-12613425) Write the supported Python versions inline, instead of linking out to Dev Center.
-        PythonLayerError::PythonArchiveNotFound {
-            python_version,
-            stack,
-        } => log_error(
+        // TODO: Decide how to explain to users how stacks, base images and builder images versions relate to each other.
+        PythonLayerError::PythonArchiveNotFound { python_version } => log_error(
             "Requested Python version is not available",
             formatdoc! {"
-                The requested Python version ({python_version}) is not available for this stack ({stack}).
+                The requested Python version ({python_version}) is not available for this builder image.
                 
                 Please update the version in 'runtime.txt' to a supported Python version, or else
                 remove the file to instead use the default version (currently Python {DEFAULT_PYTHON_VERSION}).
