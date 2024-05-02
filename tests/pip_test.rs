@@ -96,7 +96,12 @@ fn pip_basic_install_and_cache_reuse() {
 // - The layer metadata written by older versions of the buildpack are still compatible.
 #[test]
 #[ignore = "integration test"]
-fn pip_cache_invalidation_and_metadata_compatibility() {
+fn pip_cache_invalidation_with_compatible_metadata() {
+    // TODO: Re-enable this test after the next buildpack release, at which point there will
+    // be a historic buildpack version with compatible cache metadata that we can use.
+    #![allow(unreachable_code)]
+    return;
+
     let PackagingToolVersions {
         pip_version,
         setuptools_version,
@@ -107,7 +112,7 @@ fn pip_cache_invalidation_and_metadata_compatibility() {
 
     TestRunner::default().build(
         config.clone().buildpacks([BuildpackReference::Other(
-            "docker://docker.io/heroku/buildpack-python:0.1.0".to_string(),
+            "docker://docker.io/heroku/buildpack-python:0.9.0".to_string(),
         )]),
         |context| {
             context.rebuild(config, |rebuild_context| {
@@ -125,6 +130,54 @@ fn pip_cache_invalidation_and_metadata_compatibility() {
                          - The pip version has changed from 23.0.1 to {pip_version}
                          - The setuptools version has changed from 67.5.0 to {setuptools_version}
                          - The wheel version has changed from 0.38.4 to {wheel_version}
+                        Installing Python {DEFAULT_PYTHON_VERSION}
+                        Installing pip {pip_version}, setuptools {setuptools_version} and wheel {wheel_version}
+                        
+                        [Installing dependencies using Pip]
+                        Discarding cached pip download/wheel cache
+                        Running pip install
+                        Collecting typing-extensions==4.7.1 (from -r requirements.txt (line 2))
+                          Downloading typing_extensions-4.7.1-py3-none-any.whl.metadata (3.1 kB)
+                        Downloading typing_extensions-4.7.1-py3-none-any.whl (33 kB)
+                        Installing collected packages: typing-extensions
+                        Successfully installed typing-extensions-4.7.1
+                    "}
+                );
+            });
+        },
+    );
+}
+
+// This tests that:
+// - The cached layers are correctly invalidated when the layer metadata was incompatible.
+// - That a suitable message was output explaining why.
+#[test]
+#[ignore = "integration test"]
+fn pip_cache_invalidation_with_incompatible_metadata() {
+    let PackagingToolVersions {
+        pip_version,
+        setuptools_version,
+        wheel_version,
+    } = PackagingToolVersions::default();
+
+    let config = BuildConfig::new(builder(), "tests/fixtures/pip_basic");
+
+    TestRunner::default().build(
+        config.clone().buildpacks([BuildpackReference::Other(
+            "docker://docker.io/heroku/buildpack-python:0.8.4".to_string(),
+        )]),
+        |context| {
+            context.rebuild(config, |rebuild_context| {
+                assert_empty!(rebuild_context.pack_stderr);
+                assert_contains!(
+                    rebuild_context.pack_stdout,
+                    &formatdoc! {"
+                        [Determining Python version]
+                        No Python version specified, using the current default of Python {DEFAULT_PYTHON_VERSION}.
+                        To use a different version, see: https://devcenter.heroku.com/articles/python-runtimes
+                        
+                        [Installing Python and packaging tools]
+                        Discarding cache since the buildpack cache format has changed
                         Installing Python {DEFAULT_PYTHON_VERSION}
                         Installing pip {pip_version}, setuptools {setuptools_version} and wheel {wheel_version}
                         

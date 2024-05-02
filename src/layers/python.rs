@@ -3,11 +3,13 @@ use crate::python_version::PythonVersion;
 use crate::utils::{self, DownloadUnpackArchiveError, StreamedCommandError};
 use crate::{BuildpackError, PythonBuildpack};
 use libcnb::build::BuildContext;
-use libcnb::data::buildpack::StackId;
 use libcnb::data::layer_content_metadata::LayerTypes;
-use libcnb::layer::{ExistingLayerStrategy, Layer, LayerData, LayerResult, LayerResultBuilder};
+use libcnb::generic::GenericMetadata;
+use libcnb::layer::{
+    ExistingLayerStrategy, Layer, LayerData, LayerResult, LayerResultBuilder, MetadataMigration,
+};
 use libcnb::layer_env::{LayerEnv, ModificationBehavior, Scope};
-use libcnb::{Buildpack, Env};
+use libcnb::{Buildpack, Env, Target};
 use libherokubuildpack::log::log_info;
 use serde::{Deserialize, Serialize};
 use std::fs::Permissions;
@@ -52,20 +54,19 @@ impl Layer for PythonLayer<'_> {
     }
 
     fn create(
-        &self,
+        &mut self,
         context: &BuildContext<Self::Buildpack>,
         layer_path: &Path,
     ) -> Result<LayerResult<Self::Metadata>, <Self::Buildpack as Buildpack>::Error> {
         log_info(format!("Installing Python {}", self.python_version));
 
-        let archive_url = self.python_version.url(&context.stack_id);
-        utils::download_and_unpack_gzipped_archive(&archive_url, layer_path).map_err(|error| {
+        let archive_url = self.python_version.url(&context.target);
+        utils::download_and_unpack_zstd_archive(&archive_url, layer_path).map_err(|error| {
             match error {
                 // TODO: Remove this once the Python version is validated against a manifest (at which
                 // point 404s can be treated as an internal error, instead of user error)
                 DownloadUnpackArchiveError::Request(ureq::Error::Status(404, _)) => {
                     PythonLayerError::PythonArchiveNotFound {
-                        stack: context.stack_id.clone(),
                         python_version: self.python_version.clone(),
                     }
                 }
@@ -134,19 +135,19 @@ impl Layer for PythonLayer<'_> {
         fs::set_permissions(site_packages_dir, Permissions::from_mode(0o555))
             .map_err(PythonLayerError::MakeSitePackagesReadOnly)?;
 
-        let layer_metadata = self.generate_layer_metadata(&context.stack_id);
+        let layer_metadata = self.generate_layer_metadata(&context.target);
         LayerResultBuilder::new(layer_metadata)
             .env(layer_env)
             .build()
     }
 
     fn existing_layer_strategy(
-        &self,
+        &mut self,
         context: &BuildContext<Self::Buildpack>,
         layer_data: &LayerData<Self::Metadata>,
     ) -> Result<ExistingLayerStrategy, <Self::Buildpack as Buildpack>::Error> {
         let cached_metadata = &layer_data.content_metadata.metadata;
-        let new_metadata = self.generate_layer_metadata(&context.stack_id);
+        let new_metadata = self.generate_layer_metadata(&context.target);
         let cache_invalidation_reasons = cache_invalidation_reasons(cached_metadata, &new_metadata);
 
         if cache_invalidation_reasons.is_empty() {
@@ -171,12 +172,25 @@ impl Layer for PythonLayer<'_> {
             Ok(ExistingLayerStrategy::Recreate)
         }
     }
+
+    fn migrate_incompatible_metadata(
+        &mut self,
+        _context: &BuildContext<Self::Buildpack>,
+        _metadata: &GenericMetadata,
+    ) -> Result<MetadataMigration<Self::Metadata>, <Self::Buildpack as Buildpack>::Error> {
+        // For now we don't migrate old cache metadata formats, since we want to invalidate
+        // the cache anyway (to switch to the new runtime archives).
+        log_info("Discarding cache since the buildpack cache format has changed");
+        Ok(MetadataMigration::RecreateLayer)
+    }
 }
 
 impl<'a> PythonLayer<'a> {
-    fn generate_layer_metadata(&self, stack_id: &StackId) -> PythonLayerMetadata {
+    fn generate_layer_metadata(&self, target: &Target) -> PythonLayerMetadata {
         PythonLayerMetadata {
-            stack: stack_id.clone(),
+            arch: target.arch.clone(),
+            distro_name: target.distro_name.clone(),
+            distro_version: target.distro_version.clone(),
             python_version: self.python_version.to_string(),
             packaging_tool_versions: self.packaging_tool_versions.clone(),
         }
@@ -186,8 +200,11 @@ impl<'a> PythonLayer<'a> {
 /// Metadata stored in the generated layer that allows future builds to determine whether
 /// the cached layer needs to be invalidated or not.
 #[derive(Clone, Deserialize, PartialEq, Serialize)]
+#[serde(deny_unknown_fields)]
 pub(crate) struct PythonLayerMetadata {
-    stack: StackId,
+    arch: String,
+    distro_name: String,
+    distro_version: String,
     python_version: String,
     packaging_tool_versions: PackagingToolVersions,
 }
@@ -204,7 +221,9 @@ fn cache_invalidation_reasons(
     // metadata in the future, it forces them to be used as part of cache invalidation,
     // otherwise Clippy would report unused variable errors.
     let PythonLayerMetadata {
-        stack: cached_stack,
+        arch: cached_arch,
+        distro_name: cached_distro_name,
+        distro_version: cached_distro_version,
         python_version: cached_python_version,
         packaging_tool_versions:
             PackagingToolVersions {
@@ -215,7 +234,9 @@ fn cache_invalidation_reasons(
     } = cached_metadata;
 
     let PythonLayerMetadata {
-        stack,
+        arch,
+        distro_name,
+        distro_version,
         python_version,
         packaging_tool_versions:
             PackagingToolVersions {
@@ -227,9 +248,15 @@ fn cache_invalidation_reasons(
 
     let mut reasons = Vec::new();
 
-    if cached_stack != stack {
+    if cached_arch != arch {
         reasons.push(format!(
-            "The stack has changed from {cached_stack} to {stack}"
+            "The CPU architecture has changed from {cached_arch} to {arch}"
+        ));
+    }
+
+    if (cached_distro_name, cached_distro_version) != (distro_name, distro_version) {
+        reasons.push(format!(
+            "The OS has changed from {cached_distro_name}-{cached_distro_version} to {distro_name}-{distro_version}"
         ));
     }
 
@@ -426,10 +453,7 @@ pub(crate) enum PythonLayerError {
     DownloadUnpackPythonArchive(DownloadUnpackArchiveError),
     LocateBundledPip(io::Error),
     MakeSitePackagesReadOnly(io::Error),
-    PythonArchiveNotFound {
-        python_version: PythonVersion,
-        stack: StackId,
-    },
+    PythonArchiveNotFound { python_version: PythonVersion },
 }
 
 impl From<PythonLayerError> for BuildpackError {
@@ -441,12 +465,13 @@ impl From<PythonLayerError> for BuildpackError {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use libcnb::data::stack_id;
 
     #[test]
     fn cache_invalidation_reasons_unchanged() {
         let metadata = PythonLayerMetadata {
-            stack: stack_id!("heroku-22"),
+            arch: "amd64".to_string(),
+            distro_name: "ubuntu".to_string(),
+            distro_version: "22.04".to_string(),
             python_version: "3.11.0".to_string(),
             packaging_tool_versions: PackagingToolVersions {
                 pip_version: "A.B.C".to_string(),
@@ -463,7 +488,9 @@ mod tests {
     #[test]
     fn cache_invalidation_reasons_single_change() {
         let cached_metadata = PythonLayerMetadata {
-            stack: stack_id!("heroku-22"),
+            arch: "amd64".to_string(),
+            distro_name: "ubuntu".to_string(),
+            distro_version: "22.04".to_string(),
             python_version: "3.11.0".to_string(),
             packaging_tool_versions: PackagingToolVersions {
                 pip_version: "A.B.C".to_string(),
@@ -471,20 +498,34 @@ mod tests {
                 wheel_version: "G.H.I".to_string(),
             },
         };
-        let new_metadata = PythonLayerMetadata {
-            python_version: "3.11.1".to_string(),
-            ..cached_metadata.clone()
-        };
         assert_eq!(
-            cache_invalidation_reasons(&cached_metadata, &new_metadata),
+            cache_invalidation_reasons(
+                &cached_metadata,
+                &PythonLayerMetadata {
+                    python_version: "3.11.1".to_string(),
+                    ..cached_metadata.clone()
+                }
+            ),
             ["The Python version has changed from 3.11.0 to 3.11.1"]
+        );
+        assert_eq!(
+            cache_invalidation_reasons(
+                &cached_metadata,
+                &PythonLayerMetadata {
+                    distro_version: "24.04".to_string(),
+                    ..cached_metadata.clone()
+                }
+            ),
+            ["The OS has changed from ubuntu-22.04 to ubuntu-24.04"]
         );
     }
 
     #[test]
     fn cache_invalidation_reasons_all_changed() {
         let cached_metadata = PythonLayerMetadata {
-            stack: stack_id!("heroku-20"),
+            arch: "amd64".to_string(),
+            distro_name: "ubuntu".to_string(),
+            distro_version: "22.04".to_string(),
             python_version: "3.9.0".to_string(),
             packaging_tool_versions: PackagingToolVersions {
                 pip_version: "A.B.C".to_string(),
@@ -493,7 +534,9 @@ mod tests {
             },
         };
         let new_metadata = PythonLayerMetadata {
-            stack: stack_id!("heroku-22"),
+            arch: "arm64".to_string(),
+            distro_name: "debian".to_string(),
+            distro_version: "12".to_string(),
             python_version: "3.11.1".to_string(),
             packaging_tool_versions: PackagingToolVersions {
                 pip_version: "A.B.C-new".to_string(),
@@ -504,7 +547,8 @@ mod tests {
         assert_eq!(
             cache_invalidation_reasons(&cached_metadata, &new_metadata),
             [
-                "The stack has changed from heroku-20 to heroku-22",
+                "The CPU architecture has changed from amd64 to arm64",
+                "The OS has changed from ubuntu-22.04 to debian-12",
                 "The Python version has changed from 3.9.0 to 3.11.1",
                 "The pip version has changed from A.B.C to A.B.C-new",
                 "The setuptools version has changed from D.E.F to D.E.F-new",

@@ -1,4 +1,4 @@
-api = "0.9"
+api = "0.10"
 
 [buildpack]
 id = "heroku/python"
@@ -11,11 +11,22 @@ keywords = ["python", "heroku"]
 [[buildpack.licenses]]
 type = "BSD-3-Clause"
 
+# This workaround can be removed once a new Pack release ships that includes:
+# https://github.com/buildpacks/pack/pull/2081
 [[stacks]]
-id = "heroku-20"
+id = "*"
 
-[[stacks]]
-id = "heroku-22"
+[[targets]]
+os = "linux"
+arch = "amd64"
+
+[[targets.distros]]
+name = "ubuntu"
+version = "20.04"
+
+[[targets.distros]]
+name = "ubuntu"
+version = "22.04"
 
 [metadata.release]
 image = { repository = "docker.io/heroku/buildpack-python" }

@@ -31,12 +31,8 @@ fn python_version_unspecified() {
 #[test]
 #[ignore = "integration test"]
 fn python_3_7() {
-    // Python 3.7 is only available on Heroku-20 and older.
-    let fixture = "tests/fixtures/python_3.7";
-    match builder().as_str() {
-        "heroku/builder:20" => builds_with_python_version(fixture, LATEST_PYTHON_3_7),
-        _ => rejects_non_existent_python_version(fixture, LATEST_PYTHON_3_7),
-    };
+    // Python 3.7 is EOL and so archives for it don't exist at the new S3 filenames.
+    rejects_non_existent_python_version("tests/fixtures/python_3.7", LATEST_PYTHON_3_7);
 }
 
 #[test]
@@ -207,22 +203,14 @@ fn runtime_txt_non_existent_version() {
 }
 
 fn rejects_non_existent_python_version(fixture_path: &str, python_version: &str) {
-    let builder = builder();
-
     TestRunner::default().build(
-        BuildConfig::new(&builder, fixture_path).expected_pack_result(PackResult::Failure),
+        BuildConfig::new(builder(), fixture_path).expected_pack_result(PackResult::Failure),
         |context| {
-            let expected_stack = match builder.as_str() {
-                "heroku/builder:20" => "heroku-20",
-                "heroku/builder:22" => "heroku-22",
-                _ => unimplemented!("Unknown builder!"),
-            };
-
             assert_contains!(
                 context.pack_stderr,
                 &formatdoc! {"
                     [Error: Requested Python version is not available]
-                    The requested Python version ({python_version}) is not available for this stack ({expected_stack}).
+                    The requested Python version ({python_version}) is not available for this builder image.
                     
                     Please update the version in 'runtime.txt' to a supported Python version, or else
                     remove the file to instead use the default version (currently Python {DEFAULT_PYTHON_VERSION}).

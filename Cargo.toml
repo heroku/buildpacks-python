@@ -21,20 +21,15 @@ large_enum_variant = "allow"
 result_large_err = "allow"
 
 [dependencies]
-# The default `miniz_oxide` flate2 backend has poor performance in debug/under QEMU:
-# https://github.com/rust-lang/flate2-rs/issues/297
-# Ideally we'd use the fastest `zlib-ng` backend, however it fails to cross-compile:
-# https://github.com/rust-lang/libz-sys/issues/93
-# As such we have to use the next best alternate backend, which is `zlib`.
-flate2 = { version = "1", default-features = false, features = ["zlib"] }
 indoc = "2"
 # libcnb has a much bigger impact on buildpack behaviour than any other dependencies,
 # so it's pinned to an exact version to isolate it from lockfile refreshes.
-libcnb = "=0.17.0"
-libherokubuildpack = { version = "=0.17.0", default-features = false, features = ["log"] }
+libcnb = "=0.21.0"
+libherokubuildpack = { version = "=0.21.0", default-features = false, features = ["log"] }
 serde = "1"
 tar = { version = "0.4", default-features = false }
 ureq = { version = "2", default-features = false, features = ["tls"] }
+zstd = { version = "0.13", default-features = false }
 
 [dev-dependencies]
-libcnb-test = "=0.17.0"
+libcnb-test = "=0.21.0"

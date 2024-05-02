@@ -1,8 +1,8 @@
-use flate2::read::GzDecoder;
 use std::path::Path;
 use std::process::{Command, ExitStatus, Output};
 use std::{fs, io};
 use tar::Archive;
+use zstd::Decoder;
 
 /// Read the contents of the provided filepath if the file exists, gracefully handling
 /// the file not being present, but still returning any other form of IO error.
@@ -15,8 +15,8 @@ pub(crate) fn read_optional_file(path: &Path) -> io::Result<Option<String>> {
         })
 }
 
-/// Download a gzipped tar file and unpack it to the specified directory.
-pub(crate) fn download_and_unpack_gzipped_archive(
+/// Download a Zstandard compressed tar file and unpack it to the specified directory.
+pub(crate) fn download_and_unpack_zstd_archive(
     uri: &str,
     destination: &Path,
 ) -> Result<(), DownloadUnpackArchiveError> {
@@ -25,13 +25,14 @@ pub(crate) fn download_and_unpack_gzipped_archive(
     let response = ureq::get(uri)
         .call()
         .map_err(DownloadUnpackArchiveError::Request)?;
-    let gzip_decoder = GzDecoder::new(response.into_reader());
-    Archive::new(gzip_decoder)
+    let zstd_decoder =
+        Decoder::new(response.into_reader()).map_err(DownloadUnpackArchiveError::Unpack)?;
+    Archive::new(zstd_decoder)
         .unpack(destination)
         .map_err(DownloadUnpackArchiveError::Unpack)
 }
 
-/// Errors that can occur when downloading and unpacking an archive using `download_and_unpack_gzipped_archive`.
+/// Errors that can occur when downloading and unpacking an archive using `download_and_unpack_zstd_archive`.
 #[derive(Debug)]
 pub(crate) enum DownloadUnpackArchiveError {
     Request(ureq::Error),
