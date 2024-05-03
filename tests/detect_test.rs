@@ -1,13 +1,12 @@
-use crate::tests::builder;
+use crate::tests::default_build_config;
 use indoc::indoc;
-use libcnb_test::{assert_contains, BuildConfig, PackResult, TestRunner};
+use libcnb_test::{assert_contains, PackResult, TestRunner};
 
 #[test]
 #[ignore = "integration test"]
 fn detect_rejects_non_python_projects() {
     TestRunner::default().build(
-        BuildConfig::new(builder(), "tests/fixtures/empty")
-            .expected_pack_result(PackResult::Failure),
+        default_build_config("tests/fixtures/empty").expected_pack_result(PackResult::Failure),
         |context| {
             assert_contains!(
                 context.pack_stdout,

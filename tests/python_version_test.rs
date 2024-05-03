@@ -1,16 +1,16 @@
 use crate::packaging_tool_versions::PackagingToolVersions;
 use crate::tests::{
-    builder, DEFAULT_PYTHON_VERSION, LATEST_PYTHON_3_10, LATEST_PYTHON_3_11, LATEST_PYTHON_3_12,
-    LATEST_PYTHON_3_7, LATEST_PYTHON_3_8, LATEST_PYTHON_3_9,
+    builder, default_build_config, DEFAULT_PYTHON_VERSION, LATEST_PYTHON_3_10, LATEST_PYTHON_3_11,
+    LATEST_PYTHON_3_12, LATEST_PYTHON_3_7, LATEST_PYTHON_3_8, LATEST_PYTHON_3_9,
 };
 use indoc::{formatdoc, indoc};
-use libcnb_test::{assert_contains, assert_empty, BuildConfig, PackResult, TestRunner};
+use libcnb_test::{assert_contains, assert_empty, PackResult, TestRunner};
 
 #[test]
 #[ignore = "integration test"]
 fn python_version_unspecified() {
     TestRunner::default().build(
-        BuildConfig::new(builder(), "tests/fixtures/python_version_unspecified"),
+        default_build_config( "tests/fixtures/python_version_unspecified"),
         |context| {
             assert_empty!(context.pack_stderr);
             assert_contains!(
@@ -49,7 +49,14 @@ fn python_3_8() {
 #[test]
 #[ignore = "integration test"]
 fn python_3_9() {
-    builds_with_python_version("tests/fixtures/python_3.9", LATEST_PYTHON_3_9);
+    // Python 3.9 is only available on Heroku-22 and older.
+    let fixture = "tests/fixtures/python_3.9";
+    match builder().as_str() {
+        "heroku/builder:20" | "heroku/builder:22" => {
+            builds_with_python_version(fixture, LATEST_PYTHON_3_9);
+        }
+        _ => rejects_non_existent_python_version(fixture, LATEST_PYTHON_3_9),
+    };
 }
 
 #[test]
@@ -77,7 +84,7 @@ fn builds_with_python_version(fixture_path: &str, python_version: &str) {
         wheel_version,
     } = PackagingToolVersions::default();
 
-    let mut config = BuildConfig::new(builder(), fixture_path);
+    let mut config = default_build_config(fixture_path);
     // Checks that potentially broken user-provided env vars don't take precedence over those
     // set by this buildpack and break running Python. These are based on the env vars that
     // used to be set by `bin/release` by very old versions of the classic Python buildpack:
@@ -133,9 +140,9 @@ fn builds_with_python_version(fixture_path: &str, python_version: &str) {
             "#}
         );
         assert_empty!(command_output.stderr);
-        assert_contains!(
+        assert_eq!(
             command_output.stdout,
-            &format!("Python {python_version}")
+            format!("Python {python_version}\n")
         );
     });
 }
@@ -144,7 +151,7 @@ fn builds_with_python_version(fixture_path: &str, python_version: &str) {
 #[ignore = "integration test"]
 fn runtime_txt_io_error() {
     TestRunner::default().build(
-        BuildConfig::new(builder(), "tests/fixtures/runtime_txt_invalid_unicode")
+        default_build_config("tests/fixtures/runtime_txt_invalid_unicode")
             .expected_pack_result(PackResult::Failure),
         |context| {
             assert_contains!(
@@ -164,7 +171,7 @@ fn runtime_txt_io_error() {
 #[ignore = "integration test"]
 fn runtime_txt_invalid_version() {
     TestRunner::default().build(
-        BuildConfig::new(builder(), "tests/fixtures/runtime_txt_invalid_version")
+        default_build_config( "tests/fixtures/runtime_txt_invalid_version")
             .expected_pack_result(PackResult::Failure),
         |context| {
             assert_contains!(
@@ -204,7 +211,7 @@ fn runtime_txt_non_existent_version() {
 
 fn rejects_non_existent_python_version(fixture_path: &str, python_version: &str) {
     TestRunner::default().build(
-        BuildConfig::new(builder(), fixture_path).expected_pack_result(PackResult::Failure),
+        default_build_config( fixture_path).expected_pack_result(PackResult::Failure),
         |context| {
             assert_contains!(
                 context.pack_stderr,
