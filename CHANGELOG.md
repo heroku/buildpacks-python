@@ -9,6 +9,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Changed
 
+- Updated wheel from 0.42.0 to 0.43.0. ([#179](https://github.com/heroku/buildpacks-python/pull/179))
 - The buildpack now implements Buildpack API 0.10 instead of 0.9, and so requires `lifecycle` 0.17.x or newer. ([#197](https://github.com/heroku/buildpacks-python/pull/197))
 - The buildpack's base image compatibility metadata is now declared using `[[targets]]` instead of `[[stacks]]`. ([#197](https://github.com/heroku/buildpacks-python/pull/197))
 - Changed compression format and S3 URL for Python runtime archives. ([#197](https://github.com/heroku/buildpacks-python/pull/197))
