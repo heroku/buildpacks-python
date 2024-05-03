@@ -7,6 +7,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.9.0] - 2024-05-03
+
 ### Changed
 
 - Updated setuptools from 68.0.0 to 69.5.1. ([#200](https://github.com/heroku/buildpacks-python/pull/200))
@@ -129,7 +131,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - Initial implementation. ([#3](https://github.com/heroku/buildpacks-python/pull/3))
 
-[unreleased]: https://github.com/heroku/buildpacks-python/compare/v0.8.4...HEAD
+[unreleased]: https://github.com/heroku/buildpacks-python/compare/v0.9.0...HEAD
+[0.9.0]: https://github.com/heroku/buildpacks-python/compare/v0.8.4...v0.9.0
 [0.8.4]: https://github.com/heroku/buildpacks-python/compare/v0.8.3...v0.8.4
 [0.8.3]: https://github.com/heroku/buildpacks-python/compare/v0.8.2...v0.8.3
 [0.8.2]: https://github.com/heroku/buildpacks-python/compare/v0.8.1...v0.8.2
