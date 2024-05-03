@@ -1,12 +1,12 @@
-use crate::tests::builder;
+use crate::tests::default_build_config;
 use indoc::indoc;
-use libcnb_test::{assert_contains, BuildConfig, PackResult, TestRunner};
+use libcnb_test::{assert_contains, PackResult, TestRunner};
 
 #[test]
 #[ignore = "integration test"]
 fn no_package_manager_detected() {
     TestRunner::default().build(
-        BuildConfig::new(builder(), "tests/fixtures/pyproject_toml_only")
+        default_build_config("tests/fixtures/pyproject_toml_only")
             .expected_pack_result(PackResult::Failure),
         |context| {
             assert_contains!(

@@ -7,6 +7,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Added
+
+- Added support for Ubuntu 24.04 (and thus Heroku-24 / `heroku/builder:24`). ([#202](https://github.com/heroku/buildpacks-python/pull/202))
+- Added support for the ARM64 CPU architecture (Ubuntu 24.04 only). ([#202](https://github.com/heroku/buildpacks-python/pull/202))
+
 ## [0.9.0] - 2024-05-03
 
 ### Changed

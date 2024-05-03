@@ -1,9 +1,7 @@
 use crate::packaging_tool_versions::PackagingToolVersions;
-use crate::tests::{builder, DEFAULT_PYTHON_VERSION};
+use crate::tests::{builder, default_build_config, DEFAULT_PYTHON_VERSION};
 use indoc::{formatdoc, indoc};
-use libcnb_test::{
-    assert_contains, assert_empty, BuildConfig, BuildpackReference, PackResult, TestRunner,
-};
+use libcnb_test::{assert_contains, assert_empty, BuildpackReference, PackResult, TestRunner};
 
 #[test]
 #[ignore = "integration test"]
@@ -14,7 +12,7 @@ fn pip_basic_install_and_cache_reuse() {
         wheel_version,
     } = PackagingToolVersions::default();
 
-    let config = BuildConfig::new(builder(), "tests/fixtures/pip_basic");
+    let config = default_build_config("tests/fixtures/pip_basic");
 
     TestRunner::default().build(&config, |context| {
         assert_empty!(context.pack_stderr);
@@ -97,8 +95,9 @@ fn pip_basic_install_and_cache_reuse() {
 #[test]
 #[ignore = "integration test"]
 fn pip_cache_invalidation_with_compatible_metadata() {
-    // TODO: Re-enable this test after the next buildpack release, at which point there will
-    // be a historic buildpack version with compatible cache metadata that we can use.
+    // TODO: Re-enable this test the next time the default-Python/pip/setuptools/wheel versions
+    // change, at which point there will be a historic buildpack version that has both compatible
+    // metadata, and that is also compatible with Ubuntu 24.04.
     #![allow(unreachable_code)]
     return;
 
@@ -108,7 +107,7 @@ fn pip_cache_invalidation_with_compatible_metadata() {
         wheel_version,
     } = PackagingToolVersions::default();
 
-    let config = BuildConfig::new(builder(), "tests/fixtures/pip_basic");
+    let config = default_build_config("tests/fixtures/pip_basic");
 
     TestRunner::default().build(
         config.clone().buildpacks([BuildpackReference::Other(
@@ -154,13 +153,19 @@ fn pip_cache_invalidation_with_compatible_metadata() {
 #[test]
 #[ignore = "integration test"]
 fn pip_cache_invalidation_with_incompatible_metadata() {
+    // TODO: Enable this test on Heroku-24 the next time there is an incompatible metadata change,
+    // meaning we can bump the historic buildpack version to one that also supports Ubuntu 24.04.
+    if builder() == "heroku/builder:24" {
+        return;
+    }
+
     let PackagingToolVersions {
         pip_version,
         setuptools_version,
         wheel_version,
     } = PackagingToolVersions::default();
 
-    let config = BuildConfig::new(builder(), "tests/fixtures/pip_basic");
+    let config = default_build_config("tests/fixtures/pip_basic");
 
     TestRunner::default().build(
         config.clone().buildpacks([BuildpackReference::Other(
@@ -206,7 +211,7 @@ fn pip_cache_invalidation_with_incompatible_metadata() {
 #[ignore = "integration test"]
 fn pip_editable_git_compiled() {
     TestRunner::default().build(
-        BuildConfig::new(builder(), "tests/fixtures/pip_editable_git_compiled")
+        default_build_config( "tests/fixtures/pip_editable_git_compiled")
             .env("WHEEL_PACKAGE_URL", "https://github.com/pypa/wheel"),
         |context| {
             assert_contains!(
@@ -221,7 +226,7 @@ fn pip_editable_git_compiled() {
 #[ignore = "integration test"]
 fn pip_install_error() {
     TestRunner::default().build(
-        BuildConfig::new(builder(), "tests/fixtures/pip_invalid_requirement")
+        default_build_config( "tests/fixtures/pip_invalid_requirement")
             .expected_pack_result(PackResult::Failure),
         |context| {
             // Ideally we could test a combined stdout/stderr, however libcnb-test doesn't support this:

@@ -1,6 +1,6 @@
-use crate::tests::builder;
+use crate::tests::default_build_config;
 use indoc::indoc;
-use libcnb_test::{assert_contains, assert_empty, BuildConfig, PackResult, TestRunner};
+use libcnb_test::{assert_contains, assert_empty, PackResult, TestRunner};
 
 // This test uses symlinks for requirements.txt and manage.py to confirm that it's possible to use
 // them when the Django app is nested inside a subdirectory (such as in backend+frontend monorepos).
@@ -8,7 +8,7 @@ use libcnb_test::{assert_contains, assert_empty, BuildConfig, PackResult, TestRu
 #[ignore = "integration test"]
 fn django_staticfiles_latest_django() {
     TestRunner::default().build(
-        BuildConfig::new(builder(), "tests/fixtures/django_staticfiles_latest_django")
+        default_build_config("tests/fixtures/django_staticfiles_latest_django")
             // Tests that env vars are passed to the 'manage.py' script invocations.
             .env("EXPECTED_ENV_VAR", "1"),
         |context| {
@@ -26,23 +26,20 @@ fn django_staticfiles_latest_django() {
     );
 }
 
-// This tests the oldest Django version that works on Python 3.9 (which is the
+// This tests the oldest Django version that works on Python 3.10 (which is the
 // oldest Python that is available on all of our supported builders).
 #[test]
 #[ignore = "integration test"]
 fn django_staticfiles_legacy_django() {
     TestRunner::default().build(
-        BuildConfig::new(builder(), "tests/fixtures/django_staticfiles_legacy_django"),
+        default_build_config("tests/fixtures/django_staticfiles_legacy_django"),
         |context| {
             assert_empty!(context.pack_stderr);
             assert_contains!(
                 context.pack_stdout,
                 indoc! {"
-                    Successfully installed Django-1.8.19
-                    
                     [Generating Django static files]
                     Running 'manage.py collectstatic'
-                    Linking '/workspace/testapp/static/robots.txt'
                     
                     1 static file symlinked to '/workspace/staticfiles'.
                 "}
@@ -55,7 +52,7 @@ fn django_staticfiles_legacy_django() {
 #[ignore = "integration test"]
 fn django_no_manage_py() {
     TestRunner::default().build(
-        BuildConfig::new(builder(), "tests/fixtures/django_no_manage_py"),
+        default_build_config("tests/fixtures/django_no_manage_py"),
         |context| {
             assert_empty!(context.pack_stderr);
             assert_contains!(
@@ -75,10 +72,7 @@ fn django_no_manage_py() {
 #[ignore = "integration test"]
 fn django_staticfiles_app_not_enabled() {
     TestRunner::default().build(
-        BuildConfig::new(
-            builder(),
-            "tests/fixtures/django_staticfiles_app_not_enabled",
-        ),
+        default_build_config("tests/fixtures/django_staticfiles_app_not_enabled"),
         |context| {
             assert_empty!(context.pack_stderr);
             assert_contains!(
@@ -97,7 +91,7 @@ fn django_staticfiles_app_not_enabled() {
 #[ignore = "integration test"]
 fn django_invalid_settings_module() {
     TestRunner::default().build(
-        BuildConfig::new(builder(), "tests/fixtures/django_invalid_settings_module")
+        default_build_config("tests/fixtures/django_invalid_settings_module")
             .expected_pack_result(PackResult::Failure),
         |context| {
             assert_contains!(
@@ -139,7 +133,7 @@ fn django_invalid_settings_module() {
 #[ignore = "integration test"]
 fn django_staticfiles_misconfigured() {
     TestRunner::default().build(
-        BuildConfig::new(builder(), "tests/fixtures/django_staticfiles_misconfigured")
+        default_build_config("tests/fixtures/django_staticfiles_misconfigured")
             .expected_pack_result(PackResult::Failure),
         |context| {
             assert_contains!(
