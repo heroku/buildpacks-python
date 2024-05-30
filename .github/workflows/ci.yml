@@ -51,22 +51,12 @@ jobs:
             arch: "arm64"
           - builder: "builder:20"
             arch: "arm64"
-    runs-on: ${{ matrix.arch == 'arm64' && 'pub-hk-ubuntu-22.04-arm-large' || 'ubuntu-latest' }}
+    runs-on: ${{ matrix.arch == 'arm64' && 'pub-hk-ubuntu-22.04-arm-medium' || 'ubuntu-latest' }}
     env:
       INTEGRATION_TEST_BUILDER: heroku/${{ matrix.builder }}
     steps:
       - name: Checkout
         uses: actions/checkout@v4
-      # The beta ARM64 runners don't yet ship with the normal installed tools.
-      - name: Install Docker, Rust and missing development libs (ARM64 only)
-        if: matrix.arch == 'arm64'
-        run: |
-          sudo apt-get update --error-on=any
-          sudo apt-get install -y --no-install-recommends acl docker.io docker-buildx libc6-dev
-          sudo usermod -aG docker $USER
-          sudo setfacl --modify user:$USER:rw /var/run/docker.sock
-          curl -sSf https://sh.rustup.rs | sh -s -- -y --profile minimal
-          echo "${HOME}/.cargo/bin" >> "${GITHUB_PATH}"
       - name: Install musl-tools
         run: sudo apt-get install -y --no-install-recommends musl-tools
       - name: Update Rust toolchain
@@ -84,7 +74,7 @@ jobs:
       # we run all integration tests, but on older stacks we only run stack-specific tests.
       - name: Run integration tests (all tests)
         if: matrix.builder == 'builder:24'
-        run: cargo test --locked -- --ignored --test-threads 5
+        run: cargo test --locked -- --ignored --test-threads $(($(nproc)+1))
       - name: Run integration tests (stack-specific tests only)
         if: matrix.builder != 'builder:24'
-        run: cargo test --locked -- --ignored --test-threads 5 'python_version_test::'
+        run: cargo test --locked -- --ignored --test-threads $(($(nproc)+1)) 'python_version_test::'
