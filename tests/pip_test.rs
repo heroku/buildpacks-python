@@ -95,12 +95,6 @@ fn pip_basic_install_and_cache_reuse() {
 #[test]
 #[ignore = "integration test"]
 fn pip_cache_invalidation_with_compatible_metadata() {
-    // TODO: Re-enable this test the next time the default-Python/pip/setuptools/wheel versions
-    // change, at which point there will be a historic buildpack version that has both compatible
-    // metadata, and that is also compatible with Ubuntu 24.04.
-    #![allow(unreachable_code)]
-    return;
-
     let PackagingToolVersions {
         pip_version,
         setuptools_version,
@@ -111,7 +105,7 @@ fn pip_cache_invalidation_with_compatible_metadata() {
 
     TestRunner::default().build(
         config.clone().buildpacks([BuildpackReference::Other(
-            "docker://docker.io/heroku/buildpack-python:0.9.0".to_string(),
+            "docker://docker.io/heroku/buildpack-python:0.10.0".to_string(),
         )]),
         |context| {
             context.rebuild(config, |rebuild_context| {
@@ -125,10 +119,8 @@ fn pip_cache_invalidation_with_compatible_metadata() {
                         
                         [Installing Python and packaging tools]
                         Discarding cache since:
-                         - The Python version has changed from 3.11.2 to {DEFAULT_PYTHON_VERSION}
-                         - The pip version has changed from 23.0.1 to {pip_version}
-                         - The setuptools version has changed from 67.5.0 to {setuptools_version}
-                         - The wheel version has changed from 0.38.4 to {wheel_version}
+                         - The Python version has changed from 3.12.3 to {DEFAULT_PYTHON_VERSION}
+                         - The setuptools version has changed from 69.5.1 to {setuptools_version}
                         Installing Python {DEFAULT_PYTHON_VERSION}
                         Installing pip {pip_version}, setuptools {setuptools_version} and wheel {wheel_version}
                         

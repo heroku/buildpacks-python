@@ -43,7 +43,7 @@ To install a different version, add a `runtime.txt` file to your app’s root di
 
 ```term
 $ cat runtime.txt
-python-3.12.3
+python-3.12.4
 ```
 
 In the future this buildpack will also support specifying the Python version via a `.python-version` file (see [#6](https://github.com/heroku/buildpacks-python/issues/6)).
