@@ -1,3 +1,6 @@
+// TODO: Switch to libcnb's struct layer API.
+#![allow(deprecated)]
+
 use crate::packaging_tool_versions::PackagingToolVersions;
 use crate::python_version::PythonVersion;
 use crate::utils::{self, DownloadUnpackArchiveError, StreamedCommandError};

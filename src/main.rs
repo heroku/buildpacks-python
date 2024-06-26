@@ -46,6 +46,8 @@ impl Buildpack for PythonBuildpack {
         }
     }
 
+    // TODO: Switch to libcnb's struct layer API.
+    #[allow(deprecated)]
     fn build(&self, context: BuildContext<Self>) -> libcnb::Result<BuildResult, Self::Error> {
         // We perform all project analysis up front, so the build can fail early if the config is invalid.
         // TODO: Add a "Build config" header and list all config in one place?
