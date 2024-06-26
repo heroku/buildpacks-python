@@ -132,8 +132,9 @@ fn builds_with_python_version(fixture_path: &str, python_version: &str) {
                   exit 1
                 fi
 
-                # Check all required dynamically linked libraries can be found in the runtime image.
-                if find /layers -name '*.so' -exec ldd '{}' + | grep 'not found'; then
+                # Check all required dynamically linked libraries can be found in the run image.
+                ldd_output=$(find /layers -type f,l \( -name 'python3' -o -name '*.so*' \) -exec ldd '{}' +)
+                if grep 'not found' <<<"${ldd_output}" | sort --unique; then
                   echo "The above dynamically linked libraries were not found!"
                   exit 1
                 fi
