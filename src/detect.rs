@@ -7,16 +7,21 @@ use std::path::Path;
 /// This list is deliberately larger than just the list of supported package manager files,
 /// so that Python projects that are missing some of the required files still pass detection,
 /// allowing us to show a helpful error message during the build phase.
-const KNOWN_PYTHON_PROJECT_FILES: [&str; 9] = [
+const KNOWN_PYTHON_PROJECT_FILES: [&str; 14] = [
     ".python-version",
+    "app.py",
     "main.py",
     "manage.py",
+    "pdm.lock",
     "Pipfile",
+    "Pipfile.lock",
     "poetry.lock",
     "pyproject.toml",
     "requirements.txt",
     "runtime.txt",
+    "setup.cfg",
     "setup.py",
+    "uv.lock",
 ];
 
 /// Returns whether the specified project directory is that of a Python project, and so
