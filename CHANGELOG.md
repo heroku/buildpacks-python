@@ -9,6 +9,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Changed
 
+- Updated pip from 23.3.2 to 24.0. ([#219](https://github.com/heroku/buildpacks-python/pull/219))
 - Buildpack detection now recognises more types of Python-related files. ([#215](https://github.com/heroku/buildpacks-python/pull/215))
 
 ## [0.11.0] - 2024-06-07
