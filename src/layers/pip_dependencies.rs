@@ -1,3 +1,6 @@
+// TODO: Switch to libcnb's struct layer API.
+#![allow(deprecated)]
+
 use crate::utils::{self, StreamedCommandError};
 use crate::{BuildpackError, PythonBuildpack};
 use libcnb::build::BuildContext;
