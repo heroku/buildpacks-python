@@ -120,6 +120,7 @@ fn pip_cache_invalidation_with_compatible_metadata() {
                         [Installing Python and packaging tools]
                         Discarding cache since:
                          - The Python version has changed from 3.12.3 to {DEFAULT_PYTHON_VERSION}
+                         - The pip version has changed from 24.0 to {pip_version}
                          - The setuptools version has changed from 69.5.1 to {setuptools_version}
                         Installing Python {DEFAULT_PYTHON_VERSION}
                         Installing pip {pip_version}, setuptools {setuptools_version} and wheel {wheel_version}
@@ -233,7 +234,9 @@ fn pip_install_error() {
             assert_contains!(
                 context.pack_stderr,
                 indoc! {"
-                    ERROR: Invalid requirement: 'an-invalid-requirement!' (from line 1 of requirements.txt)
+                    ERROR: Invalid requirement: 'an-invalid-requirement!': Expected end or semicolon (after name and no valid version specifier)
+                        an-invalid-requirement!
+                                              ^ (from line 1 of requirements.txt)
                     
                     [Error: Unable to install dependencies using pip]
                     The 'pip install' command to install the application's dependencies from
