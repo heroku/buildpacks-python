@@ -234,7 +234,9 @@ fn pip_install_error() {
             assert_contains!(
                 context.pack_stderr,
                 indoc! {"
-                    ERROR: Invalid requirement: 'an-invalid-requirement!' (from line 1 of requirements.txt)
+                    ERROR: Invalid requirement: 'an-invalid-requirement!': Expected end or semicolon (after name and no valid version specifier)
+                        an-invalid-requirement!
+                                              ^ (from line 1 of requirements.txt)
                     
                     [Error: Unable to install dependencies using pip]
                     The 'pip install' command to install the application's dependencies from
