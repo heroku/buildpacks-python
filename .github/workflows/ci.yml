@@ -68,7 +68,16 @@ jobs:
       - name: Install Pack CLI
         uses: buildpacks/github-actions/setup-pack@v5.7.2
       - name: Pull builder image
-        run: docker pull ${{ env.INTEGRATION_TEST_BUILDER }}
+        run: docker pull '${{ env.INTEGRATION_TEST_BUILDER }}'
+      - name: Pull run image
+        # Using `docker inspect` rather than `pack builder inspect` since the latter makes
+        # additional requests to Docker Hub even when the image is available locally.
+        run: |
+          RUN_IMAGE=$(
+            docker inspect --format='{{index .Config.Labels "io.buildpacks.builder.metadata"}}' '${{ env.INTEGRATION_TEST_BUILDER }}' \
+              | jq --exit-status --raw-output '.stack.runImage.image'
+          )
+          docker pull "${RUN_IMAGE}"
       # The integration tests are annotated with the `ignore` attribute, allowing us to run
       # only those and not the unit tests, via the `--ignored` option. On the latest stack
       # we run all integration tests, but on older stacks we only run stack-specific tests.
