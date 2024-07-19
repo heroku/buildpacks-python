@@ -196,11 +196,6 @@ fn on_python_layer_error(error: PythonLayerError) {
 
 fn on_pip_dependencies_layer_error(error: PipDependenciesLayerError) {
     match error {
-        PipDependenciesLayerError::CreateSrcDir(io_error) => log_io_error(
-            "Unable to create 'src' directory required for pip install",
-            "creating the 'src' directory in the pip layer, prior to running pip install",
-            &io_error,
-        ),
         PipDependenciesLayerError::PipInstallCommand(error) => match error {
             StreamedCommandError::Io(io_error) => log_io_error(
                 "Unable to install dependencies using pip",
