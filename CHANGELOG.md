@@ -7,6 +7,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Changed
+
+- Stopped manually creating a `src` directory inside the Pip dependencies layer. Pip will create the directory itself if needed (when there are editable VCS dependencies). ([#228](https://github.com/heroku/buildpacks-python/pull/228))
+
 ## [0.12.1] - 2024-07-15
 
 ### Changed

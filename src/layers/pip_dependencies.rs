@@ -12,7 +12,6 @@ use libcnb::{Buildpack, Env};
 use libherokubuildpack::log::log_info;
 use std::path::{Path, PathBuf};
 use std::process::Command;
-use std::{fs, io};
 
 /// Layer containing the application's Python dependencies, installed using Pip.
 pub(crate) struct PipDependenciesLayer<'a> {
@@ -56,17 +55,6 @@ impl Layer for PipDependenciesLayer<'_> {
         let layer_env = generate_layer_env(layer_path);
         let command_env = layer_env.apply(Scope::Build, self.command_env);
 
-        // When Pip installs dependencies from a VCS URL it has to clone the repository in order
-        // to install it. In standard installation mode the clone is made to a temporary directory
-        // and then deleted, however, when packages are installed in editable mode Pip must keep
-        // the repository around, since the directory is added to the Python path directly (via
-        // the `.pth` file created in `site-packages`). By default Pip will store the repository
-        // in the current working directory (the app dir), however, we would prefer it to be stored
-        // in the dependencies layer instead for consistency. (Plus if the dependencies layer were
-        // ever cached, storing the repository in the app dir would break on repeat-builds).
-        let src_dir = layer_path.join("src");
-        fs::create_dir(&src_dir).map_err(PipDependenciesLayerError::CreateSrcDir)?;
-
         log_info("Running pip install");
 
         utils::run_command_and_stream_output(
@@ -96,10 +84,16 @@ impl Layer for PipDependenciesLayer<'_> {
                     "--user",
                     "--requirement",
                     "requirements.txt",
-                    // Clone any VCS repositories installed in editable mode into the directory created
-                    // above, rather than the default of the current working directory (the app dir).
+                    // When Pip installs dependencies from a VCS URL it has to clone the repository in order
+                    // to install it. In standard installation mode the clone is made to a temporary directory
+                    // and then deleted, however, when packages are installed in editable mode Pip must keep
+                    // the repository around, since the directory is added to the Python path directly (via
+                    // the `.pth` file created in `site-packages`). By default Pip will store the repository
+                    // in the current working directory (the app dir), however, we would prefer it to be stored
+                    // in the dependencies layer instead for consistency. (Plus if the dependencies layer were
+                    // ever cached, storing the repository in the app dir would break on repeat-builds).
                     "--src",
-                    &src_dir.to_string_lossy(),
+                    &layer_path.join("src").to_string_lossy(),
                 ])
                 .current_dir(&context.app_dir)
                 .env_clear()
@@ -139,7 +133,6 @@ fn generate_layer_env(layer_path: &Path) -> LayerEnv {
 /// Errors that can occur when installing the project's dependencies into a layer using Pip.
 #[derive(Debug)]
 pub(crate) enum PipDependenciesLayerError {
-    CreateSrcDir(io::Error),
     PipInstallCommand(StreamedCommandError),
 }
 
