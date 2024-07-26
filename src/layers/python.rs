@@ -469,9 +469,8 @@ impl From<PythonLayerError> for BuildpackError {
 mod tests {
     use super::*;
 
-    #[test]
-    fn cache_invalidation_reasons_unchanged() {
-        let metadata = PythonLayerMetadata {
+    fn example_layer_metadata() -> PythonLayerMetadata {
+        PythonLayerMetadata {
             arch: "amd64".to_string(),
             distro_name: "ubuntu".to_string(),
             distro_version: "22.04".to_string(),
@@ -481,61 +480,35 @@ mod tests {
                 setuptools_version: "D.E.F".to_string(),
                 wheel_version: "G.H.I".to_string(),
             },
-        };
+        }
+    }
+
+    #[test]
+    fn cache_invalidation_reasons_unchanged() {
+        let cached_metadata = example_layer_metadata();
+        let new_metadata = cached_metadata.clone();
         assert_eq!(
-            cache_invalidation_reasons(&metadata, &metadata),
+            cache_invalidation_reasons(&cached_metadata, &new_metadata),
             Vec::<String>::new()
         );
     }
 
     #[test]
     fn cache_invalidation_reasons_single_change() {
-        let cached_metadata = PythonLayerMetadata {
-            arch: "amd64".to_string(),
-            distro_name: "ubuntu".to_string(),
-            distro_version: "22.04".to_string(),
-            python_version: "3.11.0".to_string(),
-            packaging_tool_versions: PackagingToolVersions {
-                pip_version: "A.B.C".to_string(),
-                setuptools_version: "D.E.F".to_string(),
-                wheel_version: "G.H.I".to_string(),
-            },
+        let cached_metadata = example_layer_metadata();
+        let new_metadata = PythonLayerMetadata {
+            distro_version: "24.04".to_string(),
+            ..cached_metadata.clone()
         };
         assert_eq!(
-            cache_invalidation_reasons(
-                &cached_metadata,
-                &PythonLayerMetadata {
-                    python_version: "3.11.1".to_string(),
-                    ..cached_metadata.clone()
-                }
-            ),
-            ["The Python version has changed from 3.11.0 to 3.11.1"]
-        );
-        assert_eq!(
-            cache_invalidation_reasons(
-                &cached_metadata,
-                &PythonLayerMetadata {
-                    distro_version: "24.04".to_string(),
-                    ..cached_metadata.clone()
-                }
-            ),
+            cache_invalidation_reasons(&cached_metadata, &new_metadata),
             ["The OS has changed from ubuntu-22.04 to ubuntu-24.04"]
         );
     }
 
     #[test]
     fn cache_invalidation_reasons_all_changed() {
-        let cached_metadata = PythonLayerMetadata {
-            arch: "amd64".to_string(),
-            distro_name: "ubuntu".to_string(),
-            distro_version: "22.04".to_string(),
-            python_version: "3.9.0".to_string(),
-            packaging_tool_versions: PackagingToolVersions {
-                pip_version: "A.B.C".to_string(),
-                setuptools_version: "D.E.F".to_string(),
-                wheel_version: "G.H.I".to_string(),
-            },
-        };
+        let cached_metadata = example_layer_metadata();
         let new_metadata = PythonLayerMetadata {
             arch: "arm64".to_string(),
             distro_name: "debian".to_string(),
@@ -552,7 +525,7 @@ mod tests {
             [
                 "The CPU architecture has changed from amd64 to arm64",
                 "The OS has changed from ubuntu-22.04 to debian-12",
-                "The Python version has changed from 3.9.0 to 3.11.1",
+                "The Python version has changed from 3.11.0 to 3.11.1",
                 "The pip version has changed from A.B.C to A.B.C-new",
                 "The setuptools version has changed from D.E.F to D.E.F-new",
                 "The wheel version has changed from G.H.I to G.H.I-new"
