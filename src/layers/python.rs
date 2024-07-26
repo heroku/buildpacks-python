@@ -562,43 +562,6 @@ mod tests {
 
     #[test]
     fn python_layer_env() {
-        let layer_env = generate_layer_env(
-            Path::new("/layers/python"),
-            &PythonVersion {
-                major: 3,
-                minor: 9,
-                patch: 0,
-            },
-        );
-
-        // Remember to force invalidation of the cached layer if these env vars ever change.
-        assert_eq!(
-            utils::environment_as_sorted_vector(&layer_env.apply_to_empty(Scope::Build)),
-            [
-                ("CPATH", "/layers/python/include/python3.9"),
-                ("LANG", "C.UTF-8"),
-                ("PIP_DISABLE_PIP_VERSION_CHECK", "1"),
-                ("PKG_CONFIG_PATH", "/layers/python/lib/pkgconfig"),
-                ("PYTHONHOME", "/layers/python"),
-                ("PYTHONUNBUFFERED", "1"),
-                ("SOURCE_DATE_EPOCH", "315532801"),
-            ]
-        );
-        assert_eq!(
-            utils::environment_as_sorted_vector(&layer_env.apply_to_empty(Scope::Launch)),
-            [
-                ("CPATH", "/layers/python/include/python3.9"),
-                ("LANG", "C.UTF-8"),
-                ("PIP_DISABLE_PIP_VERSION_CHECK", "1"),
-                ("PKG_CONFIG_PATH", "/layers/python/lib/pkgconfig"),
-                ("PYTHONHOME", "/layers/python"),
-                ("PYTHONUNBUFFERED", "1"),
-            ]
-        );
-    }
-
-    #[test]
-    fn python_layer_env_with_existing_env() {
         let mut base_env = Env::new();
         base_env.insert("CPATH", "/base");
         base_env.insert("LANG", "this-should-be-overridden");
@@ -606,10 +569,9 @@ mod tests {
         base_env.insert("PKG_CONFIG_PATH", "/base");
         base_env.insert("PYTHONHOME", "this-should-be-overridden");
         base_env.insert("PYTHONUNBUFFERED", "this-should-be-overridden");
-        base_env.insert("SOURCE_DATE_EPOCH", "this-should-be-preserved");
 
         let layer_env = generate_layer_env(
-            Path::new("/layers/python"),
+            Path::new("/layer-dir"),
             &PythonVersion {
                 major: 3,
                 minor: 11,
@@ -621,25 +583,24 @@ mod tests {
         assert_eq!(
             utils::environment_as_sorted_vector(&layer_env.apply(Scope::Build, &base_env)),
             [
-                ("CPATH", "/layers/python/include/python3.11:/base"),
+                ("CPATH", "/layer-dir/include/python3.11:/base"),
                 ("LANG", "C.UTF-8"),
                 ("PIP_DISABLE_PIP_VERSION_CHECK", "1"),
-                ("PKG_CONFIG_PATH", "/layers/python/lib/pkgconfig:/base"),
-                ("PYTHONHOME", "/layers/python"),
+                ("PKG_CONFIG_PATH", "/layer-dir/lib/pkgconfig:/base"),
+                ("PYTHONHOME", "/layer-dir"),
                 ("PYTHONUNBUFFERED", "1"),
-                ("SOURCE_DATE_EPOCH", "this-should-be-preserved"),
+                ("SOURCE_DATE_EPOCH", "315532801"),
             ]
         );
         assert_eq!(
             utils::environment_as_sorted_vector(&layer_env.apply(Scope::Launch, &base_env)),
             [
-                ("CPATH", "/layers/python/include/python3.11:/base"),
+                ("CPATH", "/layer-dir/include/python3.11:/base"),
                 ("LANG", "C.UTF-8"),
                 ("PIP_DISABLE_PIP_VERSION_CHECK", "1"),
-                ("PKG_CONFIG_PATH", "/layers/python/lib/pkgconfig:/base"),
-                ("PYTHONHOME", "/layers/python"),
+                ("PKG_CONFIG_PATH", "/layer-dir/lib/pkgconfig:/base"),
+                ("PYTHONHOME", "/layer-dir"),
                 ("PYTHONUNBUFFERED", "1"),
-                ("SOURCE_DATE_EPOCH", "this-should-be-preserved"),
             ]
         );
     }

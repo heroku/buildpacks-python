@@ -38,19 +38,37 @@ fn pip_basic_install_and_cache_reuse() {
         );
 
         // Check that:
-        // - Pip is available at runtime too (and not just during the build).
+        // - The correct env vars are set at run-time.
+        // - Pip is available at run-time too (and not just during the build).
         // - The correct versions of pip/setuptools/wheel were installed.
         // - Pip uses (via 'PYTHONUSERBASE') the user site-packages in the dependencies
         //   layer, and so can find the typing-extensions package installed there.
         // - The "pip update available" warning is not shown (since it should be suppressed).
         // - The system site-packages directory is protected against running 'pip install'
         //   without having passed '--user'.
-        let command_output =
-            context.run_shell_command("pip list && pip install --dry-run typing-extensions");
+        let command_output = context.run_shell_command(
+            indoc! {"
+                set -euo pipefail
+                printenv | sort | grep -vE '^(_|HOME|HOSTNAME|OLDPWD|PWD|SHLVL)='
+                echo
+                pip list
+                pip install --dry-run typing-extensions
+            "}
+        );
         assert_empty!(command_output.stderr);
         assert_contains!(
             command_output.stdout,
             &formatdoc! {"
+                CPATH=/layers/heroku_python/python/include/python3.12
+                LANG=C.UTF-8
+                LD_LIBRARY_PATH=/layers/heroku_python/python/lib:/layers/heroku_python/dependencies/lib
+                PATH=/layers/heroku_python/python/bin:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin
+                PIP_DISABLE_PIP_VERSION_CHECK=1
+                PKG_CONFIG_PATH=/layers/heroku_python/python/lib/pkgconfig
+                PYTHONHOME=/layers/heroku_python/python
+                PYTHONUNBUFFERED=1
+                PYTHONUSERBASE=/layers/heroku_python/dependencies
+                
                 Package           Version
                 ----------------- -------
                 pip               {pip_version}

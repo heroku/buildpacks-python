@@ -151,15 +151,15 @@ mod tests {
         let mut base_env = Env::new();
         base_env.insert("PYTHONUSERBASE", "this-should-be-overridden");
 
-        let layer_env = generate_layer_env(Path::new("/layers/dependencies"));
+        let layer_env = generate_layer_env(Path::new("/layer-dir"));
 
         assert_eq!(
             utils::environment_as_sorted_vector(&layer_env.apply(Scope::Build, &base_env)),
-            [("PYTHONUSERBASE", "/layers/dependencies")]
+            [("PYTHONUSERBASE", "/layer-dir")]
         );
         assert_eq!(
             utils::environment_as_sorted_vector(&layer_env.apply(Scope::Launch, &base_env)),
-            [("PYTHONUSERBASE", "/layers/dependencies")]
+            [("PYTHONUSERBASE", "/layer-dir")]
         );
     }
 }

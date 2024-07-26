@@ -25,6 +25,7 @@ const DEFAULT_BUILDER: &str = "heroku/builder:24";
 
 fn default_build_config(fixture_path: impl AsRef<Path>) -> BuildConfig {
     let builder = builder();
+    let mut config = BuildConfig::new(&builder, fixture_path);
 
     // TODO: Once Pack build supports `--platform` and libcnb-test adjusted accordingly, change this
     // to allow configuring the target arch independently of the builder name (eg via env var).
@@ -33,9 +34,24 @@ fn default_build_config(fixture_path: impl AsRef<Path>) -> BuildConfig {
         "heroku/builder:24" if cfg!(target_arch = "aarch64") => "aarch64-unknown-linux-musl",
         _ => "x86_64-unknown-linux-musl",
     };
-
-    let mut config = BuildConfig::new(&builder, fixture_path);
     config.target_triple(target_triple);
+
+    // Ensure that potentially broken user-provided env vars don't take precedence over those set
+    // by this buildpack and break running Python/Pip. Some of these are based on the env vars that
+    // used to be set by `bin/release` by very old versions of the classic Python buildpack:
+    // https://github.com/heroku/heroku-buildpack-python/blob/27abdfe7d7ad104dabceb45641415251e965671c/bin/release#L11-L18
+    config.envs([
+        ("CPATH", "/invalid"),
+        ("LD_LIBRARY_PATH", "/invalid"),
+        ("LIBRARY_PATH", "/invalid"),
+        ("PATH", "/invalid"),
+        ("PIP_DISABLE_PIP_VERSION_CHECK", "0"),
+        ("PKG_CONFIG_PATH", "/invalid"),
+        ("PYTHONHOME", "/invalid"),
+        ("PYTHONPATH", "/invalid"),
+        ("PYTHONUSERBASE", "/invalid"),
+    ]);
+
     config
 }
 
