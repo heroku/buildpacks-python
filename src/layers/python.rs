@@ -292,10 +292,6 @@ fn cache_invalidation_reasons(
 
 /// Environment variables that will be set by this layer.
 fn generate_layer_env(layer_path: &Path, python_version: &PythonVersion) -> LayerEnv {
-    // Several of the env vars below are technically build-time only vars, however, we use
-    // `Scope::All` instead of `Scope::Build` to reduce confusion if pip install commands
-    // are used at runtime when debugging.
-    //
     // Remember to force invalidation of the cached layer if these env vars ever change.
     LayerEnv::new()
         // We have to set `CPATH` explicitly, since:
@@ -304,7 +300,7 @@ fn generate_layer_env(layer_path: &Path, python_version: &PythonVersion) -> Laye
         //  - Older setuptools cannot find this directory without `CPATH` being set:
         //    https://github.com/pypa/setuptools/issues/3657
         .chainable_insert(
-            Scope::All,
+            Scope::Build,
             ModificationBehavior::Prepend,
             "CPATH",
             layer_path.join(format!(
@@ -312,7 +308,7 @@ fn generate_layer_env(layer_path: &Path, python_version: &PythonVersion) -> Laye
                 python_version.major, python_version.minor
             )),
         )
-        .chainable_insert(Scope::All, ModificationBehavior::Delimiter, "CPATH", ":")
+        .chainable_insert(Scope::Build, ModificationBehavior::Delimiter, "CPATH", ":")
         // Ensure Python uses a Unicode locate, to prevent the issues described in:
         // https://github.com/docker-library/python/pull/570
         .chainable_insert(
@@ -324,7 +320,7 @@ fn generate_layer_env(layer_path: &Path, python_version: &PythonVersion) -> Laye
         // We use a curated Pip version, so disable the update check to speed up Pip invocations,
         // reduce build log spam and prevent users from thinking they need to manually upgrade.
         // This uses an env var (rather than the `--disable-pip-version-check` arg) so that it also
-        // takes effect for any pip invocations in later buildpacks or when debugging at runtime.
+        // takes effect for any pip invocations in later buildpacks or when debugging at run-time.
         .chainable_insert(
             Scope::All,
             ModificationBehavior::Override,
@@ -334,13 +330,13 @@ fn generate_layer_env(layer_path: &Path, python_version: &PythonVersion) -> Laye
         // We have to set `PKG_CONFIG_PATH` explicitly, since the automatic path set by lifecycle/libcnb
         // is `<layer>/pkgconfig/`, whereas Python's pkgconfig files are at `<layer>/lib/pkgconfig/`.
         .chainable_insert(
-            Scope::All,
+            Scope::Build,
             ModificationBehavior::Prepend,
             "PKG_CONFIG_PATH",
             layer_path.join("lib/pkgconfig"),
         )
         .chainable_insert(
-            Scope::All,
+            Scope::Build,
             ModificationBehavior::Delimiter,
             "PKG_CONFIG_PATH",
             ":",
@@ -348,12 +344,12 @@ fn generate_layer_env(layer_path: &Path, python_version: &PythonVersion) -> Laye
         // Our Python runtime is relocated (installed into a different location to which is was
         // originally compiled) which Python itself handles well, since it recalculates its actual
         // location at startup:
-        // https://docs.python.org/3.11/library/sys_path_init.html
+        // https://docs.python.org/3/library/sys_path_init.html
         // However, the uWSGI package uses the wrong `sysconfig` APIs so tries to reference the old
         // compile location, unless we override that by setting `PYTHONHOME`:
         // https://github.com/unbit/uwsgi/issues/2525
         // In addition, some legacy apps have `PYTHONHOME` set to an invalid value, so if we did not
-        // set it explicitly here, Python would fail to run both during the build and at runtime.
+        // set it explicitly here, Python would fail to run both during the build and at run-time.
         .chainable_insert(
             Scope::All,
             ModificationBehavior::Override,
@@ -379,7 +375,7 @@ fn generate_layer_env(layer_path: &Path, python_version: &PythonVersion) -> Laye
         // files to a fixed value in order to improve the determinism of builds:
         // https://buildpacks.io/docs/features/reproducibility/#consequences-and-caveats
         //
-        // At runtime, this then means the timestamps embedded in the `.pyc` files no longer match
+        // At run-time, this then means the timestamps embedded in the `.pyc` files no longer match
         // the timestamps of the original `.py` files, causing Python to have to regenerate the
         // bytecode, and so losing any benefit of having kept the `.pyc` files in the image.
         //
@@ -392,12 +388,12 @@ fn generate_layer_env(layer_path: &Path, python_version: &PythonVersion) -> Laye
         //
         // Instead, we use the hash-based cache files mode added in Python 3.7+, which embeds a hash
         // of the original `.py` file in the `.pyc` file instead of the timestamp:
-        // https://docs.python.org/3.11/reference/import.html#pyc-invalidation
+        // https://docs.python.org/3/reference/import.html#pyc-invalidation
         // https://peps.python.org/pep-0552/
         //
         // This mode can be enabled by passing `--invalidation-mode checked-hash` to `compileall`,
         // or via the `SOURCE_DATE_EPOCH` env var:
-        // https://docs.python.org/3.11/library/compileall.html#cmdoption-compileall-invalidation-mode
+        // https://docs.python.org/3/library/compileall.html#cmdoption-compileall-invalidation-mode
         //
         // Note: Both the CLI args and the env var only apply to usages of `compileall` or `py_compile`,
         // and not `.pyc` generation as part of Python importing a file during normal operation.
@@ -568,10 +564,10 @@ mod tests {
         assert_eq!(
             utils::environment_as_sorted_vector(&layer_env.apply(Scope::Launch, &base_env)),
             [
-                ("CPATH", "/layer-dir/include/python3.11:/base"),
+                ("CPATH", "/base"),
                 ("LANG", "C.UTF-8"),
                 ("PIP_DISABLE_PIP_VERSION_CHECK", "1"),
-                ("PKG_CONFIG_PATH", "/layer-dir/lib/pkgconfig:/base"),
+                ("PKG_CONFIG_PATH", "/base"),
                 ("PYTHONHOME", "/layer-dir"),
                 ("PYTHONUNBUFFERED", "1"),
             ]

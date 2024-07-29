@@ -59,12 +59,10 @@ fn pip_basic_install_and_cache_reuse() {
         assert_contains!(
             command_output.stdout,
             &formatdoc! {"
-                CPATH=/layers/heroku_python/python/include/python3.12
                 LANG=C.UTF-8
                 LD_LIBRARY_PATH=/layers/heroku_python/python/lib:/layers/heroku_python/dependencies/lib
                 PATH=/layers/heroku_python/python/bin:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin
                 PIP_DISABLE_PIP_VERSION_CHECK=1
-                PKG_CONFIG_PATH=/layers/heroku_python/python/lib/pkgconfig
                 PYTHONHOME=/layers/heroku_python/python
                 PYTHONUNBUFFERED=1
                 PYTHONUSERBASE=/layers/heroku_python/dependencies
