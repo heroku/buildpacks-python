@@ -61,7 +61,7 @@ fn pip_basic_install_and_cache_reuse() {
             &formatdoc! {"
                 LANG=C.UTF-8
                 LD_LIBRARY_PATH=/layers/heroku_python/python/lib:/layers/heroku_python/dependencies/lib
-                PATH=/layers/heroku_python/python/bin:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin
+                PATH=/layers/heroku_python/dependencies/bin:/layers/heroku_python/python/bin:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin
                 PIP_DISABLE_PIP_VERSION_CHECK=1
                 PYTHONHOME=/layers/heroku_python/python
                 PYTHONUNBUFFERED=1
