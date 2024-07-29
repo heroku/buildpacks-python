@@ -14,7 +14,7 @@ pub(crate) fn is_django_installed(dependencies_layer_dir: &Path) -> io::Result<b
 
 pub(crate) fn run_django_collectstatic(
     app_dir: &Path,
-    command_env: &Env,
+    env: &Env,
 ) -> Result<(), DjangoCollectstaticError> {
     if !has_management_script(app_dir)
         .map_err(DjangoCollectstaticError::CheckManagementScriptExists)?
@@ -27,7 +27,7 @@ pub(crate) fn run_django_collectstatic(
         return Ok(());
     }
 
-    if !has_collectstatic_command(app_dir, command_env)
+    if !has_collectstatic_command(app_dir, env)
         .map_err(DjangoCollectstaticError::CheckCollectstaticCommandExists)?
     {
         log_info(indoc! {"
@@ -49,7 +49,7 @@ pub(crate) fn run_django_collectstatic(
             ])
             .current_dir(app_dir)
             .env_clear()
-            .envs(command_env),
+            .envs(env),
     )
     .map_err(DjangoCollectstaticError::CollectstaticCommand)
 }
@@ -58,16 +58,13 @@ fn has_management_script(app_dir: &Path) -> io::Result<bool> {
     app_dir.join(MANAGEMENT_SCRIPT_NAME).try_exists()
 }
 
-fn has_collectstatic_command(
-    app_dir: &Path,
-    command_env: &Env,
-) -> Result<bool, CapturedCommandError> {
+fn has_collectstatic_command(app_dir: &Path, env: &Env) -> Result<bool, CapturedCommandError> {
     utils::run_command_and_capture_output(
         Command::new("python")
             .args([MANAGEMENT_SCRIPT_NAME, "help", "collectstatic"])
             .current_dir(app_dir)
             .env_clear()
-            .envs(command_env),
+            .envs(env),
     )
     .map_or_else(
         |error| match error {

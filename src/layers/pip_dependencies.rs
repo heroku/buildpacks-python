@@ -1,110 +1,85 @@
-// TODO: Switch to libcnb's struct layer API.
-#![allow(deprecated)]
-
 use crate::utils::{self, StreamedCommandError};
 use crate::{BuildpackError, PythonBuildpack};
 use libcnb::build::BuildContext;
-use libcnb::data::layer_content_metadata::LayerTypes;
-use libcnb::generic::GenericMetadata;
-use libcnb::layer::{Layer, LayerResult, LayerResultBuilder};
+use libcnb::data::layer_name;
+use libcnb::layer::UncachedLayerDefinition;
 use libcnb::layer_env::{LayerEnv, ModificationBehavior, Scope};
-use libcnb::{Buildpack, Env};
+use libcnb::Env;
 use libherokubuildpack::log::log_info;
 use std::path::{Path, PathBuf};
 use std::process::Command;
 
-/// Layer containing the application's Python dependencies, installed using Pip.
-pub(crate) struct PipDependenciesLayer<'a> {
-    /// Environment variables inherited from earlier buildpack steps.
-    pub(crate) command_env: &'a Env,
-    /// The path to the Pip cache directory, which is stored in another layer since it isn't needed at runtime.
-    pub(crate) pip_cache_dir: PathBuf,
-}
-
-impl Layer for PipDependenciesLayer<'_> {
-    type Buildpack = PythonBuildpack;
-    type Metadata = GenericMetadata;
-
-    fn types(&self) -> LayerTypes {
-        // This layer is not cached, since:
-        // - Pip is a package installer rather than a project/environment manager, and so does
-        //   not deterministically manage installed Python packages. For example, if a package
-        //   entry in a requirements file is later removed, Pip will not uninstall the package.
-        //   In addition, there is no official lockfile support (only partial support via
-        //   third-party requirements file tools), so changes in transitive dependencies add yet
-        //   more opportunity for non-determinism between each install.
-        // - The Pip HTTP/wheel cache is itself cached in a separate layer, which covers the most
-        //   time consuming part of performing a pip install: downloading the dependencies and then
-        //   generating wheels (for any packages that use compiled components but don't distribute
-        //   pre-built wheels matching the current Python version).
-        //
-        // Longer term, the best option for projects that want no-op deterministic installs will
-        // be to use Poetry instead of Pip (once the buildpack supports Poetry).
-        LayerTypes {
+/// Creates a layer containing the application's Python dependencies, installed using Pip.
+//
+// To do this we use `pip install --user` so that the dependencies are installed into the user
+// `site-packages` directory in this layer (set by `PYTHONUSERBASE`), rather than the system
+// `site-packages` subdirectory of the Python installation layer.
+//
+// Note: We can't instead use Pip's `--target` option along with `PYTHONPATH`, since:
+// - Directories on `PYTHONPATH` take precedence over the Python stdlib (unlike the system or
+//   user site-packages directories), which can cause hard to debug stdlib shadowing issues
+//   if one of the app's transitive dependencies is an outdated stdlib backport package.
+// - `--target` has bugs, eg: <https://github.com/pypa/pip/issues/8799>
+//
+// This layer is not cached, since:
+// - Pip is a package installer rather than a project/environment manager, and so does not
+//   deterministically manage installed Python packages. For example, if a package entry in
+//   a requirements file is later removed, Pip will not uninstall the package. In addition,
+//   there is no official lockfile support, so changes in transitive dependencies add yet
+//   more opportunity for non-determinism between each install.
+// - The Pip HTTP/wheel cache is itself cached in a separate layer, which covers the most
+//   time consuming part of performing a pip install: downloading the dependencies and then
+//   generating wheels for any packages that don't provide them.
+pub(crate) fn install_dependencies(
+    context: &BuildContext<PythonBuildpack>,
+    env: &mut Env,
+    pip_cache_dir: &Path,
+) -> Result<PathBuf, libcnb::Error<BuildpackError>> {
+    let layer = context.uncached_layer(
+        layer_name!("dependencies"),
+        UncachedLayerDefinition {
             build: true,
-            cache: false,
             launch: true,
-        }
-    }
+        },
+    )?;
 
-    fn create(
-        &mut self,
-        context: &BuildContext<Self::Buildpack>,
-        layer_path: &Path,
-    ) -> Result<LayerResult<Self::Metadata>, <Self::Buildpack as Buildpack>::Error> {
-        let layer_env = generate_layer_env(layer_path);
-        let command_env = layer_env.apply(Scope::Build, self.command_env);
+    let layer_path = layer.path();
+    let layer_env = generate_layer_env(&layer_path);
+    layer.write_env(&layer_env)?;
+    env.clone_from(&layer_env.apply(Scope::Build, env));
 
-        log_info("Running pip install");
+    log_info("Running pip install");
 
-        utils::run_command_and_stream_output(
-            Command::new("pip")
-                .args([
-                    "install",
-                    "--cache-dir",
-                    &self.pip_cache_dir.to_string_lossy(),
-                    "--no-input",
-                    "--progress",
-                    "off",
-                    // Install dependencies into the user `site-packages` directory (set by `PYTHONUSERBASE`),
-                    // rather than the system `site-packages` directory (since we want to keep dependencies in
-                    // a separate layer to the Python runtime).
-                    //
-                    // Another option is to install into an arbitrary directory using Pip's `--target` option
-                    // combined with adding that directory to `PYTHONPATH`, however:
-                    //   - Using `--target` causes a number of issues with Pip, eg:
-                    //     https://github.com/pypa/pip/issues/8799
-                    //   - Directories added to `PYTHONPATH` take precedence over the Python stdlib (unlike
-                    //     the system or user site-packages directories), and so can result in hard to debug
-                    //     stdlib shadowing problems that users won't encounter locally (for example if one
-                    //     of the app's transitive dependencies is an outdated stdlib backport package).
-                    "--user",
-                    "--requirement",
-                    "requirements.txt",
-                    // When Pip installs dependencies from a VCS URL it has to clone the repository in order
-                    // to install it. In standard installation mode the clone is made to a temporary directory
-                    // and then deleted, however, when packages are installed in editable mode Pip must keep
-                    // the repository around, since the directory is added to the Python path directly (via
-                    // the `.pth` file created in `site-packages`). By default Pip will store the repository
-                    // in the current working directory (the app dir), however, we would prefer it to be stored
-                    // in the dependencies layer instead for consistency. (Plus if the dependencies layer were
-                    // ever cached, storing the repository in the app dir would break on repeat-builds).
-                    "--src",
-                    &layer_path.join("src").to_string_lossy(),
-                ])
-                .current_dir(&context.app_dir)
-                .env_clear()
-                .envs(&command_env),
-        )
-        .map_err(PipDependenciesLayerError::PipInstallCommand)?;
+    utils::run_command_and_stream_output(
+        Command::new("pip")
+            .args([
+                "install",
+                "--cache-dir",
+                &pip_cache_dir.to_string_lossy(),
+                "--no-input",
+                "--progress-bar",
+                "off",
+                // Using `--user` rather than `PIP_USER` since the latter affects `pip list` too.
+                "--user",
+                "--requirement",
+                "requirements.txt",
+                // For VCS dependencies installed in editable mode, the repository clones must be
+                // kept after installation, since their directories are added to the Python path
+                // directly (via `.pth` files in `site-packages`). By default Pip will store the
+                // repositories in the current working directory (the app dir), but we want them
+                // in the dependencies layer instead.
+                "--src",
+                &layer_path.join("src").to_string_lossy(),
+            ])
+            .current_dir(&context.app_dir)
+            .env_clear()
+            .envs(&*env),
+    )
+    .map_err(PipDependenciesLayerError::PipInstallCommand)?;
 
-        LayerResultBuilder::new(GenericMetadata::default())
-            .env(layer_env)
-            .build()
-    }
+    Ok(layer_path)
 }
 
-/// Environment variables that will be set by this layer.
 fn generate_layer_env(layer_path: &Path) -> LayerEnv {
     LayerEnv::new()
         // We set `PATH` explicitly, since lifecycle will only add the bin directory to `PATH` if it
@@ -117,18 +92,12 @@ fn generate_layer_env(layer_path: &Path) -> LayerEnv {
             layer_path.join("bin"),
         )
         .chainable_insert(Scope::All, ModificationBehavior::Delimiter, "PATH", ":")
-        // `PYTHONUSERBASE` overrides the default user base directory, which is used by Python to
-        // compute the path of the user `site-packages` directory:
-        // https://docs.python.org/3/using/cmdline.html#envvar-PYTHONUSERBASE
-        //
-        // Setting this:
+        // Overrides the default user base directory, used by Python to compute the path of the user
+        // `site-packages` directory. Setting this:
         //   - Makes `pip install --user` install the dependencies into the current layer rather
         //     than the user's home directory (which would be discarded at the end of the build).
         //   - Allows Python to find the installed packages at import time.
-        //
-        // It's fine for this directory to be set to the root of the layer, since all of the files
-        // created by Pip will be nested inside subdirectories (such as `bin/` or `lib/`), and so
-        // won't conflict with the CNB layer metadata related files generated by libcnb.rs.
+        // See: https://docs.python.org/3/using/cmdline.html#envvar-PYTHONUSERBASE
         .chainable_insert(
             Scope::All,
             ModificationBehavior::Override,
@@ -143,9 +112,9 @@ pub(crate) enum PipDependenciesLayerError {
     PipInstallCommand(StreamedCommandError),
 }
 
-impl From<PipDependenciesLayerError> for BuildpackError {
+impl From<PipDependenciesLayerError> for libcnb::Error<BuildpackError> {
     fn from(error: PipDependenciesLayerError) -> Self {
-        Self::PipDependenciesLayer(error)
+        Self::BuildpackError(BuildpackError::PipDependenciesLayer(error))
     }
 }
 

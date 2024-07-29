@@ -1,18 +1,14 @@
-// TODO: Switch to libcnb's struct layer API.
-#![allow(deprecated)]
-
 use crate::packaging_tool_versions::PackagingToolVersions;
 use crate::python_version::PythonVersion;
 use crate::utils::{self, DownloadUnpackArchiveError, StreamedCommandError};
 use crate::{BuildpackError, PythonBuildpack};
 use libcnb::build::BuildContext;
-use libcnb::data::layer_content_metadata::LayerTypes;
-use libcnb::generic::GenericMetadata;
+use libcnb::data::layer_name;
 use libcnb::layer::{
-    ExistingLayerStrategy, Layer, LayerData, LayerResult, LayerResultBuilder, MetadataMigration,
+    CachedLayerDefinition, EmptyLayerCause, InvalidMetadataAction, LayerState, RestoredLayerAction,
 };
 use libcnb::layer_env::{LayerEnv, ModificationBehavior, Scope};
-use libcnb::{Buildpack, Env, Target};
+use libcnb::Env;
 use libherokubuildpack::log::log_info;
 use serde::{Deserialize, Serialize};
 use std::fs::Permissions;
@@ -21,190 +17,155 @@ use std::path::{Path, PathBuf};
 use std::process::Command;
 use std::{fs, io};
 
-/// Layer containing the Python runtime, and the packages `pip`, `setuptools` and `wheel`.
-///
-/// We install both Python and the packaging tools into the same layer, since:
-///  - We don't want to mix buildpack/packaging dependencies with the app's own dependencies
-///    (for a start, we need pip installed to even install the user's own dependencies, plus
-///    want to keep caching separate), so cannot install the packaging tools into the user
-///    site-packages directory.
-///  - We don't want to install the packaging tools into an arbitrary directory added to
-///    `PYTHONPATH`, since directories added to `PYTHONPATH` take precedence over the Python
-///    stdlib (unlike the system or user site-packages directories), and so can result in hard
-///    to debug stdlib shadowing problems that users won't encounter locally.
-///  - This leaves just the system site-packages directory, which exists within the Python
-///    installation directory and Python does not support moving it elsewhere.
-///  - It matches what both local and official Docker image environments do.
-pub(crate) struct PythonLayer<'a> {
-    /// Environment variables inherited from earlier buildpack steps.
-    pub(crate) command_env: &'a Env,
-    /// The Python version that this layer should install.
-    pub(crate) python_version: &'a PythonVersion,
-    /// The pip, setuptools and wheel versions that this layer should install.
-    pub(crate) packaging_tool_versions: &'a PackagingToolVersions,
-}
+/// Creates a layer containing the Python runtime and the packages `pip`, `setuptools` and `wheel`.
+//
+// We install both Python and the packaging tools into the same layer, since:
+//  - We don't want to mix buildpack/packaging dependencies with the app's own dependencies
+//    (for a start, we need pip installed to even install the user's own dependencies, plus
+//    want to keep caching separate), so cannot install the packaging tools into the user
+//    site-packages directory.
+//  - We don't want to install the packaging tools into an arbitrary directory added to
+//    `PYTHONPATH`, since directories added to `PYTHONPATH` take precedence over the Python
+//    stdlib (unlike the system or user site-packages directories), and so can result in hard
+//    to debug stdlib shadowing problems that users won't encounter locally.
+//  - This leaves just the system site-packages directory, which exists within the Python
+//    installation directory and Python does not support moving it elsewhere.
+//  - It matches what both local and official Docker image environments do.
+#[allow(clippy::too_many_lines)]
+pub(crate) fn install_python_and_packaging_tools(
+    context: &BuildContext<PythonBuildpack>,
+    env: &mut Env,
+    python_version: &PythonVersion,
+    packaging_tool_versions: &PackagingToolVersions,
+) -> Result<(), libcnb::Error<BuildpackError>> {
+    let new_metadata = PythonLayerMetadata {
+        arch: context.target.arch.clone(),
+        distro_name: context.target.distro_name.clone(),
+        distro_version: context.target.distro_version.clone(),
+        python_version: python_version.to_string(),
+        packaging_tool_versions: packaging_tool_versions.clone(),
+    };
+    let PackagingToolVersions {
+        pip_version,
+        setuptools_version,
+        wheel_version,
+    } = packaging_tool_versions;
 
-impl Layer for PythonLayer<'_> {
-    type Buildpack = PythonBuildpack;
-    type Metadata = PythonLayerMetadata;
-
-    fn types(&self) -> LayerTypes {
-        LayerTypes {
+    let layer = context.cached_layer(
+        layer_name!("python"),
+        CachedLayerDefinition {
             build: true,
-            cache: true,
             launch: true,
-        }
-    }
-
-    fn create(
-        &mut self,
-        context: &BuildContext<Self::Buildpack>,
-        layer_path: &Path,
-    ) -> Result<LayerResult<Self::Metadata>, <Self::Buildpack as Buildpack>::Error> {
-        log_info(format!("Installing Python {}", self.python_version));
-
-        let archive_url = self.python_version.url(&context.target);
-        utils::download_and_unpack_zstd_archive(&archive_url, layer_path).map_err(|error| {
-            match error {
-                // TODO: Remove this once the Python version is validated against a manifest (at which
-                // point 404s can be treated as an internal error, instead of user error)
-                DownloadUnpackArchiveError::Request(ureq::Error::Status(404, _)) => {
-                    PythonLayerError::PythonArchiveNotFound {
-                        python_version: self.python_version.clone(),
-                    }
+            invalid_metadata_action: &|_| InvalidMetadataAction::DeleteLayer,
+            restored_layer_action: &|cached_metadata: &PythonLayerMetadata, _| {
+                let reasons = cache_invalidation_reasons(cached_metadata, &new_metadata);
+                if reasons.is_empty() {
+                    Ok((RestoredLayerAction::KeepLayer, Vec::new()))
+                } else {
+                    Ok((RestoredLayerAction::DeleteLayer, reasons))
                 }
-                other_error => PythonLayerError::DownloadUnpackPythonArchive(other_error),
-            }
-        })?;
+            },
+        },
+    )?;
+    let layer_path = layer.path();
 
-        let layer_env = generate_layer_env(layer_path, self.python_version);
-        let mut command_env = layer_env.apply(Scope::Build, self.command_env);
-
-        // The Python binaries are built using `--shared`, and since they're being installed at a
-        // different location from their original `--prefix`, they need `LD_LIBRARY_PATH` to be set
-        // in order to find `libpython3`. Whilst `LD_LIBRARY_PATH` will be automatically set later by
-        // lifecycle/libcnb, it's not set by libcnb until this `Layer` has ended, and so we have to
-        // explicitly set it for the Python invocations within this layer.
-        command_env.insert("LD_LIBRARY_PATH", layer_path.join("lib"));
-
-        let PackagingToolVersions {
-            pip_version,
-            setuptools_version,
-            wheel_version,
-        } = self.packaging_tool_versions;
-
-        log_info(format!(
-            "Installing pip {pip_version}, setuptools {setuptools_version} and wheel {wheel_version}"
-        ));
-
-        let python_binary = layer_path.join("bin/python");
-        let python_stdlib_dir = layer_path.join(format!(
-            "lib/python{}.{}",
-            self.python_version.major, self.python_version.minor
-        ));
-        let site_packages_dir = python_stdlib_dir.join("site-packages");
-
-        // Python bundles Pip within its standard library, which we can use to install our chosen
-        // pip version from PyPI, saving us from having to download the usual pip bootstrap script.
-        let bundled_pip_module_path = bundled_pip_module_path(&python_stdlib_dir)
-            .map_err(PythonLayerError::LocateBundledPip)?;
-
-        utils::run_command_and_stream_output(
-            Command::new(python_binary)
-                .args([
-                    &bundled_pip_module_path.to_string_lossy(),
-                    "install",
-                    // There is no point using Pip's cache here, since the layer itself will be cached.
-                    "--no-cache-dir",
-                    "--no-input",
-                    "--quiet",
-                    format!("pip=={pip_version}").as_str(),
-                    format!("setuptools=={setuptools_version}").as_str(),
-                    format!("wheel=={wheel_version}").as_str(),
-                ])
-                .current_dir(&context.app_dir)
-                .env_clear()
-                .envs(&command_env),
-        )
-        .map_err(PythonLayerError::BootstrapPipCommand)?;
-
-        // By default Pip will install into the system site-packages directory if it is writeable
-        // by the current user. Whilst the buildpack's own `pip install` invocations always use
-        // `--user` to ensure application dependencies are instead installed into the user
-        // site-packages, it's possible other buildpacks or custom scripts may forget to do so.
-        // By making the system site-packages directory read-only, Pip will automatically use
-        // user installs in such cases:
-        // https://github.com/pypa/pip/blob/23.0/src/pip/_internal/commands/install.py#L715-L773
-        fs::set_permissions(site_packages_dir, Permissions::from_mode(0o555))
-            .map_err(PythonLayerError::MakeSitePackagesReadOnly)?;
-
-        let layer_metadata = self.generate_layer_metadata(&context.target);
-        LayerResultBuilder::new(layer_metadata)
-            .env(layer_env)
-            .build()
-    }
-
-    fn existing_layer_strategy(
-        &mut self,
-        context: &BuildContext<Self::Buildpack>,
-        layer_data: &LayerData<Self::Metadata>,
-    ) -> Result<ExistingLayerStrategy, <Self::Buildpack as Buildpack>::Error> {
-        let cached_metadata = &layer_data.content_metadata.metadata;
-        let new_metadata = self.generate_layer_metadata(&context.target);
-        let cache_invalidation_reasons = cache_invalidation_reasons(cached_metadata, &new_metadata);
-
-        if cache_invalidation_reasons.is_empty() {
-            log_info(format!(
-                "Using cached Python {}",
-                cached_metadata.python_version
-            ));
-            let PackagingToolVersions {
-                pip_version,
-                setuptools_version,
-                wheel_version,
-            } = &cached_metadata.packaging_tool_versions;
+    match layer.state {
+        LayerState::Restored { .. } => {
+            log_info(format!("Using cached Python {python_version}"));
             log_info(format!(
                 "Using cached pip {pip_version}, setuptools {setuptools_version} and wheel {wheel_version}"
             ));
-            Ok(ExistingLayerStrategy::Keep)
-        } else {
-            log_info(format!(
-                "Discarding cache since:\n - {}",
-                cache_invalidation_reasons.join("\n - ")
-            ));
-            Ok(ExistingLayerStrategy::Recreate)
+        }
+        LayerState::Empty { ref cause } => {
+            match cause {
+                EmptyLayerCause::InvalidMetadataAction { .. } => {
+                    log_info("Discarding cache since the buildpack cache format has changed");
+                }
+                EmptyLayerCause::RestoredLayerAction { cause: reasons } => {
+                    log_info(format!(
+                        "Discarding cache since:\n - {}",
+                        reasons.join("\n - ")
+                    ));
+                }
+                EmptyLayerCause::NewlyCreated => {}
+            }
+            log_info(format!("Installing Python {python_version}"));
+            let archive_url = python_version.url(&context.target);
+            utils::download_and_unpack_zstd_archive(&archive_url, &layer_path).map_err(
+                |error| match error {
+                    // TODO: Remove this once the Python version is validated against a manifest (at
+                    // which point 404s can be treated as an internal error, instead of user error)
+                    DownloadUnpackArchiveError::Request(ureq::Error::Status(404, _)) => {
+                        PythonLayerError::PythonArchiveNotFound {
+                            python_version: python_version.clone(),
+                        }
+                    }
+                    other_error => PythonLayerError::DownloadUnpackPythonArchive(other_error),
+                },
+            )?;
+            layer.write_metadata(new_metadata)?;
         }
     }
 
-    fn migrate_incompatible_metadata(
-        &mut self,
-        _context: &BuildContext<Self::Buildpack>,
-        _metadata: &GenericMetadata,
-    ) -> Result<MetadataMigration<Self::Metadata>, <Self::Buildpack as Buildpack>::Error> {
-        // For now we don't migrate old cache metadata formats, since we want to invalidate
-        // the cache anyway (to switch to the new runtime archives).
-        log_info("Discarding cache since the buildpack cache format has changed");
-        Ok(MetadataMigration::RecreateLayer)
+    let mut layer_env = generate_layer_env(&layer_path, python_version);
+    layer.write_env(layer_env)?;
+    // Required to pick up the automatic env vars such as PATH. See: https://github.com/heroku/libcnb.rs/issues/842
+    layer_env = layer.read_env()?;
+    env.clone_from(&layer_env.apply(Scope::Build, env));
+
+    if let LayerState::Restored { .. } = layer.state {
+        return Ok(());
     }
+
+    log_info(format!(
+        "Installing pip {pip_version}, setuptools {setuptools_version} and wheel {wheel_version}"
+    ));
+
+    let python_stdlib_dir = layer_path.join(format!(
+        "lib/python{}.{}",
+        python_version.major, python_version.minor
+    ));
+
+    // Python bundles Pip within its standard library, which we can use to install our chosen
+    // pip version from PyPI, saving us from having to download the usual pip bootstrap script.
+    let bundled_pip_module_path =
+        bundled_pip_module_path(&python_stdlib_dir).map_err(PythonLayerError::LocateBundledPip)?;
+
+    utils::run_command_and_stream_output(
+        Command::new("python")
+            .args([
+                &bundled_pip_module_path.to_string_lossy(),
+                "install",
+                // There is no point using Pip's cache here, since the layer itself will be cached.
+                "--no-cache-dir",
+                "--no-input",
+                "--quiet",
+                format!("pip=={pip_version}").as_str(),
+                format!("setuptools=={setuptools_version}").as_str(),
+                format!("wheel=={wheel_version}").as_str(),
+            ])
+            .current_dir(&context.app_dir)
+            .env_clear()
+            .envs(&*env),
+    )
+    .map_err(PythonLayerError::BootstrapPipCommand)?;
+
+    // By default Pip installs into the system site-packages directory if it is writeable by the
+    // current user. Whilst the buildpack's own `pip install` invocations always use `--user` to
+    // ensure app dependencies are installed into the user site-packages, it's possible other
+    // buildpacks or custom scripts may forget to do so. By making the system site-packages
+    // directory read-only, Pip will automatically use user installs in such cases:
+    // https://github.com/pypa/pip/blob/24.1.2/src/pip/_internal/commands/install.py#L662-L720
+    let site_packages_dir = python_stdlib_dir.join("site-packages");
+    fs::set_permissions(site_packages_dir, Permissions::from_mode(0o555))
+        .map_err(PythonLayerError::MakeSitePackagesReadOnly)?;
+
+    Ok(())
 }
 
-impl<'a> PythonLayer<'a> {
-    fn generate_layer_metadata(&self, target: &Target) -> PythonLayerMetadata {
-        PythonLayerMetadata {
-            arch: target.arch.clone(),
-            distro_name: target.distro_name.clone(),
-            distro_version: target.distro_version.clone(),
-            python_version: self.python_version.to_string(),
-            packaging_tool_versions: self.packaging_tool_versions.clone(),
-        }
-    }
-}
-
-/// Metadata stored in the generated layer that allows future builds to determine whether
-/// the cached layer needs to be invalidated or not.
-#[derive(Clone, Deserialize, PartialEq, Serialize)]
+#[derive(Clone, Deserialize, Serialize)]
 #[serde(deny_unknown_fields)]
-pub(crate) struct PythonLayerMetadata {
+struct PythonLayerMetadata {
     arch: String,
     distro_name: String,
     distro_version: String,
@@ -290,15 +251,13 @@ fn cache_invalidation_reasons(
     reasons
 }
 
-/// Environment variables that will be set by this layer.
 fn generate_layer_env(layer_path: &Path, python_version: &PythonVersion) -> LayerEnv {
-    // Remember to force invalidation of the cached layer if these env vars ever change.
     LayerEnv::new()
         // We have to set `CPATH` explicitly, since:
-        //  - The automatic path set by lifecycle/libcnb is `<layer>/include/` whereas Python's
-        //    headers are at `<layer>/include/pythonX.Y/` (compilers don't recursively search).
-        //  - Older setuptools cannot find this directory without `CPATH` being set:
-        //    https://github.com/pypa/setuptools/issues/3657
+        // - The automatic path set by lifecycle/libcnb is `<layer>/include/` whereas Python's
+        //   headers are at `<layer>/include/pythonX.Y/` (compilers don't recursively search).
+        // - Older setuptools cannot find this directory without `CPATH` being set:
+        //   https://github.com/pypa/setuptools/issues/3657
         .chainable_insert(
             Scope::Build,
             ModificationBehavior::Prepend,
@@ -341,15 +300,14 @@ fn generate_layer_env(layer_path: &Path, python_version: &PythonVersion) -> Laye
             "PKG_CONFIG_PATH",
             ":",
         )
-        // Our Python runtime is relocated (installed into a different location to which is was
-        // originally compiled) which Python itself handles well, since it recalculates its actual
-        // location at startup:
+        // We relocate Python (install into a different location to which it was compiled), which
+        // Python handles fine since it recalculates its actual location at startup. However, the
+        // uWSGI package uses the wrong `sysconfig` APIs so tries to reference the old compile
+        // location, unless we override that by setting `PYTHONHOME`. See:
         // https://docs.python.org/3/library/sys_path_init.html
-        // However, the uWSGI package uses the wrong `sysconfig` APIs so tries to reference the old
-        // compile location, unless we override that by setting `PYTHONHOME`:
         // https://github.com/unbit/uwsgi/issues/2525
         // In addition, some legacy apps have `PYTHONHOME` set to an invalid value, so if we did not
-        // set it explicitly here, Python would fail to run both during the build and at run-time.
+        // set it explicitly here, they would fail to run both during the build and at run-time.
         .chainable_insert(
             Scope::All,
             ModificationBehavior::Override,
@@ -363,28 +321,22 @@ fn generate_layer_env(layer_path: &Path, python_version: &PythonVersion) -> Laye
             "PYTHONUNBUFFERED",
             "1",
         )
-        // By default, when Python creates cached bytecode files (`.pyc` files) it embeds the
-        // `.py` source file's last-modified time in the `.pyc` file, so it can later be used
-        // to determine whether the cached bytecode file needs regenerating.
-        //
-        // This causes the `.pyc` file contents (and thus layer SHA256) to be non-deterministic in
-        // cases where the `.py` file's last-modified time can vary (such as files installed by Pip,
-        // since it doesn't preserve the last modified time of the original downloaded package).
-        //
-        // In addition, as part of generating the OCI image, lifecycle resets the timestamps on all
-        // files to a fixed value in order to improve the determinism of builds:
+        // By default, Python's cached bytecode files (`.pyc` files) embed the last-modified time of
+        // their `.py` source file, so Python can determine when they need regenerating. This causes
+        // `.pyc` files (and thus layer SHA256) to be non-deterministic in cases where the source
+        // file's last-modified time can vary (such as for packages installed by Pip). In addition,
+        // when lifecycle exports layers it resets the timestamps on all files to a fixed value:
         // https://buildpacks.io/docs/features/reproducibility/#consequences-and-caveats
         //
-        // At run-time, this then means the timestamps embedded in the `.pyc` files no longer match
-        // the timestamps of the original `.py` files, causing Python to have to regenerate the
-        // bytecode, and so losing any benefit of having kept the `.pyc` files in the image.
+        // At run-time, this means the `.pyc`'s embedded timestamps no longer match the timestamps
+        // of the original `.py` files, causing Python to regenerate the bytecode, and so losing any
+        // benefit of having kept the `.pyc` files (at the cost of a larger app image).
         //
-        // One option to solve all of the above, would be to delete the `.pyc` files from the image
-        // at the end of the buildpack's build phase, however:
-        //   - This means they need to be regenerated at app boot, slowing boot times.
-        //     (For a simple Django project on a Perf-M, boot time increases from ~0.5s to ~1.5s.)
-        //   - If any other later buildpack runs any of the Python files added by this buildpack, then
-        //     the timestamp based `.pyc` files will be created again, re-introducing non-determinism.
+        // We could delete the `.pyc` files at the end of this buildpack's build phase, however:
+        // - This means they need to be regenerated at app boot, slowing boot times.
+        //   (For a simple Django project on a Perf-M, boot time increases from ~0.5s to ~1.5s.)
+        // - If a later buildpack runs any of the Python files added by this buildpack, then the
+        //   timestamp based `.pyc` files will be created again, re-introducing non-determinism.
         //
         // Instead, we use the hash-based cache files mode added in Python 3.7+, which embeds a hash
         // of the original `.py` file in the `.pyc` file instead of the timestamp:
@@ -455,9 +407,9 @@ pub(crate) enum PythonLayerError {
     PythonArchiveNotFound { python_version: PythonVersion },
 }
 
-impl From<PythonLayerError> for BuildpackError {
+impl From<PythonLayerError> for libcnb::Error<BuildpackError> {
     fn from(error: PythonLayerError) -> Self {
-        Self::PythonLayer(error)
+        Self::BuildpackError(BuildpackError::PythonLayer(error))
     }
 }
 
@@ -548,7 +500,6 @@ mod tests {
             },
         );
 
-        // Remember to force invalidation of the cached layer if these env vars ever change.
         assert_eq!(
             utils::environment_as_sorted_vector(&layer_env.apply(Scope::Build, &base_env)),
             [

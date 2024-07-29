@@ -9,17 +9,15 @@ mod runtime_txt;
 mod utils;
 
 use crate::django::DjangoCollectstaticError;
-use crate::layers::pip_cache::PipCacheLayer;
-use crate::layers::pip_dependencies::{PipDependenciesLayer, PipDependenciesLayerError};
-use crate::layers::python::{PythonLayer, PythonLayerError};
+use crate::layers::pip_dependencies::PipDependenciesLayerError;
+use crate::layers::python::{self, PythonLayerError};
+use crate::layers::{pip_cache, pip_dependencies};
 use crate::package_manager::{DeterminePackageManagerError, PackageManager};
 use crate::packaging_tool_versions::PackagingToolVersions;
 use crate::python_version::PythonVersionError;
 use libcnb::build::{BuildContext, BuildResult, BuildResultBuilder};
-use libcnb::data::layer_name;
 use libcnb::detect::{DetectContext, DetectResult, DetectResultBuilder};
 use libcnb::generic::{GenericMetadata, GenericPlatform};
-use libcnb::layer_env::Scope;
 use libcnb::{buildpack_main, Buildpack, Env};
 use libherokubuildpack::log::{log_header, log_info};
 use std::io;
@@ -46,8 +44,6 @@ impl Buildpack for PythonBuildpack {
         }
     }
 
-    // TODO: Switch to libcnb's struct layer API.
-    #[allow(deprecated)]
     fn build(&self, context: BuildContext<Self>) -> libcnb::Result<BuildResult, Self::Error> {
         // We perform all project analysis up front, so the build can fail early if the config is invalid.
         // TODO: Add a "Build config" header and list all config in one place?
@@ -64,49 +60,36 @@ impl Buildpack for PythonBuildpack {
         // with previous-buildpack or user-provided env vars (so that features like env vars in
         // in requirements files work). We protect against broken user-provided env vars by
         // making sure that buildpack env vars take precedence in layers envs and command usage.
-        let mut command_env = Env::from_current();
+        let mut env = Env::from_current();
 
         // Create the layer containing the Python runtime, and the packages `pip`, `setuptools` and `wheel`.
         log_header("Installing Python and packaging tools");
-        let python_layer = context.handle_layer(
-            layer_name!("python"),
-            PythonLayer {
-                command_env: &command_env,
-                python_version: &python_version,
-                packaging_tool_versions: &packaging_tool_versions,
-            },
+        python::install_python_and_packaging_tools(
+            &context,
+            &mut env,
+            &python_version,
+            &packaging_tool_versions,
         )?;
-        command_env = python_layer.env.apply(Scope::Build, &command_env);
 
         // Create the layers for the application dependencies and package manager cache.
         // In the future support will be added for package managers other than pip.
-        let (dependencies_layer_dir, dependencies_layer_env) = match package_manager {
+        let dependencies_layer_dir = match package_manager {
             PackageManager::Pip => {
                 log_header("Installing dependencies using Pip");
-                let pip_cache_layer = context.handle_layer(
-                    layer_name!("pip-cache"),
-                    PipCacheLayer {
-                        python_version: &python_version,
-                        packaging_tool_versions: &packaging_tool_versions,
-                    },
+                let pip_cache_dir = pip_cache::prepare_pip_cache(
+                    &context,
+                    &python_version,
+                    &packaging_tool_versions,
                 )?;
-                let pip_layer = context.handle_layer(
-                    layer_name!("dependencies"),
-                    PipDependenciesLayer {
-                        command_env: &command_env,
-                        pip_cache_dir: pip_cache_layer.path,
-                    },
-                )?;
-                (pip_layer.path, pip_layer.env)
+                pip_dependencies::install_dependencies(&context, &mut env, &pip_cache_dir)?
             }
         };
-        command_env = dependencies_layer_env.apply(Scope::Build, &command_env);
 
         if django::is_django_installed(&dependencies_layer_dir)
             .map_err(BuildpackError::DjangoDetection)?
         {
             log_header("Generating Django static files");
-            django::run_django_collectstatic(&context.app_dir, &command_env)
+            django::run_django_collectstatic(&context.app_dir, &env)
                 .map_err(BuildpackError::DjangoCollectstatic)?;
         }
 

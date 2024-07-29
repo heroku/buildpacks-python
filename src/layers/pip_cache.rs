@@ -1,96 +1,72 @@
-// TODO: Switch to libcnb's struct layer API.
-#![allow(deprecated)]
-
 use crate::packaging_tool_versions::PackagingToolVersions;
 use crate::python_version::PythonVersion;
-use crate::PythonBuildpack;
+use crate::{BuildpackError, PythonBuildpack};
 use libcnb::build::BuildContext;
-use libcnb::data::layer_content_metadata::LayerTypes;
-use libcnb::generic::GenericMetadata;
+use libcnb::data::layer_name;
 use libcnb::layer::{
-    ExistingLayerStrategy, Layer, LayerData, LayerResult, LayerResultBuilder, MetadataMigration,
+    CachedLayerDefinition, EmptyLayerCause, InvalidMetadataAction, LayerState, RestoredLayerAction,
 };
-use libcnb::{Buildpack, Target};
 use libherokubuildpack::log::log_info;
 use serde::{Deserialize, Serialize};
-use std::path::Path;
+use std::path::PathBuf;
 
-/// Layer containing Pip's cache of HTTP requests/downloads and built package wheels.
-pub(crate) struct PipCacheLayer<'a> {
-    /// The Python version used for this build.
-    pub(crate) python_version: &'a PythonVersion,
-    /// The pip, setuptools and wheel versions used for this build.
-    pub(crate) packaging_tool_versions: &'a PackagingToolVersions,
-}
+/// Creates a build-only layer for Pip's cache of HTTP requests/downloads and built package wheels.
+pub(crate) fn prepare_pip_cache(
+    context: &BuildContext<PythonBuildpack>,
+    python_version: &PythonVersion,
+    packaging_tool_versions: &PackagingToolVersions,
+) -> Result<PathBuf, libcnb::Error<BuildpackError>> {
+    let new_metadata = PipCacheLayerMetadata {
+        arch: context.target.arch.clone(),
+        distro_name: context.target.distro_name.clone(),
+        distro_version: context.target.distro_version.clone(),
+        python_version: python_version.to_string(),
+        packaging_tool_versions: packaging_tool_versions.clone(),
+    };
 
-impl Layer for PipCacheLayer<'_> {
-    type Buildpack = PythonBuildpack;
-    type Metadata = PipCacheLayerMetadata;
-
-    fn types(&self) -> LayerTypes {
-        LayerTypes {
+    let layer = context.cached_layer(
+        layer_name!("pip-cache"),
+        CachedLayerDefinition {
             build: false,
-            cache: true,
             launch: false,
-        }
-    }
+            invalid_metadata_action: &|_| InvalidMetadataAction::DeleteLayer,
+            restored_layer_action: &|cached_metadata: &PipCacheLayerMetadata, _| {
+                if cached_metadata == &new_metadata {
+                    Ok(RestoredLayerAction::KeepLayer)
+                } else {
+                    Ok(RestoredLayerAction::DeleteLayer)
+                }
+            },
+        },
+    )?;
 
-    fn create(
-        &mut self,
-        context: &BuildContext<Self::Buildpack>,
-        _layer_path: &Path,
-    ) -> Result<LayerResult<Self::Metadata>, <Self::Buildpack as Buildpack>::Error> {
-        let layer_metadata = self.generate_layer_metadata(&context.target);
-        LayerResultBuilder::new(layer_metadata).build()
-    }
-
-    fn existing_layer_strategy(
-        &mut self,
-        context: &BuildContext<Self::Buildpack>,
-        layer_data: &LayerData<Self::Metadata>,
-    ) -> Result<ExistingLayerStrategy, <Self::Buildpack as Buildpack>::Error> {
-        let cached_metadata = &layer_data.content_metadata.metadata;
-        let new_metadata = &self.generate_layer_metadata(&context.target);
-
-        if cached_metadata == new_metadata {
+    match layer.state {
+        LayerState::Restored { .. } => {
             log_info("Using cached pip download/wheel cache");
-            Ok(ExistingLayerStrategy::Keep)
-        } else {
-            log_info("Discarding cached pip download/wheel cache");
-            Ok(ExistingLayerStrategy::Recreate)
+        }
+        LayerState::Empty { cause } => {
+            match cause {
+                EmptyLayerCause::InvalidMetadataAction { .. }
+                | EmptyLayerCause::RestoredLayerAction { .. } => {
+                    // We don't go into more details as to why the cache has been discarded, since
+                    // the reasons will be the same as those logged during the earlier Python layer.
+                    log_info("Discarding cached pip download/wheel cache");
+                }
+                EmptyLayerCause::NewlyCreated => {}
+            }
+            layer.write_metadata(new_metadata)?;
         }
     }
 
-    fn migrate_incompatible_metadata(
-        &mut self,
-        _context: &BuildContext<Self::Buildpack>,
-        _metadata: &GenericMetadata,
-    ) -> Result<MetadataMigration<Self::Metadata>, <Self::Buildpack as Buildpack>::Error> {
-        log_info("Discarding cached pip download/wheel cache");
-        Ok(MetadataMigration::RecreateLayer)
-    }
+    Ok(layer.path())
 }
 
-impl<'a> PipCacheLayer<'a> {
-    fn generate_layer_metadata(&self, target: &Target) -> PipCacheLayerMetadata {
-        PipCacheLayerMetadata {
-            arch: target.arch.clone(),
-            distro_name: target.distro_name.clone(),
-            distro_version: target.distro_version.clone(),
-            python_version: self.python_version.to_string(),
-            packaging_tool_versions: self.packaging_tool_versions.clone(),
-        }
-    }
-}
-
-/// Metadata stored in the generated layer that allows future builds to determine whether
-/// the cached layer needs to be invalidated or not.
 // Timestamp based cache invalidation isn't used here since the Python/pip/setuptools/wheel
 // versions will change often enough that it isn't worth the added complexity. Ideally pip
 // would support cleaning up its own cache: https://github.com/pypa/pip/issues/6956
-#[derive(Clone, Deserialize, PartialEq, Serialize)]
+#[derive(Deserialize, PartialEq, Serialize)]
 #[serde(deny_unknown_fields)]
-pub(crate) struct PipCacheLayerMetadata {
+struct PipCacheLayerMetadata {
     arch: String,
     distro_name: String,
     distro_version: String,
