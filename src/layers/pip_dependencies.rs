@@ -64,9 +64,6 @@ impl Layer for PipDependenciesLayer<'_> {
                     "--cache-dir",
                     &self.pip_cache_dir.to_string_lossy(),
                     "--no-input",
-                    // Prevent warning about the `bin/` directory not being on `PATH`, since it
-                    // will be added automatically by libcnb/lifecycle later.
-                    "--no-warn-script-location",
                     "--progress",
                     "off",
                     // Install dependencies into the user `site-packages` directory (set by `PYTHONUSERBASE`),
@@ -110,6 +107,16 @@ impl Layer for PipDependenciesLayer<'_> {
 /// Environment variables that will be set by this layer.
 fn generate_layer_env(layer_path: &Path) -> LayerEnv {
     LayerEnv::new()
+        // We set `PATH` explicitly, since lifecycle will only add the bin directory to `PATH` if it
+        // exists - and we want to support the scenario of installing a debugging package with CLI at
+        // run-time, when none of the dependencies installed at build-time had an entrypoint script.
+        .chainable_insert(
+            Scope::All,
+            ModificationBehavior::Prepend,
+            "PATH",
+            layer_path.join("bin"),
+        )
+        .chainable_insert(Scope::All, ModificationBehavior::Delimiter, "PATH", ":")
         // `PYTHONUSERBASE` overrides the default user base directory, which is used by Python to
         // compute the path of the user `site-packages` directory:
         // https://docs.python.org/3/using/cmdline.html#envvar-PYTHONUSERBASE
@@ -149,17 +156,24 @@ mod tests {
     #[test]
     fn pip_dependencies_layer_env() {
         let mut base_env = Env::new();
+        base_env.insert("PATH", "/base");
         base_env.insert("PYTHONUSERBASE", "this-should-be-overridden");
 
         let layer_env = generate_layer_env(Path::new("/layer-dir"));
 
         assert_eq!(
             utils::environment_as_sorted_vector(&layer_env.apply(Scope::Build, &base_env)),
-            [("PYTHONUSERBASE", "/layer-dir")]
+            [
+                ("PATH", "/layer-dir/bin:/base"),
+                ("PYTHONUSERBASE", "/layer-dir"),
+            ]
         );
         assert_eq!(
             utils::environment_as_sorted_vector(&layer_env.apply(Scope::Launch, &base_env)),
-            [("PYTHONUSERBASE", "/layer-dir")]
+            [
+                ("PATH", "/layer-dir/bin:/base"),
+                ("PYTHONUSERBASE", "/layer-dir"),
+            ]
         );
     }
 }
