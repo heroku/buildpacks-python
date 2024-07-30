@@ -27,13 +27,12 @@ use std::process::Command;
 //   a requirements file is later removed, Pip will not uninstall the package. In addition,
 //   there is no official lockfile support, so changes in transitive dependencies add yet
 //   more opportunity for non-determinism between each install.
-// - The Pip HTTP/wheel cache is itself cached in a separate layer, which covers the most
-//   time consuming part of performing a pip install: downloading the dependencies and then
-//   generating wheels for any packages that don't provide them.
+// - The Pip HTTP/wheel cache is itself cached in a separate layer (exposed via `PIP_CACHE_DIR`),
+//   which covers the most time consuming part of performing a pip install: downloading the
+//   dependencies and then generating wheels for any packages that don't provide them.
 pub(crate) fn install_dependencies(
     context: &BuildContext<PythonBuildpack>,
     env: &mut Env,
-    pip_cache_dir: &Path,
 ) -> Result<PathBuf, libcnb::Error<BuildpackError>> {
     let layer = context.uncached_layer(
         layer_name!("dependencies"),
@@ -54,8 +53,6 @@ pub(crate) fn install_dependencies(
         Command::new("pip")
             .args([
                 "install",
-                "--cache-dir",
-                &pip_cache_dir.to_string_lossy(),
                 "--no-input",
                 "--progress-bar",
                 "off",
