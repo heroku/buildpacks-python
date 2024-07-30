@@ -6,16 +6,19 @@ use libcnb::data::layer_name;
 use libcnb::layer::{
     CachedLayerDefinition, EmptyLayerCause, InvalidMetadataAction, LayerState, RestoredLayerAction,
 };
+use libcnb::layer_env::{LayerEnv, ModificationBehavior, Scope};
+use libcnb::Env;
 use libherokubuildpack::log::log_info;
 use serde::{Deserialize, Serialize};
-use std::path::PathBuf;
 
 /// Creates a build-only layer for Pip's cache of HTTP requests/downloads and built package wheels.
+// See: https://pip.pypa.io/en/stable/topics/caching/
 pub(crate) fn prepare_pip_cache(
     context: &BuildContext<PythonBuildpack>,
+    env: &mut Env,
     python_version: &PythonVersion,
     packaging_tool_versions: &PackagingToolVersions,
-) -> Result<PathBuf, libcnb::Error<BuildpackError>> {
+) -> Result<(), libcnb::Error<BuildpackError>> {
     let new_metadata = PipCacheLayerMetadata {
         arch: context.target.arch.clone(),
         distro_name: context.target.distro_name.clone(),
@@ -27,7 +30,7 @@ pub(crate) fn prepare_pip_cache(
     let layer = context.cached_layer(
         layer_name!("pip-cache"),
         CachedLayerDefinition {
-            build: false,
+            build: true,
             launch: false,
             invalid_metadata_action: &|_| InvalidMetadataAction::DeleteLayer,
             restored_layer_action: &|cached_metadata: &PipCacheLayerMetadata, _| {
@@ -58,7 +61,17 @@ pub(crate) fn prepare_pip_cache(
         }
     }
 
-    Ok(layer.path())
+    // https://pip.pypa.io/en/stable/cli/pip/#cmdoption-cache-dir
+    let layer_env = LayerEnv::new().chainable_insert(
+        Scope::Build,
+        ModificationBehavior::Override,
+        "PIP_CACHE_DIR",
+        layer.path(),
+    );
+    layer.write_env(&layer_env)?;
+    env.clone_from(&layer_env.apply(Scope::Build, env));
+
+    Ok(())
 }
 
 // Timestamp based cache invalidation isn't used here since the Python/pip/setuptools/wheel

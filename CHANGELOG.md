@@ -12,6 +12,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Stopped manually creating a `src` directory inside the Pip dependencies layer. Pip will create the directory itself if needed (when there are editable VCS dependencies). ([#228](https://github.com/heroku/buildpacks-python/pull/228))
 - Stopped setting `CPATH` and `PKG_CONFIG_PATH` at launch time. ([#231](https://github.com/heroku/buildpacks-python/pull/231))
 - The `bin` directory in the Pip dependencies layer is now always added to `PATH` instead of only when an installed dependency has an entry point script. ([#232](https://github.com/heroku/buildpacks-python/pull/232))
+- The Pip cache layer is now exposed to Pip invocations in later buildpacks. ([#234](https://github.com/heroku/buildpacks-python/pull/234))
 
 ## [0.12.1] - 2024-07-15
 

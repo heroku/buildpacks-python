@@ -76,12 +76,13 @@ impl Buildpack for PythonBuildpack {
         let dependencies_layer_dir = match package_manager {
             PackageManager::Pip => {
                 log_header("Installing dependencies using Pip");
-                let pip_cache_dir = pip_cache::prepare_pip_cache(
+                pip_cache::prepare_pip_cache(
                     &context,
+                    &mut env,
                     &python_version,
                     &packaging_tool_versions,
                 )?;
-                pip_dependencies::install_dependencies(&context, &mut env, &pip_cache_dir)?
+                pip_dependencies::install_dependencies(&context, &mut env)?
             }
         };
 
