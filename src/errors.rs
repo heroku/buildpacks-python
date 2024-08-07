@@ -129,13 +129,13 @@ fn on_python_layer_error(error: PythonLayerError) {
         PythonLayerError::BootstrapPipCommand(error) => match error {
             StreamedCommandError::Io(io_error) => log_io_error(
                 "Unable to bootstrap pip",
-                "running the command to install pip, setuptools and wheel",
+                "running the command to install pip",
                 &io_error,
             ),
             StreamedCommandError::NonZeroExitStatus(exit_status) => log_error(
                 "Unable to bootstrap pip",
                 formatdoc! {"
-                    The command to install pip, setuptools and wheel did not exit successfully ({exit_status}).
+                    The command to install pip did not exit successfully ({exit_status}).
                     
                     See the log output above for more information.
                     

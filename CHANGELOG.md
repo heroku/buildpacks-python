@@ -7,6 +7,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Removed
+
+- Stopped explicitly installing setuptools and wheel. They will be automatically installed by pip into an isolated build environment if they are required for building a package. ([#243](https://github.com/heroku/buildpacks-python/pull/243))
+
 ## [0.13.0] - 2024-08-01
 
 ### Changed
