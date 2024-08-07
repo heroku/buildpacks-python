@@ -102,16 +102,11 @@ fn pip_basic_install_and_cache_reuse() {
 #[test]
 #[ignore = "integration test"]
 fn pip_cache_invalidation_with_compatible_metadata() {
-    // TODO: Re-enable this test the next time the default-Python/pip versions change, at which point
-    // there will be a historic buildpack version with compatible metadata that triggers invalidation.
-    #![allow(unreachable_code)]
-    return;
-
     let config = default_build_config("tests/fixtures/pip_basic");
 
     TestRunner::default().build(
         config.clone().buildpacks([BuildpackReference::Other(
-            "docker://docker.io/heroku/buildpack-python:TODO".to_string(),
+            "docker://docker.io/heroku/buildpack-python:0.14.0".to_string(),
         )]),
         |context| {
             context.rebuild(config, |rebuild_context| {
@@ -125,8 +120,8 @@ fn pip_cache_invalidation_with_compatible_metadata() {
                         
                         [Installing Python and pip]
                         Discarding cache since:
-                         - The Python version has changed from 3.12.3 to {DEFAULT_PYTHON_VERSION}
-                         - The pip version has changed from 24.0 to {PIP_VERSION}
+                         - The Python version has changed from 3.12.4 to {DEFAULT_PYTHON_VERSION}
+                         - The pip version has changed from 24.1.2 to {PIP_VERSION}
                         Installing Python {DEFAULT_PYTHON_VERSION}
                         Installing pip {PIP_VERSION}
                         
