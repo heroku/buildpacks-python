@@ -9,25 +9,25 @@ use libherokubuildpack::log::log_info;
 use std::path::{Path, PathBuf};
 use std::process::Command;
 
-/// Creates a layer containing the application's Python dependencies, installed using Pip.
+/// Creates a layer containing the application's Python dependencies, installed using pip.
 //
 // To do this we use `pip install --user` so that the dependencies are installed into the user
 // `site-packages` directory in this layer (set by `PYTHONUSERBASE`), rather than the system
 // `site-packages` subdirectory of the Python installation layer.
 //
-// Note: We can't instead use Pip's `--target` option along with `PYTHONPATH`, since:
+// Note: We can't instead use pip's `--target` option along with `PYTHONPATH`, since:
 // - Directories on `PYTHONPATH` take precedence over the Python stdlib (unlike the system or
 //   user site-packages directories), which can cause hard to debug stdlib shadowing issues
 //   if one of the app's transitive dependencies is an outdated stdlib backport package.
 // - `--target` has bugs, eg: <https://github.com/pypa/pip/issues/8799>
 //
 // This layer is not cached, since:
-// - Pip is a package installer rather than a project/environment manager, and so does not
+// - pip is a package installer rather than a project/environment manager, and so does not
 //   deterministically manage installed Python packages. For example, if a package entry in
-//   a requirements file is later removed, Pip will not uninstall the package. In addition,
+//   a requirements file is later removed, pip will not uninstall the package. In addition,
 //   there is no official lockfile support, so changes in transitive dependencies add yet
 //   more opportunity for non-determinism between each install.
-// - The Pip HTTP/wheel cache is itself cached in a separate layer (exposed via `PIP_CACHE_DIR`),
+// - The pip HTTP/wheel cache is itself cached in a separate layer (exposed via `PIP_CACHE_DIR`),
 //   which covers the most time consuming part of performing a pip install: downloading the
 //   dependencies and then generating wheels for any packages that don't provide them.
 pub(crate) fn install_dependencies(
@@ -62,7 +62,7 @@ pub(crate) fn install_dependencies(
                 "requirements.txt",
                 // For VCS dependencies installed in editable mode, the repository clones must be
                 // kept after installation, since their directories are added to the Python path
-                // directly (via `.pth` files in `site-packages`). By default Pip will store the
+                // directly (via `.pth` files in `site-packages`). By default pip will store the
                 // repositories in the current working directory (the app dir), but we want them
                 // in the dependencies layer instead.
                 "--src",
@@ -103,7 +103,7 @@ fn generate_layer_env(layer_path: &Path) -> LayerEnv {
         )
 }
 
-/// Errors that can occur when installing the project's dependencies into a layer using Pip.
+/// Errors that can occur when installing the project's dependencies into a layer using pip.
 #[derive(Debug)]
 pub(crate) enum PipDependenciesLayerError {
     PipInstallCommand(StreamedCommandError),

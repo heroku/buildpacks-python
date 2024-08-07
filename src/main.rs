@@ -75,7 +75,7 @@ impl Buildpack for PythonBuildpack {
         // In the future support will be added for package managers other than pip.
         let dependencies_layer_dir = match package_manager {
             PackageManager::Pip => {
-                log_header("Installing dependencies using Pip");
+                log_header("Installing dependencies using pip");
                 pip_cache::prepare_pip_cache(
                     &context,
                     &mut env,
@@ -112,7 +112,7 @@ pub(crate) enum BuildpackError {
     DjangoCollectstatic(DjangoCollectstaticError),
     /// IO errors when detecting whether Django is installed.
     DjangoDetection(io::Error),
-    /// Errors installing the project's dependencies into a layer using Pip.
+    /// Errors installing the project's dependencies into a layer using pip.
     PipDependenciesLayer(PipDependenciesLayerError),
     /// Errors installing Python and required packaging tools into a layer.
     PythonLayer(PythonLayerError),
