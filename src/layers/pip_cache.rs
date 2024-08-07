@@ -1,4 +1,4 @@
-use crate::packaging_tool_versions::PackagingToolVersions;
+use crate::packaging_tool_versions::PIP_VERSION;
 use crate::python_version::PythonVersion;
 use crate::{BuildpackError, PythonBuildpack};
 use libcnb::build::BuildContext;
@@ -17,14 +17,13 @@ pub(crate) fn prepare_pip_cache(
     context: &BuildContext<PythonBuildpack>,
     env: &mut Env,
     python_version: &PythonVersion,
-    packaging_tool_versions: &PackagingToolVersions,
 ) -> Result<(), libcnb::Error<BuildpackError>> {
     let new_metadata = PipCacheLayerMetadata {
         arch: context.target.arch.clone(),
         distro_name: context.target.distro_name.clone(),
         distro_version: context.target.distro_version.clone(),
         python_version: python_version.to_string(),
-        packaging_tool_versions: packaging_tool_versions.clone(),
+        pip_version: PIP_VERSION.to_string(),
     };
 
     let layer = context.cached_layer(
@@ -74,9 +73,9 @@ pub(crate) fn prepare_pip_cache(
     Ok(())
 }
 
-// Timestamp based cache invalidation isn't used here since the Python/pip/setuptools/wheel
-// versions will change often enough that it isn't worth the added complexity. Ideally pip
-// would support cleaning up its own cache: https://github.com/pypa/pip/issues/6956
+// Timestamp based cache invalidation isn't used here since the Python and pip versions will
+// change often enough that it isn't worth the added complexity. Ideally pip would support
+// cleaning up its own cache: https://github.com/pypa/pip/issues/6956
 #[derive(Deserialize, PartialEq, Serialize)]
 #[serde(deny_unknown_fields)]
 struct PipCacheLayerMetadata {
@@ -84,5 +83,5 @@ struct PipCacheLayerMetadata {
     distro_name: String,
     distro_version: String,
     python_version: String,
-    packaging_tool_versions: PackagingToolVersions,
+    pip_version: String,
 }

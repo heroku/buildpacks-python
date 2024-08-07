@@ -1,4 +1,4 @@
-use crate::packaging_tool_versions::PackagingToolVersions;
+use crate::packaging_tool_versions::PIP_VERSION;
 use crate::python_version::PythonVersion;
 use crate::utils::{self, DownloadUnpackArchiveError, StreamedCommandError};
 use crate::{BuildpackError, PythonBuildpack};
@@ -17,7 +17,7 @@ use std::path::{Path, PathBuf};
 use std::process::Command;
 use std::{fs, io};
 
-/// Creates a layer containing the Python runtime and the packages `pip`, `setuptools` and `wheel`.
+/// Creates a layer containing the Python runtime and pip.
 //
 // We install both Python and the packaging tools into the same layer, since:
 //  - We don't want to mix buildpack/packaging dependencies with the app's own dependencies
@@ -31,25 +31,18 @@ use std::{fs, io};
 //  - This leaves just the system site-packages directory, which exists within the Python
 //    installation directory and Python does not support moving it elsewhere.
 //  - It matches what both local and official Docker image environments do.
-#[allow(clippy::too_many_lines)]
 pub(crate) fn install_python_and_packaging_tools(
     context: &BuildContext<PythonBuildpack>,
     env: &mut Env,
     python_version: &PythonVersion,
-    packaging_tool_versions: &PackagingToolVersions,
 ) -> Result<(), libcnb::Error<BuildpackError>> {
     let new_metadata = PythonLayerMetadata {
         arch: context.target.arch.clone(),
         distro_name: context.target.distro_name.clone(),
         distro_version: context.target.distro_version.clone(),
         python_version: python_version.to_string(),
-        packaging_tool_versions: packaging_tool_versions.clone(),
+        pip_version: PIP_VERSION.to_string(),
     };
-    let PackagingToolVersions {
-        pip_version,
-        setuptools_version,
-        wheel_version,
-    } = packaging_tool_versions;
 
     let layer = context.cached_layer(
         layer_name!("python"),
@@ -71,9 +64,8 @@ pub(crate) fn install_python_and_packaging_tools(
 
     match layer.state {
         LayerState::Restored { .. } => {
-            log_info(format!("Using cached Python {python_version}"));
             log_info(format!(
-                "Using cached pip {pip_version}, setuptools {setuptools_version} and wheel {wheel_version}"
+                "Using cached Python {python_version} and pip {PIP_VERSION}"
             ));
         }
         LayerState::Empty { ref cause } => {
@@ -117,9 +109,7 @@ pub(crate) fn install_python_and_packaging_tools(
         return Ok(());
     }
 
-    log_info(format!(
-        "Installing pip {pip_version}, setuptools {setuptools_version} and wheel {wheel_version}"
-    ));
+    log_info(format!("Installing pip {PIP_VERSION}"));
 
     let python_stdlib_dir = layer_path.join(format!(
         "lib/python{}.{}",
@@ -140,9 +130,7 @@ pub(crate) fn install_python_and_packaging_tools(
                 "--no-cache-dir",
                 "--no-input",
                 "--quiet",
-                format!("pip=={pip_version}").as_str(),
-                format!("setuptools=={setuptools_version}").as_str(),
-                format!("wheel=={wheel_version}").as_str(),
+                format!("pip=={PIP_VERSION}").as_str(),
             ])
             .current_dir(&context.app_dir)
             .env_clear()
@@ -170,7 +158,7 @@ struct PythonLayerMetadata {
     distro_name: String,
     distro_version: String,
     python_version: String,
-    packaging_tool_versions: PackagingToolVersions,
+    pip_version: String,
 }
 
 /// Compare cached layer metadata to the new layer metadata to determine if the cache should be
@@ -189,12 +177,7 @@ fn cache_invalidation_reasons(
         distro_name: cached_distro_name,
         distro_version: cached_distro_version,
         python_version: cached_python_version,
-        packaging_tool_versions:
-            PackagingToolVersions {
-                pip_version: cached_pip_version,
-                setuptools_version: cached_setuptools_version,
-                wheel_version: cached_wheel_version,
-            },
+        pip_version: cached_pip_version,
     } = cached_metadata;
 
     let PythonLayerMetadata {
@@ -202,12 +185,7 @@ fn cache_invalidation_reasons(
         distro_name,
         distro_version,
         python_version,
-        packaging_tool_versions:
-            PackagingToolVersions {
-                pip_version,
-                setuptools_version,
-                wheel_version,
-            },
+        pip_version,
     } = new_metadata;
 
     let mut reasons = Vec::new();
@@ -233,18 +211,6 @@ fn cache_invalidation_reasons(
     if cached_pip_version != pip_version {
         reasons.push(format!(
             "The pip version has changed from {cached_pip_version} to {pip_version}"
-        ));
-    }
-
-    if cached_setuptools_version != setuptools_version {
-        reasons.push(format!(
-            "The setuptools version has changed from {cached_setuptools_version} to {setuptools_version}"
-        ));
-    }
-
-    if cached_wheel_version != wheel_version {
-        reasons.push(format!(
-            "The wheel version has changed from {cached_wheel_version} to {wheel_version}"
         ));
     }
 
@@ -423,11 +389,7 @@ mod tests {
             distro_name: "ubuntu".to_string(),
             distro_version: "22.04".to_string(),
             python_version: "3.11.0".to_string(),
-            packaging_tool_versions: PackagingToolVersions {
-                pip_version: "A.B.C".to_string(),
-                setuptools_version: "D.E.F".to_string(),
-                wheel_version: "G.H.I".to_string(),
-            },
+            pip_version: "A.B.C".to_string(),
         }
     }
 
@@ -462,11 +424,7 @@ mod tests {
             distro_name: "debian".to_string(),
             distro_version: "12".to_string(),
             python_version: "3.11.1".to_string(),
-            packaging_tool_versions: PackagingToolVersions {
-                pip_version: "A.B.C-new".to_string(),
-                setuptools_version: "D.E.F-new".to_string(),
-                wheel_version: "G.H.I-new".to_string(),
-            },
+            pip_version: "A.B.C-new".to_string(),
         };
         assert_eq!(
             cache_invalidation_reasons(&cached_metadata, &new_metadata),
@@ -475,8 +433,6 @@ mod tests {
                 "The OS has changed from ubuntu-22.04 to debian-12",
                 "The Python version has changed from 3.11.0 to 3.11.1",
                 "The pip version has changed from A.B.C to A.B.C-new",
-                "The setuptools version has changed from D.E.F to D.E.F-new",
-                "The wheel version has changed from G.H.I to G.H.I-new"
             ]
         );
     }

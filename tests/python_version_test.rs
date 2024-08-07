@@ -1,4 +1,4 @@
-use crate::packaging_tool_versions::PackagingToolVersions;
+use crate::packaging_tool_versions::PIP_VERSION;
 use crate::tests::{
     builder, default_build_config, DEFAULT_PYTHON_VERSION, LATEST_PYTHON_3_10, LATEST_PYTHON_3_11,
     LATEST_PYTHON_3_12, LATEST_PYTHON_3_7, LATEST_PYTHON_3_8, LATEST_PYTHON_3_9,
@@ -20,7 +20,7 @@ fn python_version_unspecified() {
                     No Python version specified, using the current default of Python {DEFAULT_PYTHON_VERSION}.
                     To use a different version, see: https://devcenter.heroku.com/articles/python-runtimes
                     
-                    [Installing Python and packaging tools]
+                    [Installing Python and pip]
                     Installing Python {DEFAULT_PYTHON_VERSION}
                 "}
             );
@@ -78,12 +78,6 @@ fn python_3_12() {
 }
 
 fn builds_with_python_version(fixture_path: &str, python_version: &str) {
-    let PackagingToolVersions {
-        pip_version,
-        setuptools_version,
-        wheel_version,
-    } = PackagingToolVersions::default();
-
     TestRunner::default().build(default_build_config(fixture_path), |context| {
         assert_empty!(context.pack_stderr);
         assert_contains!(
@@ -92,9 +86,9 @@ fn builds_with_python_version(fixture_path: &str, python_version: &str) {
                 [Determining Python version]
                 Using Python version {python_version} specified in runtime.txt
                 
-                [Installing Python and packaging tools]
+                [Installing Python and pip]
                 Installing Python {python_version}
-                Installing pip {pip_version}, setuptools {setuptools_version} and wheel {wheel_version}
+                Installing pip {PIP_VERSION}
             "}
         );
         // There's no sensible default process type we can set for Python apps.

@@ -13,7 +13,6 @@ use crate::layers::pip_dependencies::PipDependenciesLayerError;
 use crate::layers::python::{self, PythonLayerError};
 use crate::layers::{pip_cache, pip_dependencies};
 use crate::package_manager::{DeterminePackageManagerError, PackageManager};
-use crate::packaging_tool_versions::PackagingToolVersions;
 use crate::python_version::PythonVersionError;
 use libcnb::build::{BuildContext, BuildResult, BuildResultBuilder};
 use libcnb::detect::{DetectContext, DetectResult, DetectResultBuilder};
@@ -53,7 +52,6 @@ impl Buildpack for PythonBuildpack {
         log_header("Determining Python version");
         let python_version = python_version::determine_python_version(&context.app_dir)
             .map_err(BuildpackError::PythonVersion)?;
-        let packaging_tool_versions = PackagingToolVersions::default();
 
         // We inherit the current process's env vars, since we want `PATH` and `HOME` from the OS
         // to be set (so that later commands can find tools like Git in the base image), along
@@ -62,26 +60,16 @@ impl Buildpack for PythonBuildpack {
         // making sure that buildpack env vars take precedence in layers envs and command usage.
         let mut env = Env::from_current();
 
-        // Create the layer containing the Python runtime, and the packages `pip`, `setuptools` and `wheel`.
-        log_header("Installing Python and packaging tools");
-        python::install_python_and_packaging_tools(
-            &context,
-            &mut env,
-            &python_version,
-            &packaging_tool_versions,
-        )?;
+        // Create the layer containing the Python runtime and pip.
+        log_header("Installing Python and pip");
+        python::install_python_and_packaging_tools(&context, &mut env, &python_version)?;
 
         // Create the layers for the application dependencies and package manager cache.
         // In the future support will be added for package managers other than pip.
         let dependencies_layer_dir = match package_manager {
             PackageManager::Pip => {
                 log_header("Installing dependencies using pip");
-                pip_cache::prepare_pip_cache(
-                    &context,
-                    &mut env,
-                    &python_version,
-                    &packaging_tool_versions,
-                )?;
+                pip_cache::prepare_pip_cache(&context, &mut env, &python_version)?;
                 pip_dependencies::install_dependencies(&context, &mut env)?
             }
         };

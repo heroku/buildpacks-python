@@ -1,17 +1,11 @@
-use crate::packaging_tool_versions::PackagingToolVersions;
-use crate::tests::{builder, default_build_config, DEFAULT_PYTHON_VERSION};
+use crate::packaging_tool_versions::PIP_VERSION;
+use crate::tests::{default_build_config, DEFAULT_PYTHON_VERSION};
 use indoc::{formatdoc, indoc};
 use libcnb_test::{assert_contains, assert_empty, BuildpackReference, PackResult, TestRunner};
 
 #[test]
 #[ignore = "integration test"]
 fn pip_basic_install_and_cache_reuse() {
-    let PackagingToolVersions {
-        pip_version,
-        setuptools_version,
-        wheel_version,
-    } = PackagingToolVersions::default();
-
     let config = default_build_config("tests/fixtures/pip_basic");
 
     TestRunner::default().build(&config, |context| {
@@ -23,9 +17,9 @@ fn pip_basic_install_and_cache_reuse() {
                 No Python version specified, using the current default of Python {DEFAULT_PYTHON_VERSION}.
                 To use a different version, see: https://devcenter.heroku.com/articles/python-runtimes
                 
-                [Installing Python and packaging tools]
+                [Installing Python and pip]
                 Installing Python {DEFAULT_PYTHON_VERSION}
-                Installing pip {pip_version}, setuptools {setuptools_version} and wheel {wheel_version}
+                Installing pip {PIP_VERSION}
                 
                 [Installing dependencies using pip]
                 Running pip install
@@ -40,7 +34,7 @@ fn pip_basic_install_and_cache_reuse() {
         // Check that:
         // - The correct env vars are set at run-time.
         // - pip is available at run-time too (and not just during the build).
-        // - The correct versions of pip/setuptools/wheel were installed.
+        // - The correct version of pip was installed.
         // - pip uses (via 'PYTHONUSERBASE') the user site-packages in the dependencies
         //   layer, and so can find the typing-extensions package installed there.
         // - The "pip update available" warning is not shown (since it should be suppressed).
@@ -69,10 +63,8 @@ fn pip_basic_install_and_cache_reuse() {
                 
                 Package           Version
                 ----------------- -------
-                pip               {pip_version}
-                setuptools        {setuptools_version}
+                pip               {PIP_VERSION}
                 typing_extensions 4.7.1
-                wheel             {wheel_version}
                 Defaulting to user installation because normal site-packages is not writeable
                 Requirement already satisfied: typing-extensions in /layers/heroku_python/dependencies/lib/"
             }
@@ -87,9 +79,8 @@ fn pip_basic_install_and_cache_reuse() {
                     No Python version specified, using the current default of Python {DEFAULT_PYTHON_VERSION}.
                     To use a different version, see: https://devcenter.heroku.com/articles/python-runtimes
                     
-                    [Installing Python and packaging tools]
-                    Using cached Python {DEFAULT_PYTHON_VERSION}
-                    Using cached pip {pip_version}, setuptools {setuptools_version} and wheel {wheel_version}
+                    [Installing Python and pip]
+                    Using cached Python {DEFAULT_PYTHON_VERSION} and pip {PIP_VERSION}
                     
                     [Installing dependencies using pip]
                     Using cached pip download/wheel cache
@@ -111,17 +102,16 @@ fn pip_basic_install_and_cache_reuse() {
 #[test]
 #[ignore = "integration test"]
 fn pip_cache_invalidation_with_compatible_metadata() {
-    let PackagingToolVersions {
-        pip_version,
-        setuptools_version,
-        wheel_version,
-    } = PackagingToolVersions::default();
+    // TODO: Re-enable this test the next time the default-Python/pip versions change, at which point
+    // there will be a historic buildpack version with compatible metadata that triggers invalidation.
+    #![allow(unreachable_code)]
+    return;
 
     let config = default_build_config("tests/fixtures/pip_basic");
 
     TestRunner::default().build(
         config.clone().buildpacks([BuildpackReference::Other(
-            "docker://docker.io/heroku/buildpack-python:0.10.0".to_string(),
+            "docker://docker.io/heroku/buildpack-python:TODO".to_string(),
         )]),
         |context| {
             context.rebuild(config, |rebuild_context| {
@@ -133,13 +123,12 @@ fn pip_cache_invalidation_with_compatible_metadata() {
                         No Python version specified, using the current default of Python {DEFAULT_PYTHON_VERSION}.
                         To use a different version, see: https://devcenter.heroku.com/articles/python-runtimes
                         
-                        [Installing Python and packaging tools]
+                        [Installing Python and pip]
                         Discarding cache since:
                          - The Python version has changed from 3.12.3 to {DEFAULT_PYTHON_VERSION}
-                         - The pip version has changed from 24.0 to {pip_version}
-                         - The setuptools version has changed from 69.5.1 to {setuptools_version}
+                         - The pip version has changed from 24.0 to {PIP_VERSION}
                         Installing Python {DEFAULT_PYTHON_VERSION}
-                        Installing pip {pip_version}, setuptools {setuptools_version} and wheel {wheel_version}
+                        Installing pip {PIP_VERSION}
                         
                         [Installing dependencies using pip]
                         Discarding cached pip download/wheel cache
@@ -162,23 +151,11 @@ fn pip_cache_invalidation_with_compatible_metadata() {
 #[test]
 #[ignore = "integration test"]
 fn pip_cache_invalidation_with_incompatible_metadata() {
-    // TODO: Enable this test on Heroku-24 the next time there is an incompatible metadata change,
-    // meaning we can bump the historic buildpack version to one that also supports Ubuntu 24.04.
-    if builder() == "heroku/builder:24" {
-        return;
-    }
-
-    let PackagingToolVersions {
-        pip_version,
-        setuptools_version,
-        wheel_version,
-    } = PackagingToolVersions::default();
-
     let config = default_build_config("tests/fixtures/pip_basic");
 
     TestRunner::default().build(
         config.clone().buildpacks([BuildpackReference::Other(
-            "docker://docker.io/heroku/buildpack-python:0.8.4".to_string(),
+            "docker://docker.io/heroku/buildpack-python:0.13.0".to_string(),
         )]),
         |context| {
             context.rebuild(config, |rebuild_context| {
@@ -190,10 +167,10 @@ fn pip_cache_invalidation_with_incompatible_metadata() {
                         No Python version specified, using the current default of Python {DEFAULT_PYTHON_VERSION}.
                         To use a different version, see: https://devcenter.heroku.com/articles/python-runtimes
                         
-                        [Installing Python and packaging tools]
+                        [Installing Python and pip]
                         Discarding cache since the buildpack cache format has changed
                         Installing Python {DEFAULT_PYTHON_VERSION}
-                        Installing pip {pip_version}, setuptools {setuptools_version} and wheel {wheel_version}
+                        Installing pip {PIP_VERSION}
                         
                         [Installing dependencies using pip]
                         Discarding cached pip download/wheel cache
