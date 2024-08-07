@@ -27,7 +27,7 @@ fn pip_basic_install_and_cache_reuse() {
                 Installing Python {DEFAULT_PYTHON_VERSION}
                 Installing pip {pip_version}, setuptools {setuptools_version} and wheel {wheel_version}
                 
-                [Installing dependencies using Pip]
+                [Installing dependencies using pip]
                 Running pip install
                 Collecting typing-extensions==4.7.1 (from -r requirements.txt (line 2))
                   Downloading typing_extensions-4.7.1-py3-none-any.whl.metadata (3.1 kB)
@@ -39,9 +39,9 @@ fn pip_basic_install_and_cache_reuse() {
 
         // Check that:
         // - The correct env vars are set at run-time.
-        // - Pip is available at run-time too (and not just during the build).
+        // - pip is available at run-time too (and not just during the build).
         // - The correct versions of pip/setuptools/wheel were installed.
-        // - Pip uses (via 'PYTHONUSERBASE') the user site-packages in the dependencies
+        // - pip uses (via 'PYTHONUSERBASE') the user site-packages in the dependencies
         //   layer, and so can find the typing-extensions package installed there.
         // - The "pip update available" warning is not shown (since it should be suppressed).
         // - The system site-packages directory is protected against running 'pip install'
@@ -91,7 +91,7 @@ fn pip_basic_install_and_cache_reuse() {
                     Using cached Python {DEFAULT_PYTHON_VERSION}
                     Using cached pip {pip_version}, setuptools {setuptools_version} and wheel {wheel_version}
                     
-                    [Installing dependencies using Pip]
+                    [Installing dependencies using pip]
                     Using cached pip download/wheel cache
                     Running pip install
                     Collecting typing-extensions==4.7.1 (from -r requirements.txt (line 2))
@@ -141,7 +141,7 @@ fn pip_cache_invalidation_with_compatible_metadata() {
                         Installing Python {DEFAULT_PYTHON_VERSION}
                         Installing pip {pip_version}, setuptools {setuptools_version} and wheel {wheel_version}
                         
-                        [Installing dependencies using Pip]
+                        [Installing dependencies using pip]
                         Discarding cached pip download/wheel cache
                         Running pip install
                         Collecting typing-extensions==4.7.1 (from -r requirements.txt (line 2))
@@ -195,7 +195,7 @@ fn pip_cache_invalidation_with_incompatible_metadata() {
                         Installing Python {DEFAULT_PYTHON_VERSION}
                         Installing pip {pip_version}, setuptools {setuptools_version} and wheel {wheel_version}
                         
-                        [Installing dependencies using Pip]
+                        [Installing dependencies using pip]
                         Discarding cached pip download/wheel cache
                         Running pip install
                         Collecting typing-extensions==4.7.1 (from -r requirements.txt (line 2))
@@ -243,7 +243,7 @@ fn pip_install_error() {
             assert_contains!(
                 context.pack_stdout,
                 indoc! {"
-                    [Installing dependencies using Pip]
+                    [Installing dependencies using pip]
                     Running pip install
                 "}
             );

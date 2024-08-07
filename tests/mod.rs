@@ -37,7 +37,7 @@ fn default_build_config(fixture_path: impl AsRef<Path>) -> BuildConfig {
     config.target_triple(target_triple);
 
     // Ensure that potentially broken user-provided env vars don't take precedence over those set
-    // by this buildpack and break running Python/Pip. Some of these are based on the env vars that
+    // by this buildpack and break running Python/pip. Some of these are based on the env vars that
     // used to be set by `bin/release` by very old versions of the classic Python buildpack:
     // https://github.com/heroku/heroku-buildpack-python/blob/27abdfe7d7ad104dabceb45641415251e965671c/bin/release#L11-L18
     config.envs([

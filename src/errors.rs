@@ -70,7 +70,7 @@ fn on_determine_package_manager_error(error: DeterminePackageManagerError) {
         DeterminePackageManagerError::NoneFound => log_error(
             "No Python package manager files were found",
             indoc! {"
-                A Pip requirements file was not found in your application's source code.
+                A pip requirements file was not found in your application's source code.
                 This file is required so that your application's dependencies can be installed.
                 
                 Please add a file named exactly 'requirements.txt' to the root directory of your

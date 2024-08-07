@@ -13,7 +13,7 @@ fn no_package_manager_detected() {
                 context.pack_stderr,
                 indoc! {"
                     [Error: No Python package manager files were found]
-                    A Pip requirements file was not found in your application's source code.
+                    A pip requirements file was not found in your application's source code.
                     This file is required so that your application's dependencies can be installed.
                     
                     Please add a file named exactly 'requirements.txt' to the root directory of your

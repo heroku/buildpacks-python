@@ -11,7 +11,7 @@ use libcnb::Env;
 use libherokubuildpack::log::log_info;
 use serde::{Deserialize, Serialize};
 
-/// Creates a build-only layer for Pip's cache of HTTP requests/downloads and built package wheels.
+/// Creates a build-only layer for pip's cache of HTTP requests/downloads and built package wheels.
 // See: https://pip.pypa.io/en/stable/topics/caching/
 pub(crate) fn prepare_pip_cache(
     context: &BuildContext<PythonBuildpack>,

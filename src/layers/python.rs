@@ -126,7 +126,7 @@ pub(crate) fn install_python_and_packaging_tools(
         python_version.major, python_version.minor
     ));
 
-    // Python bundles Pip within its standard library, which we can use to install our chosen
+    // Python bundles pip within its standard library, which we can use to install our chosen
     // pip version from PyPI, saving us from having to download the usual pip bootstrap script.
     let bundled_pip_module_path =
         bundled_pip_module_path(&python_stdlib_dir).map_err(PythonLayerError::LocateBundledPip)?;
@@ -136,7 +136,7 @@ pub(crate) fn install_python_and_packaging_tools(
             .args([
                 &bundled_pip_module_path.to_string_lossy(),
                 "install",
-                // There is no point using Pip's cache here, since the layer itself will be cached.
+                // There is no point using pip's cache here, since the layer itself will be cached.
                 "--no-cache-dir",
                 "--no-input",
                 "--quiet",
@@ -150,11 +150,11 @@ pub(crate) fn install_python_and_packaging_tools(
     )
     .map_err(PythonLayerError::BootstrapPipCommand)?;
 
-    // By default Pip installs into the system site-packages directory if it is writeable by the
+    // By default pip installs into the system site-packages directory if it is writeable by the
     // current user. Whilst the buildpack's own `pip install` invocations always use `--user` to
     // ensure app dependencies are installed into the user site-packages, it's possible other
     // buildpacks or custom scripts may forget to do so. By making the system site-packages
-    // directory read-only, Pip will automatically use user installs in such cases:
+    // directory read-only, pip will automatically use user installs in such cases:
     // https://github.com/pypa/pip/blob/24.1.2/src/pip/_internal/commands/install.py#L662-L720
     let site_packages_dir = python_stdlib_dir.join("site-packages");
     fs::set_permissions(site_packages_dir, Permissions::from_mode(0o555))
@@ -276,7 +276,7 @@ fn generate_layer_env(layer_path: &Path, python_version: &PythonVersion) -> Laye
             "LANG",
             "C.UTF-8",
         )
-        // We use a curated Pip version, so disable the update check to speed up Pip invocations,
+        // We use a curated pip version, so disable the update check to speed up pip invocations,
         // reduce build log spam and prevent users from thinking they need to manually upgrade.
         // This uses an env var (rather than the `--disable-pip-version-check` arg) so that it also
         // takes effect for any pip invocations in later buildpacks or when debugging at run-time.
@@ -324,7 +324,7 @@ fn generate_layer_env(layer_path: &Path, python_version: &PythonVersion) -> Laye
         // By default, Python's cached bytecode files (`.pyc` files) embed the last-modified time of
         // their `.py` source file, so Python can determine when they need regenerating. This causes
         // `.pyc` files (and thus layer SHA256) to be non-deterministic in cases where the source
-        // file's last-modified time can vary (such as for packages installed by Pip). In addition,
+        // file's last-modified time can vary (such as for packages installed by pip). In addition,
         // when lifecycle exports layers it resets the timestamps on all files to a fixed value:
         // https://buildpacks.io/docs/features/reproducibility/#consequences-and-caveats
         //
@@ -351,13 +351,13 @@ fn generate_layer_env(layer_path: &Path, python_version: &PythonVersion) -> Laye
         // and not `.pyc` generation as part of Python importing a file during normal operation.
         //
         // We use the env var, since:
-        //   - Pip calls `compileall` itself after installing packages, and doesn't allow us to
+        //   - pip calls `compileall` itself after installing packages, and doesn't allow us to
         //     customise the options passed to it, which would mean we'd have to pass `--no-compile`
-        //     to Pip followed by running `compileall` manually ourselves, meaning more complexity
+        //     to pip followed by running `compileall` manually ourselves, meaning more complexity
         //     every time we (or a later buildpack) use `pip install`.
         //   - When we add support for Poetry, we'll have to use an env var regardless, since Poetry
-        //     doesn't allow customising the options passed to its internal Pip invocations, so we'd
-        //     have no way of passing `--no-compile` to Pip.
+        //     doesn't allow customising the options passed to its internal pip invocations, so we'd
+        //     have no way of passing `--no-compile` to pip.
         .chainable_insert(
             Scope::Build,
             ModificationBehavior::Default,
@@ -372,18 +372,18 @@ fn generate_layer_env(layer_path: &Path, python_version: &PythonVersion) -> Laye
         )
 }
 
-/// The path to the Pip module bundled in Python's standard library.
+/// The path to the pip module bundled in Python's standard library.
 fn bundled_pip_module_path(python_stdlib_dir: &Path) -> io::Result<PathBuf> {
     let bundled_wheels_dir = python_stdlib_dir.join("ensurepip/_bundled");
 
-    // The wheel filename includes the Pip version (for example `pip-XX.Y-py3-none-any.whl`),
+    // The wheel filename includes the pip version (for example `pip-XX.Y-py3-none-any.whl`),
     // which varies from one Python release to the next (including between patch releases).
     // As such, we have to find the wheel based on the known filename prefix of `pip-`.
     for entry in fs::read_dir(bundled_wheels_dir)? {
         let entry = entry?;
         if entry.file_name().to_string_lossy().starts_with("pip-") {
             let pip_wheel_path = entry.path();
-            // The Pip module exists inside the pip wheel (which is a zip file), however,
+            // The pip module exists inside the pip wheel (which is a zip file), however,
             // Python can load it directly by appending the module name to the zip filename,
             // as though it were a path. For example: `pip-XX.Y-py3-none-any.whl/pip`
             let pip_module_path = pip_wheel_path.join("pip");
