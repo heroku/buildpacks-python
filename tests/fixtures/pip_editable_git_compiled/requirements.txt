@@ -8,4 +8,4 @@
 # The URL to the package is specified via env var, to test that user-provided env vars
 # are propagated to pip for use by its env var interpolation feature.
 
--e git+${WHEEL_PACKAGE_URL}@0.40.0#egg=extension.dist&subdirectory=tests/testdata/extension.dist
+-e git+${WHEEL_PACKAGE_URL}@0.44.0#egg=extension.dist&subdirectory=tests/testdata/extension.dist

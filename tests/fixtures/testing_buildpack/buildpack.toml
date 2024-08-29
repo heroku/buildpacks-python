@@ -1,0 +1,6 @@
+api = "0.11"
+
+[buildpack]
+id = "testing-buildpack"
+version = "0.0.0"
+clear-env = true

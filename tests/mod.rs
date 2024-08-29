@@ -3,15 +3,15 @@
 //! These tests are not run via automatic integration test discovery, but instead are
 //! imported in main.rs so that they have access to private APIs (see comment in main.rs).
 
-use libcnb_test::BuildConfig;
-use std::env;
-use std::path::Path;
-
 mod detect_test;
 mod django_test;
 mod package_manager_test;
 mod pip_test;
 mod python_version_test;
+
+use libcnb_test::BuildConfig;
+use std::env;
+use std::path::Path;
 
 const LATEST_PYTHON_3_7: &str = "3.7.17";
 const LATEST_PYTHON_3_8: &str = "3.8.19";
