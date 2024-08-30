@@ -34,9 +34,9 @@ pub(crate) fn prepare_pip_cache(
             invalid_metadata_action: &|_| InvalidMetadataAction::DeleteLayer,
             restored_layer_action: &|cached_metadata: &PipCacheLayerMetadata, _| {
                 if cached_metadata == &new_metadata {
-                    Ok(RestoredLayerAction::KeepLayer)
+                    RestoredLayerAction::KeepLayer
                 } else {
-                    Ok(RestoredLayerAction::DeleteLayer)
+                    RestoredLayerAction::DeleteLayer
                 }
             },
         },
