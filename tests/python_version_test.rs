@@ -1,4 +1,3 @@
-use crate::packaging_tool_versions::PIP_VERSION;
 use crate::tests::{
     builder, default_build_config, DEFAULT_PYTHON_VERSION, LATEST_PYTHON_3_10, LATEST_PYTHON_3_11,
     LATEST_PYTHON_3_12, LATEST_PYTHON_3_7, LATEST_PYTHON_3_8, LATEST_PYTHON_3_9,
@@ -20,7 +19,7 @@ fn python_version_unspecified() {
                     No Python version specified, using the current default of Python {DEFAULT_PYTHON_VERSION}.
                     To use a different version, see: https://devcenter.heroku.com/articles/python-runtimes
                     
-                    [Installing Python and pip]
+                    [Installing Python]
                     Installing Python {DEFAULT_PYTHON_VERSION}
                 "}
             );
@@ -86,9 +85,8 @@ fn builds_with_python_version(fixture_path: &str, python_version: &str) {
                 [Determining Python version]
                 Using Python version {python_version} specified in runtime.txt
                 
-                [Installing Python and pip]
+                [Installing Python]
                 Installing Python {python_version}
-                Installing pip {PIP_VERSION}
             "}
         );
         // There's no sensible default process type we can set for Python apps.
@@ -193,7 +191,7 @@ fn runtime_txt_non_existent_version() {
 
 fn rejects_non_existent_python_version(fixture_path: &str, python_version: &str) {
     TestRunner::default().build(
-        default_build_config( fixture_path).expected_pack_result(PackResult::Failure),
+        default_build_config(fixture_path).expected_pack_result(PackResult::Failure),
         |context| {
             assert_contains!(
                 context.pack_stderr,

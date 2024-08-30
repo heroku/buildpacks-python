@@ -1,4 +1,5 @@
 use crate::django::DjangoCollectstaticError;
+use crate::layers::pip::PipLayerError;
 use crate::layers::pip_dependencies::PipDependenciesLayerError;
 use crate::layers::python::PythonLayerError;
 use crate::package_manager::DeterminePackageManagerError;
@@ -46,6 +47,7 @@ fn on_buildpack_error(error: BuildpackError) {
         BuildpackError::DjangoCollectstatic(error) => on_django_collectstatic_error(error),
         BuildpackError::DjangoDetection(error) => on_django_detection_error(&error),
         BuildpackError::PipDependenciesLayer(error) => on_pip_dependencies_layer_error(error),
+        BuildpackError::PipLayer(error) => on_pip_layer_error(error),
         BuildpackError::PythonLayer(error) => on_python_layer_error(error),
         BuildpackError::PythonVersion(error) => on_python_version_error(error),
     };
@@ -126,28 +128,6 @@ fn on_python_version_error(error: PythonVersionError) {
 
 fn on_python_layer_error(error: PythonLayerError) {
     match error {
-        PythonLayerError::BootstrapPipCommand(error) => match error {
-            StreamedCommandError::Io(io_error) => log_io_error(
-                "Unable to bootstrap pip",
-                "running the command to install pip",
-                &io_error,
-            ),
-            StreamedCommandError::NonZeroExitStatus(exit_status) => log_error(
-                "Unable to bootstrap pip",
-                formatdoc! {"
-                    The command to install pip did not exit successfully ({exit_status}).
-                    
-                    See the log output above for more information.
-                    
-                    In some cases, this happens due to an unstable network connection.
-                    Please try again to see if the error resolves itself.
-                    
-                    If that does not help, check the status of PyPI (the upstream Python
-                    package repository service), here:
-                    https://status.python.org
-                "},
-            ),
-        },
         PythonLayerError::DownloadUnpackPythonArchive(error) => match error {
             DownloadUnpackArchiveError::Request(ureq_error) => log_error(
                 "Unable to download Python",
@@ -166,11 +146,6 @@ fn on_python_layer_error(error: PythonLayerError) {
                 &io_error,
             ),
         },
-        PythonLayerError::LocateBundledPip(io_error) => log_io_error(
-            "Unable to locate the bundled copy of pip",
-            "locating the pip wheel file bundled inside the Python 'ensurepip' module",
-            &io_error,
-        ),
         // This error will change once the Python version is validated against a manifest.
         // TODO: (W-12613425) Write the supported Python versions inline, instead of linking out to Dev Center.
         // TODO: Decide how to explain to users how stacks, base images and builder images versions relate to each other.
@@ -185,6 +160,38 @@ fn on_python_layer_error(error: PythonLayerError) {
                 For a list of the supported Python versions, see:
                 https://devcenter.heroku.com/articles/python-support#supported-runtimes
             "},
+        ),
+    };
+}
+
+fn on_pip_layer_error(error: PipLayerError) {
+    match error {
+        PipLayerError::InstallPipCommand(error) => match error {
+            StreamedCommandError::Io(io_error) => log_io_error(
+                "Unable to install pip",
+                "running 'python' to install pip",
+                &io_error,
+            ),
+            StreamedCommandError::NonZeroExitStatus(exit_status) => log_error(
+                "Unable to install pip",
+                formatdoc! {"
+                    The command to install pip did not exit successfully ({exit_status}).
+                    
+                    See the log output above for more information.
+                    
+                    In some cases, this happens due to an unstable network connection.
+                    Please try again to see if the error resolves itself.
+                    
+                    If that does not help, check the status of PyPI (the upstream Python
+                    package repository service), here:
+                    https://status.python.org
+                "},
+            ),
+        },
+        PipLayerError::LocateBundledPip(io_error) => log_io_error(
+            "Unable to locate the bundled copy of pip",
+            "locating the pip wheel file bundled inside the Python 'ensurepip' module",
+            &io_error,
         ),
     };
 }
@@ -210,7 +217,7 @@ fn on_pip_dependencies_layer_error(error: PipDependenciesLayerError) {
         PipDependenciesLayerError::PipInstallCommand(error) => match error {
             StreamedCommandError::Io(io_error) => log_io_error(
                 "Unable to install dependencies using pip",
-                "running the 'pip install' command to install the application's dependencies",
+                "running 'pip install' to install the app's dependencies",
                 &io_error,
             ),
             // TODO: Add more suggestions here as to causes (eg network, invalid requirements.txt,

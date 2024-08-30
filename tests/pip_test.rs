@@ -22,8 +22,10 @@ fn pip_basic_install_and_cache_reuse() {
                 No Python version specified, using the current default of Python {DEFAULT_PYTHON_VERSION}.
                 To use a different version, see: https://devcenter.heroku.com/articles/python-runtimes
                 
-                [Installing Python and pip]
+                [Installing Python]
                 Installing Python {DEFAULT_PYTHON_VERSION}
+                
+                [Installing pip]
                 Installing pip {PIP_VERSION}
                 
                 [Installing dependencies using pip]
@@ -38,15 +40,16 @@ fn pip_basic_install_and_cache_reuse() {
                 ## Testing buildpack ##
                 CPATH=/layers/heroku_python/venv/include:/layers/heroku_python/python/include/python3.12:/layers/heroku_python/python/include
                 LANG=C.UTF-8
-                LD_LIBRARY_PATH=/layers/heroku_python/venv/lib:/layers/heroku_python/python/lib
-                LIBRARY_PATH=/layers/heroku_python/venv/lib:/layers/heroku_python/python/lib
-                PATH=/layers/heroku_python/venv/bin:/layers/heroku_python/python/bin:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin
+                LD_LIBRARY_PATH=/layers/heroku_python/venv/lib:/layers/heroku_python/python/lib:/layers/heroku_python/pip/lib
+                LIBRARY_PATH=/layers/heroku_python/venv/lib:/layers/heroku_python/python/lib:/layers/heroku_python/pip/lib
+                PATH=/layers/heroku_python/venv/bin:/layers/heroku_python/python/bin:/layers/heroku_python/pip/bin:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin
                 PIP_CACHE_DIR=/layers/heroku_python/pip-cache
                 PIP_DISABLE_PIP_VERSION_CHECK=1
                 PIP_PYTHON=/layers/heroku_python/venv
                 PKG_CONFIG_PATH=/layers/heroku_python/python/lib/pkgconfig
                 PYTHONHOME=/layers/heroku_python/python
                 PYTHONUNBUFFERED=1
+                PYTHONUSERBASE=/layers/heroku_python/pip
                 SOURCE_DATE_EPOCH=315532801
                 VIRTUAL_ENV=/layers/heroku_python/venv
                 
@@ -56,7 +59,7 @@ fn pip_basic_install_and_cache_reuse() {
                  '/layers/heroku_python/python/lib/python3.12/lib-dynload',
                  '/layers/heroku_python/venv/lib/python3.12/site-packages']
                 
-                pip {PIP_VERSION} from /layers/heroku_python/python/lib/python3.12/site-packages/pip (python 3.12)
+                pip {PIP_VERSION} from /layers/heroku_python/pip/lib/python3.12/site-packages/pip (python 3.12)
                 Package           Version
                 ----------------- -------
                 typing_extensions 4.12.2
@@ -82,12 +85,13 @@ fn pip_basic_install_and_cache_reuse() {
             command_output.stdout,
             formatdoc! {"
                 LANG=C.UTF-8
-                LD_LIBRARY_PATH=/layers/heroku_python/venv/lib:/layers/heroku_python/python/lib
-                PATH=/layers/heroku_python/venv/bin:/layers/heroku_python/python/bin:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin
+                LD_LIBRARY_PATH=/layers/heroku_python/venv/lib:/layers/heroku_python/python/lib:/layers/heroku_python/pip/lib
+                PATH=/layers/heroku_python/venv/bin:/layers/heroku_python/python/bin:/layers/heroku_python/pip/bin:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin
                 PIP_DISABLE_PIP_VERSION_CHECK=1
                 PIP_PYTHON=/layers/heroku_python/venv
                 PYTHONHOME=/layers/heroku_python/python
                 PYTHONUNBUFFERED=1
+                PYTHONUSERBASE=/layers/heroku_python/pip
                 VIRTUAL_ENV=/layers/heroku_python/venv
                 
                 Package           Version
@@ -105,8 +109,11 @@ fn pip_basic_install_and_cache_reuse() {
                     No Python version specified, using the current default of Python {DEFAULT_PYTHON_VERSION}.
                     To use a different version, see: https://devcenter.heroku.com/articles/python-runtimes
                     
-                    [Installing Python and pip]
-                    Using cached Python {DEFAULT_PYTHON_VERSION} and pip {PIP_VERSION}
+                    [Installing Python]
+                    Using cached Python {DEFAULT_PYTHON_VERSION}
+                    
+                    [Installing pip]
+                    Using cached pip {PIP_VERSION}
                     
                     [Installing dependencies using pip]
                     Using cached pip download/wheel cache
@@ -139,10 +146,13 @@ fn pip_cache_invalidation_python_version_changed() {
                     No Python version specified, using the current default of Python {DEFAULT_PYTHON_VERSION}.
                     To use a different version, see: https://devcenter.heroku.com/articles/python-runtimes
                     
-                    [Installing Python and pip]
-                    Discarding cache since:
+                    [Installing Python]
+                    Discarding cached Python {LATEST_PYTHON_3_11} since:
                      - The Python version has changed from {LATEST_PYTHON_3_11} to {DEFAULT_PYTHON_VERSION}
                     Installing Python {DEFAULT_PYTHON_VERSION}
+                    
+                    [Installing pip]
+                    Discarding cached pip {PIP_VERSION}
                     Installing pip {PIP_VERSION}
                     
                     [Installing dependencies using pip]
@@ -181,11 +191,11 @@ fn pip_cache_previous_buildpack_version() {
                     No Python version specified, using the current default of Python {DEFAULT_PYTHON_VERSION}.
                     To use a different version, see: https://devcenter.heroku.com/articles/python-runtimes
                     
-                    [Installing Python and pip]
-                    Discarding cache since:
-                     - The Python version has changed from 3.12.4 to {DEFAULT_PYTHON_VERSION}
-                     - The pip version has changed from 24.1.2 to {PIP_VERSION}
+                    [Installing Python]
+                    Discarding cached Python since its layer metadata can't be parsed
                     Installing Python {DEFAULT_PYTHON_VERSION}
+                    
+                    [Installing pip]
                     Installing pip {PIP_VERSION}
                     
                     [Installing dependencies using pip]

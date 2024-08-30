@@ -1,4 +1,5 @@
-use std::path::Path;
+use crate::python_version::PythonVersion;
+use std::path::{Path, PathBuf};
 use std::process::{Command, ExitStatus, Output};
 use std::{fs, io};
 use tar::Archive;
@@ -37,6 +38,37 @@ pub(crate) fn download_and_unpack_zstd_archive(
 pub(crate) enum DownloadUnpackArchiveError {
     Request(ureq::Error),
     Unpack(io::Error),
+}
+
+/// Determine the path to the pip module bundled in Python's standard library.
+pub(crate) fn bundled_pip_module_path(
+    python_layer_path: &Path,
+    python_version: &PythonVersion,
+) -> io::Result<PathBuf> {
+    let bundled_wheels_dir = python_layer_path.join(format!(
+        "lib/python{}.{}/ensurepip/_bundled",
+        python_version.major, python_version.minor
+    ));
+
+    // The wheel filename includes the pip version (for example `pip-XX.Y-py3-none-any.whl`),
+    // which varies from one Python release to the next (including between patch releases).
+    // As such, we have to find the wheel based on the known filename prefix of `pip-`.
+    for entry in fs::read_dir(bundled_wheels_dir)? {
+        let entry = entry?;
+        if entry.file_name().to_string_lossy().starts_with("pip-") {
+            let pip_wheel_path = entry.path();
+            // The pip module exists inside the pip wheel (which is a zip file), however,
+            // Python can load it directly by appending the module name to the zip filename,
+            // as though it were a path. For example: `pip-XX.Y-py3-none-any.whl/pip`
+            let pip_module_path = pip_wheel_path.join("pip");
+            return Ok(pip_module_path);
+        }
+    }
+
+    Err(io::Error::new(
+        io::ErrorKind::NotFound,
+        "No files found matching the pip wheel filename prefix",
+    ))
 }
 
 /// A helper for running an external process using [`Command`], that streams stdout/stderr

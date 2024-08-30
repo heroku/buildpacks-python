@@ -9,9 +9,10 @@ mod runtime_txt;
 mod utils;
 
 use crate::django::DjangoCollectstaticError;
+use crate::layers::pip::PipLayerError;
 use crate::layers::pip_dependencies::PipDependenciesLayerError;
-use crate::layers::python::{self, PythonLayerError};
-use crate::layers::{pip_cache, pip_dependencies};
+use crate::layers::python::PythonLayerError;
+use crate::layers::{pip, pip_cache, pip_dependencies, python};
 use crate::package_manager::{DeterminePackageManagerError, PackageManager};
 use crate::python_version::PythonVersionError;
 use libcnb::build::{BuildContext, BuildResult, BuildResultBuilder};
@@ -60,14 +61,14 @@ impl Buildpack for PythonBuildpack {
         // making sure that buildpack env vars take precedence in layers envs and command usage.
         let mut env = Env::from_current();
 
-        // Create the layer containing the Python runtime and pip.
-        log_header("Installing Python and pip");
-        python::install_python_and_packaging_tools(&context, &mut env, &python_version)?;
+        log_header("Installing Python");
+        let python_layer_path = python::install_python(&context, &mut env, &python_version)?;
 
-        // Create the layers for the application dependencies and package manager cache.
         // In the future support will be added for package managers other than pip.
         let dependencies_layer_dir = match package_manager {
             PackageManager::Pip => {
+                log_header("Installing pip");
+                pip::install_pip(&context, &mut env, &python_version, &python_layer_path)?;
                 log_header("Installing dependencies using pip");
                 pip_cache::prepare_pip_cache(&context, &mut env, &python_version)?;
                 pip_dependencies::install_dependencies(&context, &mut env)?
@@ -102,7 +103,9 @@ pub(crate) enum BuildpackError {
     DjangoDetection(io::Error),
     /// Errors installing the project's dependencies into a layer using pip.
     PipDependenciesLayer(PipDependenciesLayerError),
-    /// Errors installing Python and required packaging tools into a layer.
+    /// Errors installing pip into a layer.
+    PipLayer(PipLayerError),
+    /// Errors installing Python into a layer.
     PythonLayer(PythonLayerError),
     /// Errors determining which Python version to use for a project.
     PythonVersion(PythonVersionError),

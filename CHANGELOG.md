@@ -10,6 +10,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Changed
 
 - App dependencies are now installed into a virtual environment instead of user site-packages. ([#257](https://github.com/heroku/buildpacks-python/pull/257))
+- pip is now installed into its own layer (as a user site-packages install) instead of into system site-packages in the Python layer. ([#258](https://github.com/heroku/buildpacks-python/pull/258))
 
 ## [0.15.0] - 2024-08-07
 

@@ -1,6 +1,5 @@
-use crate::packaging_tool_versions::PIP_VERSION;
 use crate::python_version::PythonVersion;
-use crate::utils::{self, DownloadUnpackArchiveError, StreamedCommandError};
+use crate::utils::{self, DownloadUnpackArchiveError};
 use crate::{BuildpackError, PythonBuildpack};
 use libcnb::build::BuildContext;
 use libcnb::data::layer_name;
@@ -12,34 +11,18 @@ use libcnb::Env;
 use libherokubuildpack::log::log_info;
 use serde::{Deserialize, Serialize};
 use std::path::{Path, PathBuf};
-use std::process::Command;
-use std::{fs, io};
 
-/// Creates a layer containing the Python runtime and pip.
-//
-// We install both Python and the packaging tools into the same layer, since:
-//  - We don't want to mix buildpack/packaging dependencies with the app's own dependencies
-//    (for a start, we need pip installed to even install the user's own dependencies, plus
-//    want to keep caching separate), so cannot install the packaging tools into the user
-//    site-packages directory.
-//  - We don't want to install the packaging tools into an arbitrary directory added to
-//    `PYTHONPATH`, since directories added to `PYTHONPATH` take precedence over the Python
-//    stdlib (unlike the system or user site-packages directories), and so can result in hard
-//    to debug stdlib shadowing problems that users won't encounter locally.
-//  - This leaves just the system site-packages directory, which exists within the Python
-//    installation directory and Python does not support moving it elsewhere.
-//  - It matches what both local and official Docker image environments do.
-pub(crate) fn install_python_and_packaging_tools(
+/// Creates a layer containing the Python runtime.
+pub(crate) fn install_python(
     context: &BuildContext<PythonBuildpack>,
     env: &mut Env,
     python_version: &PythonVersion,
-) -> Result<(), libcnb::Error<BuildpackError>> {
+) -> Result<PathBuf, libcnb::Error<BuildpackError>> {
     let new_metadata = PythonLayerMetadata {
         arch: context.target.arch.clone(),
         distro_name: context.target.distro_name.clone(),
         distro_version: context.target.distro_version.clone(),
         python_version: python_version.to_string(),
-        pip_version: PIP_VERSION.to_string(),
     };
 
     let layer = context.cached_layer(
@@ -49,11 +32,18 @@ pub(crate) fn install_python_and_packaging_tools(
             launch: true,
             invalid_metadata_action: &|_| InvalidMetadataAction::DeleteLayer,
             restored_layer_action: &|cached_metadata: &PythonLayerMetadata, _| {
+                let cached_python_version = cached_metadata.python_version.clone();
                 let reasons = cache_invalidation_reasons(cached_metadata, &new_metadata);
                 if reasons.is_empty() {
-                    Ok((RestoredLayerAction::KeepLayer, Vec::new()))
+                    Ok((
+                        RestoredLayerAction::KeepLayer,
+                        (cached_python_version, Vec::new()),
+                    ))
                 } else {
-                    Ok((RestoredLayerAction::DeleteLayer, reasons))
+                    Ok((
+                        RestoredLayerAction::DeleteLayer,
+                        (cached_python_version, reasons),
+                    ))
                 }
             },
         },
@@ -61,19 +51,25 @@ pub(crate) fn install_python_and_packaging_tools(
     let layer_path = layer.path();
 
     match layer.state {
-        LayerState::Restored { .. } => {
-            log_info(format!(
-                "Using cached Python {python_version} and pip {PIP_VERSION}"
-            ));
+        LayerState::Restored {
+            cause: (ref cached_python_version, _),
+        } => {
+            log_info(format!("Using cached Python {cached_python_version}"));
         }
         LayerState::Empty { ref cause } => {
             match cause {
                 EmptyLayerCause::InvalidMetadataAction { .. } => {
-                    log_info("Discarding cache since the buildpack cache format has changed");
+                    log_info("Discarding cached Python since its layer metadata can't be parsed");
                 }
-                EmptyLayerCause::RestoredLayerAction { cause: reasons } => {
+                EmptyLayerCause::RestoredLayerAction {
+                    cause: (ref cached_python_version, reasons),
+                } => {
+                    // TODO: Move this type of detailed change messaging to a build config summary
+                    // at the start of the build. This message could then be simplified to:
+                    // "Discarding cached Python X.Y.Z (ubuntu-24.04, arm64)"
+                    // ...and the "Installing" message changed similarly.
                     log_info(format!(
-                        "Discarding cache since:\n - {}",
+                        "Discarding cached Python {cached_python_version} since:\n - {}",
                         reasons.join("\n - ")
                     ));
                 }
@@ -103,40 +99,7 @@ pub(crate) fn install_python_and_packaging_tools(
     layer_env = layer.read_env()?;
     env.clone_from(&layer_env.apply(Scope::Build, env));
 
-    if let LayerState::Restored { .. } = layer.state {
-        return Ok(());
-    }
-
-    log_info(format!("Installing pip {PIP_VERSION}"));
-
-    let python_stdlib_dir = layer_path.join(format!(
-        "lib/python{}.{}",
-        python_version.major, python_version.minor
-    ));
-
-    // Python bundles pip within its standard library, which we can use to install our chosen
-    // pip version from PyPI, saving us from having to download the usual pip bootstrap script.
-    let bundled_pip_module_path =
-        bundled_pip_module_path(&python_stdlib_dir).map_err(PythonLayerError::LocateBundledPip)?;
-
-    utils::run_command_and_stream_output(
-        Command::new("python")
-            .args([
-                &bundled_pip_module_path.to_string_lossy(),
-                "install",
-                // There is no point using pip's cache here, since the layer itself will be cached.
-                "--no-cache-dir",
-                "--no-input",
-                "--quiet",
-                format!("pip=={PIP_VERSION}").as_str(),
-            ])
-            .current_dir(&context.app_dir)
-            .env_clear()
-            .envs(&*env),
-    )
-    .map_err(PythonLayerError::BootstrapPipCommand)?;
-
-    Ok(())
+    Ok(layer_path)
 }
 
 #[derive(Clone, Deserialize, Serialize)]
@@ -146,7 +109,6 @@ struct PythonLayerMetadata {
     distro_name: String,
     distro_version: String,
     python_version: String,
-    pip_version: String,
 }
 
 /// Compare cached layer metadata to the new layer metadata to determine if the cache should be
@@ -165,7 +127,6 @@ fn cache_invalidation_reasons(
         distro_name: cached_distro_name,
         distro_version: cached_distro_version,
         python_version: cached_python_version,
-        pip_version: cached_pip_version,
     } = cached_metadata;
 
     let PythonLayerMetadata {
@@ -173,7 +134,6 @@ fn cache_invalidation_reasons(
         distro_name,
         distro_version,
         python_version,
-        pip_version,
     } = new_metadata;
 
     let mut reasons = Vec::new();
@@ -193,12 +153,6 @@ fn cache_invalidation_reasons(
     if cached_python_version != python_version {
         reasons.push(format!(
             "The Python version has changed from {cached_python_version} to {python_version}"
-        ));
-    }
-
-    if cached_pip_version != pip_version {
-        reasons.push(format!(
-            "The pip version has changed from {cached_pip_version} to {pip_version}"
         ));
     }
 
@@ -229,16 +183,6 @@ fn generate_layer_env(layer_path: &Path, python_version: &PythonVersion) -> Laye
             ModificationBehavior::Override,
             "LANG",
             "C.UTF-8",
-        )
-        // We use a curated pip version, so disable the update check to speed up pip invocations,
-        // reduce build log spam and prevent users from thinking they need to manually upgrade.
-        // This uses an env var (rather than the `--disable-pip-version-check` arg) so that it also
-        // takes effect for any pip invocations in later buildpacks or when debugging at run-time.
-        .chainable_insert(
-            Scope::All,
-            ModificationBehavior::Override,
-            "PIP_DISABLE_PIP_VERSION_CHECK",
-            "1",
         )
         // We have to set `PKG_CONFIG_PATH` explicitly, since the automatic path set by lifecycle/libcnb
         // is `<layer>/pkgconfig/`, whereas Python's pkgconfig files are at `<layer>/lib/pkgconfig/`.
@@ -277,20 +221,17 @@ fn generate_layer_env(layer_path: &Path, python_version: &PythonVersion) -> Laye
         )
         // By default, Python's cached bytecode files (`.pyc` files) embed the last-modified time of
         // their `.py` source file, so Python can determine when they need regenerating. This causes
-        // `.pyc` files (and thus layer SHA256) to be non-deterministic in cases where the source
-        // file's last-modified time can vary (such as for packages installed by pip). In addition,
-        // when lifecycle exports layers it resets the timestamps on all files to a fixed value:
-        // https://buildpacks.io/docs/features/reproducibility/#consequences-and-caveats
+        // them (and the layer digest) to be non-deterministic in cases where the source file's
+        // last-modified time can vary (such as for installed packages). In addition, when lifecycle
+        // exports layers it resets the timestamps on all files to a fixed value:
+        // https://buildpacks.io/docs/for-app-developers/concepts/reproducibility/#consequences-and-caveats
         //
         // At run-time, this means the `.pyc`'s embedded timestamps no longer match the timestamps
         // of the original `.py` files, causing Python to regenerate the bytecode, and so losing any
         // benefit of having kept the `.pyc` files (at the cost of a larger app image).
         //
-        // We could delete the `.pyc` files at the end of this buildpack's build phase, however:
-        // - This means they need to be regenerated at app boot, slowing boot times.
-        //   (For a simple Django project on a Perf-M, boot time increases from ~0.5s to ~1.5s.)
-        // - If a later buildpack runs any of the Python files added by this buildpack, then the
-        //   timestamp based `.pyc` files will be created again, re-introducing non-determinism.
+        // We could delete the `.pyc` files at the end of this buildpack's build phase, or suppress
+        // their creation using `PYTHONDONTWRITEBYTECODE=1`, but this would mean slower app boot.
         //
         // Instead, we use the hash-based cache files mode added in Python 3.7+, which embeds a hash
         // of the original `.py` file in the `.pyc` file instead of the timestamp:
@@ -303,15 +244,6 @@ fn generate_layer_env(layer_path: &Path, python_version: &PythonVersion) -> Laye
         //
         // Note: Both the CLI args and the env var only apply to usages of `compileall` or `py_compile`,
         // and not `.pyc` generation as part of Python importing a file during normal operation.
-        //
-        // We use the env var, since:
-        //   - pip calls `compileall` itself after installing packages, and doesn't allow us to
-        //     customise the options passed to it, which would mean we'd have to pass `--no-compile`
-        //     to pip followed by running `compileall` manually ourselves, meaning more complexity
-        //     every time we (or a later buildpack) use `pip install`.
-        //   - When we add support for Poetry, we'll have to use an env var regardless, since Poetry
-        //     doesn't allow customising the options passed to its internal pip invocations, so we'd
-        //     have no way of passing `--no-compile` to pip.
         .chainable_insert(
             Scope::Build,
             ModificationBehavior::Default,
@@ -321,42 +253,15 @@ fn generate_layer_env(layer_path: &Path, python_version: &PythonVersion) -> Laye
             // the pip install. As such, we cannot use a zero value since the ZIP file format doesn't
             // support dates before 1980. Instead, we use a value equivalent to `1980-01-01T00:00:01Z`,
             // for parity with that used by lifecycle:
-            // https://github.com/buildpacks/lifecycle/blob/v0.15.3/archive/writer.go#L12
+            // https://github.com/buildpacks/lifecycle/blob/v0.20.1/archive/writer.go#L12
             "315532801",
         )
 }
 
-/// The path to the pip module bundled in Python's standard library.
-fn bundled_pip_module_path(python_stdlib_dir: &Path) -> io::Result<PathBuf> {
-    let bundled_wheels_dir = python_stdlib_dir.join("ensurepip/_bundled");
-
-    // The wheel filename includes the pip version (for example `pip-XX.Y-py3-none-any.whl`),
-    // which varies from one Python release to the next (including between patch releases).
-    // As such, we have to find the wheel based on the known filename prefix of `pip-`.
-    for entry in fs::read_dir(bundled_wheels_dir)? {
-        let entry = entry?;
-        if entry.file_name().to_string_lossy().starts_with("pip-") {
-            let pip_wheel_path = entry.path();
-            // The pip module exists inside the pip wheel (which is a zip file), however,
-            // Python can load it directly by appending the module name to the zip filename,
-            // as though it were a path. For example: `pip-XX.Y-py3-none-any.whl/pip`
-            let pip_module_path = pip_wheel_path.join("pip");
-            return Ok(pip_module_path);
-        }
-    }
-
-    Err(io::Error::new(
-        io::ErrorKind::NotFound,
-        "No files found matching the pip wheel filename prefix",
-    ))
-}
-
-/// Errors that can occur when installing Python and required packaging tools into a layer.
+/// Errors that can occur when installing Python into a layer.
 #[derive(Debug)]
 pub(crate) enum PythonLayerError {
-    BootstrapPipCommand(StreamedCommandError),
     DownloadUnpackPythonArchive(DownloadUnpackArchiveError),
-    LocateBundledPip(io::Error),
     PythonArchiveNotFound { python_version: PythonVersion },
 }
 
@@ -376,7 +281,6 @@ mod tests {
             distro_name: "ubuntu".to_string(),
             distro_version: "22.04".to_string(),
             python_version: "3.11.0".to_string(),
-            pip_version: "A.B.C".to_string(),
         }
     }
 
@@ -411,7 +315,6 @@ mod tests {
             distro_name: "debian".to_string(),
             distro_version: "12".to_string(),
             python_version: "3.11.1".to_string(),
-            pip_version: "A.B.C-new".to_string(),
         };
         assert_eq!(
             cache_invalidation_reasons(&cached_metadata, &new_metadata),
@@ -419,7 +322,6 @@ mod tests {
                 "The CPU architecture has changed from amd64 to arm64",
                 "The OS has changed from ubuntu-22.04 to debian-12",
                 "The Python version has changed from 3.11.0 to 3.11.1",
-                "The pip version has changed from A.B.C to A.B.C-new",
             ]
         );
     }
@@ -429,7 +331,6 @@ mod tests {
         let mut base_env = Env::new();
         base_env.insert("CPATH", "/base");
         base_env.insert("LANG", "this-should-be-overridden");
-        base_env.insert("PIP_DISABLE_PIP_VERSION_CHECK", "this-should-be-overridden");
         base_env.insert("PKG_CONFIG_PATH", "/base");
         base_env.insert("PYTHONHOME", "this-should-be-overridden");
         base_env.insert("PYTHONUNBUFFERED", "this-should-be-overridden");
@@ -448,7 +349,6 @@ mod tests {
             [
                 ("CPATH", "/layer-dir/include/python3.11:/base"),
                 ("LANG", "C.UTF-8"),
-                ("PIP_DISABLE_PIP_VERSION_CHECK", "1"),
                 ("PKG_CONFIG_PATH", "/layer-dir/lib/pkgconfig:/base"),
                 ("PYTHONHOME", "/layer-dir"),
                 ("PYTHONUNBUFFERED", "1"),
@@ -460,7 +360,6 @@ mod tests {
             [
                 ("CPATH", "/base"),
                 ("LANG", "C.UTF-8"),
-                ("PIP_DISABLE_PIP_VERSION_CHECK", "1"),
                 ("PKG_CONFIG_PATH", "/base"),
                 ("PYTHONHOME", "/layer-dir"),
                 ("PYTHONUNBUFFERED", "1"),
