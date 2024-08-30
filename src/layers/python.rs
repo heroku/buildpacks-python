@@ -11,8 +11,6 @@ use libcnb::layer_env::{LayerEnv, ModificationBehavior, Scope};
 use libcnb::Env;
 use libherokubuildpack::log::log_info;
 use serde::{Deserialize, Serialize};
-use std::fs::Permissions;
-use std::os::unix::prelude::PermissionsExt;
 use std::path::{Path, PathBuf};
 use std::process::Command;
 use std::{fs, io};
@@ -137,16 +135,6 @@ pub(crate) fn install_python_and_packaging_tools(
             .envs(&*env),
     )
     .map_err(PythonLayerError::BootstrapPipCommand)?;
-
-    // By default pip installs into the system site-packages directory if it is writeable by the
-    // current user. Whilst the buildpack's own `pip install` invocations always use `--user` to
-    // ensure app dependencies are installed into the user site-packages, it's possible other
-    // buildpacks or custom scripts may forget to do so. By making the system site-packages
-    // directory read-only, pip will automatically use user installs in such cases:
-    // https://github.com/pypa/pip/blob/24.1.2/src/pip/_internal/commands/install.py#L662-L720
-    let site_packages_dir = python_stdlib_dir.join("site-packages");
-    fs::set_permissions(site_packages_dir, Permissions::from_mode(0o555))
-        .map_err(PythonLayerError::MakeSitePackagesReadOnly)?;
 
     Ok(())
 }
@@ -369,7 +357,6 @@ pub(crate) enum PythonLayerError {
     BootstrapPipCommand(StreamedCommandError),
     DownloadUnpackPythonArchive(DownloadUnpackArchiveError),
     LocateBundledPip(io::Error),
-    MakeSitePackagesReadOnly(io::Error),
     PythonArchiveNotFound { python_version: PythonVersion },
 }
 

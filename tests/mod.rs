@@ -51,6 +51,7 @@ fn default_build_config(fixture_path: impl AsRef<Path>) -> BuildConfig {
         ("PYTHONHOME", "/invalid"),
         ("PYTHONPATH", "/invalid"),
         ("PYTHONUSERBASE", "/invalid"),
+        ("VIRTUAL_ENV", "/invalid"),
     ]);
 
     config

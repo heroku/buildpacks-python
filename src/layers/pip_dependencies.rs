@@ -6,20 +6,18 @@ use libcnb::layer::UncachedLayerDefinition;
 use libcnb::layer_env::{LayerEnv, ModificationBehavior, Scope};
 use libcnb::Env;
 use libherokubuildpack::log::log_info;
-use std::path::{Path, PathBuf};
+use std::path::PathBuf;
 use std::process::Command;
 
 /// Creates a layer containing the application's Python dependencies, installed using pip.
 //
-// To do this we use `pip install --user` so that the dependencies are installed into the user
-// `site-packages` directory in this layer (set by `PYTHONUSERBASE`), rather than the system
-// `site-packages` subdirectory of the Python installation layer.
-//
-// Note: We can't instead use pip's `--target` option along with `PYTHONPATH`, since:
-// - Directories on `PYTHONPATH` take precedence over the Python stdlib (unlike the system or
-//   user site-packages directories), which can cause hard to debug stdlib shadowing issues
-//   if one of the app's transitive dependencies is an outdated stdlib backport package.
-// - `--target` has bugs, eg: <https://github.com/pypa/pip/issues/8799>
+// We install into a virtual environment since:
+// - We can't install into the system site-packages inside the main Python directory since
+//   we need the app dependencies to be in their own layer.
+// - Some packages are broken with `--user` installs when using relocated Python, and
+//   otherwise require other workarounds. eg: https://github.com/unbit/uwsgi/issues/2525
+// - PEP-405 style venvs are very lightweight and are also much more frequently
+//   used in the wild compared to `--user`, and therefore the better tested path.
 //
 // This layer is not cached, since:
 // - pip is a package installer rather than a project/environment manager, and so does not
@@ -35,20 +33,50 @@ pub(crate) fn install_dependencies(
     env: &mut Env,
 ) -> Result<PathBuf, libcnb::Error<BuildpackError>> {
     let layer = context.uncached_layer(
-        layer_name!("dependencies"),
+        // The name of this layer must be alphabetically after that of the `python` layer so that
+        // this layer's `bin/` directory (and thus `python` symlink) is listed first in `PATH`:
+        // https://github.com/buildpacks/spec/blob/main/buildpack.md#layer-paths
+        layer_name!("venv"),
         UncachedLayerDefinition {
             build: true,
             launch: true,
         },
     )?;
-
     let layer_path = layer.path();
-    let layer_env = generate_layer_env(&layer_path);
+
+    log_info("Creating virtual environment");
+    utils::run_command_and_stream_output(
+        Command::new("python")
+            .args(["-m", "venv", "--without-pip", &layer_path.to_string_lossy()])
+            .env_clear()
+            .envs(&*env),
+    )
+    .map_err(PipDependenciesLayerError::CreateVenvCommand)?;
+
+    let mut layer_env = LayerEnv::new()
+        // Since pip is installed in a different layer (outside of this venv), we have to explicitly
+        // tell it to perform operations against this venv instead of the global Python install.
+        // https://pip.pypa.io/en/stable/cli/pip/#cmdoption-python
+        .chainable_insert(
+            Scope::All,
+            ModificationBehavior::Override,
+            "PIP_PYTHON",
+            &layer_path,
+        )
+        // For parity with the venv's `bin/activate` script:
+        // https://docs.python.org/3/library/venv.html#how-venvs-work
+        .chainable_insert(
+            Scope::All,
+            ModificationBehavior::Override,
+            "VIRTUAL_ENV",
+            &layer_path,
+        );
     layer.write_env(&layer_env)?;
+    // Required to pick up the automatic PATH env var. See: https://github.com/heroku/libcnb.rs/issues/842
+    layer_env = layer.read_env()?;
     env.clone_from(&layer_env.apply(Scope::Build, env));
 
-    log_info("Running pip install");
-
+    log_info("Running 'pip install -r requirements.txt'");
     utils::run_command_and_stream_output(
         Command::new("pip")
             .args([
@@ -56,17 +84,8 @@ pub(crate) fn install_dependencies(
                 "--no-input",
                 "--progress-bar",
                 "off",
-                // Using `--user` rather than `PIP_USER` since the latter affects `pip list` too.
-                "--user",
                 "--requirement",
                 "requirements.txt",
-                // For VCS dependencies installed in editable mode, the repository clones must be
-                // kept after installation, since their directories are added to the Python path
-                // directly (via `.pth` files in `site-packages`). By default pip will store the
-                // repositories in the current working directory (the app dir), but we want them
-                // in the dependencies layer instead.
-                "--src",
-                &layer_path.join("src").to_string_lossy(),
             ])
             .current_dir(&context.app_dir)
             .env_clear()
@@ -77,69 +96,15 @@ pub(crate) fn install_dependencies(
     Ok(layer_path)
 }
 
-fn generate_layer_env(layer_path: &Path) -> LayerEnv {
-    LayerEnv::new()
-        // We set `PATH` explicitly, since lifecycle will only add the bin directory to `PATH` if it
-        // exists - and we want to support the scenario of installing a debugging package with CLI at
-        // run-time, when none of the dependencies installed at build-time had an entrypoint script.
-        .chainable_insert(
-            Scope::All,
-            ModificationBehavior::Prepend,
-            "PATH",
-            layer_path.join("bin"),
-        )
-        .chainable_insert(Scope::All, ModificationBehavior::Delimiter, "PATH", ":")
-        // Overrides the default user base directory, used by Python to compute the path of the user
-        // `site-packages` directory. Setting this:
-        //   - Makes `pip install --user` install the dependencies into the current layer rather
-        //     than the user's home directory (which would be discarded at the end of the build).
-        //   - Allows Python to find the installed packages at import time.
-        // See: https://docs.python.org/3/using/cmdline.html#envvar-PYTHONUSERBASE
-        .chainable_insert(
-            Scope::All,
-            ModificationBehavior::Override,
-            "PYTHONUSERBASE",
-            layer_path,
-        )
-}
-
 /// Errors that can occur when installing the project's dependencies into a layer using pip.
 #[derive(Debug)]
 pub(crate) enum PipDependenciesLayerError {
+    CreateVenvCommand(StreamedCommandError),
     PipInstallCommand(StreamedCommandError),
 }
 
 impl From<PipDependenciesLayerError> for libcnb::Error<BuildpackError> {
     fn from(error: PipDependenciesLayerError) -> Self {
         Self::BuildpackError(BuildpackError::PipDependenciesLayer(error))
-    }
-}
-
-#[cfg(test)]
-mod tests {
-    use super::*;
-
-    #[test]
-    fn pip_dependencies_layer_env() {
-        let mut base_env = Env::new();
-        base_env.insert("PATH", "/base");
-        base_env.insert("PYTHONUSERBASE", "this-should-be-overridden");
-
-        let layer_env = generate_layer_env(Path::new("/layer-dir"));
-
-        assert_eq!(
-            utils::environment_as_sorted_vector(&layer_env.apply(Scope::Build, &base_env)),
-            [
-                ("PATH", "/layer-dir/bin:/base"),
-                ("PYTHONUSERBASE", "/layer-dir"),
-            ]
-        );
-        assert_eq!(
-            utils::environment_as_sorted_vector(&layer_env.apply(Scope::Launch, &base_env)),
-            [
-                ("PATH", "/layer-dir/bin:/base"),
-                ("PYTHONUSERBASE", "/layer-dir"),
-            ]
-        );
     }
 }

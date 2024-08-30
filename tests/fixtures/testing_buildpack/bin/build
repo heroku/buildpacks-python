@@ -5,8 +5,6 @@
 # - Python's sys.path is correct.
 # - The correct version of pip was installed.
 # - Both the package manager and Python can find the typing-extensions package.
-# - The system site-packages directory is protected against running 'pip install'
-#   without having passed '--user'.
 # - The typing-extensions package was installed into a separate dependencies layer.
 
 set -euo pipefail
@@ -20,5 +18,4 @@ python -c 'import pprint, sys; pprint.pp(sys.path)'
 echo
 pip --version
 pip list
-pip install --dry-run typing-extensions
 python -c 'import typing_extensions; print(typing_extensions)'
