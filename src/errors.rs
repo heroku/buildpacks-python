@@ -171,11 +171,6 @@ fn on_python_layer_error(error: PythonLayerError) {
             "locating the pip wheel file bundled inside the Python 'ensurepip' module",
             &io_error,
         ),
-        PythonLayerError::MakeSitePackagesReadOnly(io_error) => log_io_error(
-            "Unable to make site-packages directory read-only",
-            "modifying the permissions on Python's 'site-packages' directory",
-            &io_error,
-        ),
         // This error will change once the Python version is validated against a manifest.
         // TODO: (W-12613425) Write the supported Python versions inline, instead of linking out to Dev Center.
         // TODO: Decide how to explain to users how stacks, base images and builder images versions relate to each other.
@@ -196,6 +191,22 @@ fn on_python_layer_error(error: PythonLayerError) {
 
 fn on_pip_dependencies_layer_error(error: PipDependenciesLayerError) {
     match error {
+        PipDependenciesLayerError::CreateVenvCommand(error) => match error {
+            StreamedCommandError::Io(io_error) => log_io_error(
+                "Unable to create virtual environment",
+                "running 'python -m venv' to create a virtual environment",
+                &io_error,
+            ),
+            StreamedCommandError::NonZeroExitStatus(exit_status) => log_error(
+                "Unable to create virtual environment",
+                formatdoc! {"
+                    The 'python -m venv' command to create a virtual environment did
+                    not exit successfully ({exit_status}).
+                    
+                    See the log output above for more information.
+                "},
+            ),
+        },
         PipDependenciesLayerError::PipInstallCommand(error) => match error {
             StreamedCommandError::Io(io_error) => log_io_error(
                 "Unable to install dependencies using pip",
@@ -207,8 +218,8 @@ fn on_pip_dependencies_layer_error(error: PipDependenciesLayerError) {
             StreamedCommandError::NonZeroExitStatus(exit_status) => log_error(
                 "Unable to install dependencies using pip",
                 formatdoc! {"
-                    The 'pip install' command to install the application's dependencies from
-                    'requirements.txt' failed ({exit_status}).
+                    The 'pip install -r requirements.txt' command to install the app's
+                    dependencies failed ({exit_status}).
                     
                     See the log output above for more information.
                 "},

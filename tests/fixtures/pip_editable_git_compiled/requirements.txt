@@ -1,6 +1,6 @@
 # This requirement uses a VCS URL and `-e` in order to test that:
 #  - Git from the stack image can be found (ie: the system PATH has been correctly propagated to pip).
-#  - The editable mode repository clone is saved into the dependencies layer (via the `--src` option).
+#  - The editable mode repository clone is saved into the dependencies layer.
 #
 # A C-based package is used instead of a pure Python package, in order to test that the
 # Python headers can be found in the `include/pythonX.Y/` directory of the Python layer.

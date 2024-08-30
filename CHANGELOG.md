@@ -7,6 +7,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Changed
+
+- App dependencies are now installed into a virtual environment instead of user site-packages. ([#257](https://github.com/heroku/buildpacks-python/pull/257))
+
 ## [0.15.0] - 2024-08-07
 
 ### Changed

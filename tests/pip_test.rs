@@ -27,7 +27,8 @@ fn pip_basic_install_and_cache_reuse() {
                 Installing pip {PIP_VERSION}
                 
                 [Installing dependencies using pip]
-                Running pip install
+                Creating virtual environment
+                Running 'pip install -r requirements.txt'
                 Collecting typing-extensions==4.12.2 (from -r requirements.txt (line 2))
                   Downloading typing_extensions-4.12.2-py3-none-any.whl.metadata (3.0 kB)
                 Downloading typing_extensions-4.12.2-py3-none-any.whl (37 kB)
@@ -35,34 +36,31 @@ fn pip_basic_install_and_cache_reuse() {
                 Successfully installed typing-extensions-4.12.2
                 
                 ## Testing buildpack ##
-                CPATH=/layers/heroku_python/python/include/python3.12:/layers/heroku_python/python/include
+                CPATH=/layers/heroku_python/venv/include:/layers/heroku_python/python/include/python3.12:/layers/heroku_python/python/include
                 LANG=C.UTF-8
-                LD_LIBRARY_PATH=/layers/heroku_python/python/lib:/layers/heroku_python/dependencies/lib
-                LIBRARY_PATH=/layers/heroku_python/python/lib:/layers/heroku_python/dependencies/lib
-                PATH=/layers/heroku_python/python/bin:/layers/heroku_python/dependencies/bin:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin
+                LD_LIBRARY_PATH=/layers/heroku_python/venv/lib:/layers/heroku_python/python/lib
+                LIBRARY_PATH=/layers/heroku_python/venv/lib:/layers/heroku_python/python/lib
+                PATH=/layers/heroku_python/venv/bin:/layers/heroku_python/python/bin:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin
                 PIP_CACHE_DIR=/layers/heroku_python/pip-cache
                 PIP_DISABLE_PIP_VERSION_CHECK=1
+                PIP_PYTHON=/layers/heroku_python/venv
                 PKG_CONFIG_PATH=/layers/heroku_python/python/lib/pkgconfig
                 PYTHONHOME=/layers/heroku_python/python
                 PYTHONUNBUFFERED=1
-                PYTHONUSERBASE=/layers/heroku_python/dependencies
                 SOURCE_DATE_EPOCH=315532801
+                VIRTUAL_ENV=/layers/heroku_python/venv
                 
                 ['',
                  '/layers/heroku_python/python/lib/python312.zip',
                  '/layers/heroku_python/python/lib/python3.12',
                  '/layers/heroku_python/python/lib/python3.12/lib-dynload',
-                 '/layers/heroku_python/dependencies/lib/python3.12/site-packages',
-                 '/layers/heroku_python/python/lib/python3.12/site-packages']
+                 '/layers/heroku_python/venv/lib/python3.12/site-packages']
                 
                 pip {PIP_VERSION} from /layers/heroku_python/python/lib/python3.12/site-packages/pip (python 3.12)
                 Package           Version
                 ----------------- -------
-                pip               {PIP_VERSION}
                 typing_extensions 4.12.2
-                Defaulting to user installation because normal site-packages is not writeable
-                Requirement already satisfied: typing-extensions in /layers/heroku_python/dependencies/lib/python3.12/site-packages (4.12.2)
-                <module 'typing_extensions' from '/layers/heroku_python/dependencies/lib/python3.12/site-packages/typing_extensions.py'>
+                <module 'typing_extensions' from '/layers/heroku_python/venv/lib/python3.12/site-packages/typing_extensions.py'>
             "}
         );
 
@@ -84,16 +82,16 @@ fn pip_basic_install_and_cache_reuse() {
             command_output.stdout,
             formatdoc! {"
                 LANG=C.UTF-8
-                LD_LIBRARY_PATH=/layers/heroku_python/python/lib:/layers/heroku_python/dependencies/lib
-                PATH=/layers/heroku_python/dependencies/bin:/layers/heroku_python/python/bin:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin
+                LD_LIBRARY_PATH=/layers/heroku_python/venv/lib:/layers/heroku_python/python/lib
+                PATH=/layers/heroku_python/venv/bin:/layers/heroku_python/python/bin:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin
                 PIP_DISABLE_PIP_VERSION_CHECK=1
+                PIP_PYTHON=/layers/heroku_python/venv
                 PYTHONHOME=/layers/heroku_python/python
                 PYTHONUNBUFFERED=1
-                PYTHONUSERBASE=/layers/heroku_python/dependencies
+                VIRTUAL_ENV=/layers/heroku_python/venv
                 
                 Package           Version
                 ----------------- -------
-                pip               {PIP_VERSION}
                 typing_extensions 4.12.2
             "}
         );
@@ -112,7 +110,8 @@ fn pip_basic_install_and_cache_reuse() {
                     
                     [Installing dependencies using pip]
                     Using cached pip download/wheel cache
-                    Running pip install
+                    Creating virtual environment
+                    Running 'pip install -r requirements.txt'
                     Collecting typing-extensions==4.12.2 (from -r requirements.txt (line 2))
                       Using cached typing_extensions-4.12.2-py3-none-any.whl.metadata (3.0 kB)
                     Using cached typing_extensions-4.12.2-py3-none-any.whl (37 kB)
@@ -148,7 +147,8 @@ fn pip_cache_invalidation_python_version_changed() {
                     
                     [Installing dependencies using pip]
                     Discarding cached pip download/wheel cache
-                    Running pip install
+                    Creating virtual environment
+                    Running 'pip install -r requirements.txt'
                     Collecting typing-extensions==4.12.2 (from -r requirements.txt (line 2))
                       Downloading typing_extensions-4.12.2-py3-none-any.whl.metadata (3.0 kB)
                     Downloading typing_extensions-4.12.2-py3-none-any.whl (37 kB)
@@ -190,7 +190,8 @@ fn pip_cache_previous_buildpack_version() {
                     
                     [Installing dependencies using pip]
                     Discarding cached pip download/wheel cache
-                    Running pip install
+                    Creating virtual environment
+                    Running 'pip install -r requirements.txt'
                     Collecting typing-extensions==4.12.2 (from -r requirements.txt (line 2))
                       Downloading typing_extensions-4.12.2-py3-none-any.whl.metadata (3.0 kB)
                     Downloading typing_extensions-4.12.2-py3-none-any.whl (37 kB)
@@ -217,7 +218,7 @@ fn pip_editable_git_compiled() {
     TestRunner::default().build(config, |context| {
         assert_contains!(
             context.pack_stdout,
-            "Cloning https://github.com/pypa/wheel.git (to revision 0.44.0) to /layers/heroku_python/dependencies/src/extension-dist"
+            "Cloning https://github.com/pypa/wheel.git (to revision 0.44.0) to /layers/heroku_python/venv/src/extension-dist"
         );
     });
 }
@@ -235,7 +236,8 @@ fn pip_install_error() {
             context.pack_stdout,
             indoc! {"
                 [Installing dependencies using pip]
-                Running pip install
+                Creating virtual environment
+                Running 'pip install -r requirements.txt'
             "}
         );
         assert_contains!(
@@ -246,8 +248,8 @@ fn pip_install_error() {
                                           ^ (from line 1 of requirements.txt)
                 
                 [Error: Unable to install dependencies using pip]
-                The 'pip install' command to install the application's dependencies from
-                'requirements.txt' failed (exit status: 1).
+                The 'pip install -r requirements.txt' command to install the app's
+                dependencies failed (exit status: 1).
                 
                 See the log output above for more information.
             "}
