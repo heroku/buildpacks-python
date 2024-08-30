@@ -31,7 +31,7 @@ pub(crate) fn install_pip(
         layer_name!("pip"),
         CachedLayerDefinition {
             build: true,
-            launch: true,
+            launch: false,
             invalid_metadata_action: &|_| InvalidMetadataAction::DeleteLayer,
             restored_layer_action: &|cached_metadata: &PipLayerMetadata, _| {
                 let cached_pip_version = cached_metadata.pip_version.clone();
@@ -49,7 +49,7 @@ pub(crate) fn install_pip(
         // reduce build log spam and prevent users from thinking they need to manually upgrade.
         // https://pip.pypa.io/en/stable/cli/pip/#cmdoption-disable-pip-version-check
         .chainable_insert(
-            Scope::All,
+            Scope::Build,
             ModificationBehavior::Override,
             "PIP_DISABLE_PIP_VERSION_CHECK",
             "1",
@@ -57,7 +57,7 @@ pub(crate) fn install_pip(
         // Move the Python user base directory to this layer instead of under HOME:
         // https://docs.python.org/3/using/cmdline.html#envvar-PYTHONUSERBASE
         .chainable_insert(
-            Scope::All,
+            Scope::Build,
             ModificationBehavior::Override,
             "PYTHONUSERBASE",
             layer.path(),
