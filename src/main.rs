@@ -11,8 +11,10 @@ mod utils;
 use crate::django::DjangoCollectstaticError;
 use crate::layers::pip::PipLayerError;
 use crate::layers::pip_dependencies::PipDependenciesLayerError;
+use crate::layers::poetry::PoetryLayerError;
+use crate::layers::poetry_dependencies::PoetryDependenciesLayerError;
 use crate::layers::python::PythonLayerError;
-use crate::layers::{pip, pip_cache, pip_dependencies, python};
+use crate::layers::{pip, pip_cache, pip_dependencies, poetry, poetry_dependencies, python};
 use crate::package_manager::{DeterminePackageManagerError, PackageManager};
 use crate::python_version::PythonVersionError;
 use libcnb::build::{BuildContext, BuildResult, BuildResultBuilder};
@@ -39,7 +41,7 @@ impl Buildpack for PythonBuildpack {
         {
             DetectResultBuilder::pass().build()
         } else {
-            log_info("No Python project files found (such as requirements.txt).");
+            log_info("No Python project files found (such as pyproject.toml, requirements.txt or poetry.lock).");
             DetectResultBuilder::fail().build()
         }
     }
@@ -64,7 +66,6 @@ impl Buildpack for PythonBuildpack {
         log_header("Installing Python");
         let python_layer_path = python::install_python(&context, &mut env, &python_version)?;
 
-        // In the future support will be added for package managers other than pip.
         let dependencies_layer_dir = match package_manager {
             PackageManager::Pip => {
                 log_header("Installing pip");
@@ -72,6 +73,12 @@ impl Buildpack for PythonBuildpack {
                 log_header("Installing dependencies using pip");
                 pip_cache::prepare_pip_cache(&context, &mut env, &python_version)?;
                 pip_dependencies::install_dependencies(&context, &mut env)?
+            }
+            PackageManager::Poetry => {
+                log_header("Installing Poetry");
+                poetry::install_poetry(&context, &mut env, &python_version, &python_layer_path)?;
+                log_header("Installing dependencies using Poetry");
+                poetry_dependencies::install_dependencies(&context, &mut env, &python_version)?
             }
         };
 
@@ -105,6 +112,10 @@ pub(crate) enum BuildpackError {
     PipDependenciesLayer(PipDependenciesLayerError),
     /// Errors installing pip into a layer.
     PipLayer(PipLayerError),
+    /// Errors installing the project's dependencies into a layer using Poetry.
+    PoetryDependenciesLayer(PoetryDependenciesLayerError),
+    /// Errors installing Poetry into a layer.
+    PoetryLayer(PoetryLayerError),
     /// Errors installing Python into a layer.
     PythonLayer(PythonLayerError),
     /// Errors determining which Python version to use for a project.

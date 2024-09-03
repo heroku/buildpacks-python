@@ -1,6 +1,8 @@
 use crate::django::DjangoCollectstaticError;
 use crate::layers::pip::PipLayerError;
 use crate::layers::pip_dependencies::PipDependenciesLayerError;
+use crate::layers::poetry::PoetryLayerError;
+use crate::layers::poetry_dependencies::PoetryDependenciesLayerError;
 use crate::layers::python::PythonLayerError;
 use crate::package_manager::DeterminePackageManagerError;
 use crate::python_version::{PythonVersion, PythonVersionError, DEFAULT_PYTHON_VERSION};
@@ -48,6 +50,8 @@ fn on_buildpack_error(error: BuildpackError) {
         BuildpackError::DjangoDetection(error) => on_django_detection_error(&error),
         BuildpackError::PipDependenciesLayer(error) => on_pip_dependencies_layer_error(error),
         BuildpackError::PipLayer(error) => on_pip_layer_error(error),
+        BuildpackError::PoetryDependenciesLayer(error) => on_poetry_dependencies_layer_error(error),
+        BuildpackError::PoetryLayer(error) => on_poetry_layer_error(error),
         BuildpackError::PythonLayer(error) => on_python_layer_error(error),
         BuildpackError::PythonVersion(error) => on_python_version_error(error),
     };
@@ -68,18 +72,46 @@ fn on_determine_package_manager_error(error: DeterminePackageManagerError) {
             "determining which Python package manager to use for this project",
             &io_error,
         ),
-        // TODO: Should this mention the setup.py / pyproject.toml case?
+        DeterminePackageManagerError::MultipleFound(package_managers) => {
+            let files_found = package_managers
+                .into_iter()
+                .map(|package_manager| {
+                    format!(
+                        "{} ({})",
+                        package_manager.packages_file(),
+                        package_manager.name()
+                    )
+                })
+                .collect::<Vec<String>>()
+                .join("\n");
+            log_error(
+                "Multiple Python package manager files were found",
+                formatdoc! {"
+                    Exactly one package manager file must be present in your app's source code,
+                    however, several were found:
+                    
+                    {files_found}
+                    
+                    Decide which package manager you want to use with your app, and then delete
+                    the file(s) and any config from the others.
+                "},
+            );
+        }
         DeterminePackageManagerError::NoneFound => log_error(
-            "No Python package manager files were found",
+            "Couldn't find any supported Python package manager files",
             indoc! {"
-                A pip requirements file was not found in your application's source code.
-                This file is required so that your application's dependencies can be installed.
+                Your app must have either a pip requirements file ('requirements.txt')
+                or Poetry lockfile ('poetry.lock') in the root directory of its source
+                code, so your app's dependencies can be installed.
                 
-                Please add a file named exactly 'requirements.txt' to the root directory of your
-                application, containing a list of the packages required by your application.
+                If your app already has one of those files, check that it:
                 
-                For more information on what this file should contain, see:
-                https://pip.pypa.io/en/stable/reference/requirements-file-format/
+                1. Is in the top level directory (not a subdirectory).
+                2. Has the correct spelling (the filenames are case-sensitive).
+                3. Isn't excluded by '.gitignore' or 'project.toml'.
+                
+                Otherwise, add a package manager file to your app. If your app has
+                no dependencies, then create an empty 'requirements.txt' file.
             "},
         ),
     };
@@ -226,6 +258,76 @@ fn on_pip_dependencies_layer_error(error: PipDependenciesLayerError) {
                 "Unable to install dependencies using pip",
                 formatdoc! {"
                     The 'pip install -r requirements.txt' command to install the app's
+                    dependencies failed ({exit_status}).
+                    
+                    See the log output above for more information.
+                "},
+            ),
+        },
+    };
+}
+
+fn on_poetry_layer_error(error: PoetryLayerError) {
+    match error {
+        PoetryLayerError::InstallPoetryCommand(error) => match error {
+            StreamedCommandError::Io(io_error) => log_io_error(
+                "Unable to install Poetry",
+                "running 'python' to install Poetry",
+                &io_error,
+            ),
+            StreamedCommandError::NonZeroExitStatus(exit_status) => log_error(
+                "Unable to install Poetry",
+                formatdoc! {"
+                    The command to install Poetry did not exit successfully ({exit_status}).
+                    
+                    See the log output above for more information.
+                    
+                    In some cases, this happens due to an unstable network connection.
+                    Please try again to see if the error resolves itself.
+                    
+                    If that does not help, check the status of PyPI (the upstream Python
+                    package repository service), here:
+                    https://status.python.org
+                "},
+            ),
+        },
+        PoetryLayerError::LocateBundledPip(io_error) => log_io_error(
+            "Unable to locate the bundled copy of pip",
+            "locating the pip wheel file bundled inside the Python 'ensurepip' module",
+            &io_error,
+        ),
+    };
+}
+
+fn on_poetry_dependencies_layer_error(error: PoetryDependenciesLayerError) {
+    match error {
+        PoetryDependenciesLayerError::CreateVenvCommand(error) => match error {
+            StreamedCommandError::Io(io_error) => log_io_error(
+                "Unable to create virtual environment",
+                "running 'python -m venv' to create a virtual environment",
+                &io_error,
+            ),
+            StreamedCommandError::NonZeroExitStatus(exit_status) => log_error(
+                "Unable to create virtual environment",
+                formatdoc! {"
+                    The 'python -m venv' command to create a virtual environment did
+                    not exit successfully ({exit_status}).
+                    
+                    See the log output above for more information.
+                "},
+            ),
+        },
+        PoetryDependenciesLayerError::PoetryInstallCommand(error) => match error {
+            StreamedCommandError::Io(io_error) => log_io_error(
+                "Unable to install dependencies using Poetry",
+                "running 'poetry install' to install the app's dependencies",
+                &io_error,
+            ),
+            // TODO: Add more suggestions here as to possible causes (similar to pip)
+            StreamedCommandError::NonZeroExitStatus(exit_status) => log_error(
+                "Unable to install dependencies using Poetry",
+                formatdoc! {"
+                    The 'poetry install --sync --only main' command to install the app's
                     dependencies failed ({exit_status}).
                     
                     See the log output above for more information.

@@ -1,5 +1,5 @@
 use crate::packaging_tool_versions::PIP_VERSION;
-use crate::tests::{default_build_config, DEFAULT_PYTHON_VERSION, LATEST_PYTHON_3_11};
+use crate::tests::{default_build_config, DEFAULT_PYTHON_VERSION};
 use indoc::{formatdoc, indoc};
 use libcnb_test::{assert_contains, assert_empty, BuildpackReference, PackResult, TestRunner};
 
@@ -132,8 +132,8 @@ fn pip_basic_install_and_cache_reuse() {
 
 #[test]
 #[ignore = "integration test"]
-fn pip_cache_invalidation_python_version_changed() {
-    let config = default_build_config("tests/fixtures/python_3.11");
+fn pip_cache_invalidation_package_manager_changed() {
+    let config = default_build_config("tests/fixtures/poetry_basic");
     let rebuild_config = default_build_config("tests/fixtures/pip_basic");
 
     TestRunner::default().build(config, |context| {
@@ -147,16 +147,12 @@ fn pip_cache_invalidation_python_version_changed() {
                     To use a different version, see: https://devcenter.heroku.com/articles/python-runtimes
                     
                     [Installing Python]
-                    Discarding cached Python {LATEST_PYTHON_3_11} since:
-                     - The Python version has changed from {LATEST_PYTHON_3_11} to {DEFAULT_PYTHON_VERSION}
-                    Installing Python {DEFAULT_PYTHON_VERSION}
+                    Using cached Python {DEFAULT_PYTHON_VERSION}
                     
                     [Installing pip]
-                    Discarding cached pip {PIP_VERSION}
                     Installing pip {PIP_VERSION}
                     
                     [Installing dependencies using pip]
-                    Discarding cached pip download/wheel cache
                     Creating virtual environment
                     Running 'pip install -r requirements.txt'
                     Collecting typing-extensions==4.12.2 (from -r requirements.txt (line 2))
@@ -177,7 +173,7 @@ fn pip_cache_invalidation_python_version_changed() {
 fn pip_cache_previous_buildpack_version() {
     let mut config = default_build_config("tests/fixtures/pip_basic");
     config.buildpacks([BuildpackReference::Other(
-        "docker://docker.io/heroku/buildpack-python:0.14.0".to_string(),
+        "docker://docker.io/heroku/buildpack-python:0.16.0".to_string(),
     )]);
     let rebuild_config = default_build_config("tests/fixtures/pip_basic");
 
@@ -192,19 +188,18 @@ fn pip_cache_previous_buildpack_version() {
                     To use a different version, see: https://devcenter.heroku.com/articles/python-runtimes
                     
                     [Installing Python]
-                    Discarding cached Python since its layer metadata can't be parsed
-                    Installing Python {DEFAULT_PYTHON_VERSION}
+                    Using cached Python {DEFAULT_PYTHON_VERSION}
                     
                     [Installing pip]
-                    Installing pip {PIP_VERSION}
+                    Using cached pip {PIP_VERSION}
                     
                     [Installing dependencies using pip]
-                    Discarding cached pip download/wheel cache
+                    Using cached pip download/wheel cache
                     Creating virtual environment
                     Running 'pip install -r requirements.txt'
                     Collecting typing-extensions==4.12.2 (from -r requirements.txt (line 2))
-                      Downloading typing_extensions-4.12.2-py3-none-any.whl.metadata (3.0 kB)
-                    Downloading typing_extensions-4.12.2-py3-none-any.whl (37 kB)
+                      Using cached typing_extensions-4.12.2-py3-none-any.whl.metadata (3.0 kB)
+                    Using cached typing_extensions-4.12.2-py3-none-any.whl (37 kB)
                     Installing collected packages: typing-extensions
                     Successfully installed typing-extensions-4.12.2
                 "}
