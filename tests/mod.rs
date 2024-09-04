@@ -7,6 +7,7 @@ mod detect_test;
 mod django_test;
 mod package_manager_test;
 mod pip_test;
+mod poetry_test;
 mod python_version_test;
 
 use libcnb_test::BuildConfig;

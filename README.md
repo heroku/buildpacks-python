@@ -31,7 +31,7 @@ docker run --rm -it -e "PORT=8080" -p 8080:8080 sample-app
 
 ## Application Requirements
 
-A `requirements.txt` file must be present at the root of your application's repository.
+A `requirements.txt` or `poetry.lock` file must be present in the root (top-level) directory of your app's source code.
 
 ## Configuration
 
@@ -39,14 +39,17 @@ A `requirements.txt` file must be present at the root of your application's repo
 
 By default, the buildpack will install the latest version of Python 3.12.
 
-To install a different version, add a `runtime.txt` file to your app’s root directory that declares the exact version number to use:
+To install a different version, add a `runtime.txt` file to your app's root directory that declares the exact version number to use:
 
 ```term
 $ cat runtime.txt
 python-3.12.5
 ```
 
-In the future this buildpack will also support specifying the Python version via a `.python-version` file (see [#6](https://github.com/heroku/buildpacks-python/issues/6)).
+In the future this buildpack will also support specifying the Python version using:
+
+- A `.python-version` file: [#6](https://github.com/heroku/buildpacks-python/issues/6)
+- `tool.poetry.dependencies.python` in `pyproject.toml`: [#260](https://github.com/heroku/buildpacks-python/issues/260)
 
 ## Contributing
 

@@ -41,29 +41,29 @@ pub(crate) fn is_python_project_directory(app_dir: &Path) -> io::Result<bool> {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::package_manager::PACKAGE_MANAGER_FILE_MAPPING;
+    use crate::package_manager::SUPPORTED_PACKAGE_MANAGERS;
 
     #[test]
-    fn is_python_project_valid_project() {
+    fn is_python_project_directory_valid_project() {
         assert!(
             is_python_project_directory(Path::new("tests/fixtures/pyproject_toml_only")).unwrap()
         );
     }
 
     #[test]
-    fn is_python_project_empty() {
+    fn is_python_project_directory_empty() {
         assert!(!is_python_project_directory(Path::new("tests/fixtures/empty")).unwrap());
     }
 
     #[test]
-    fn is_python_project_io_error() {
+    fn is_python_project_directory_io_error() {
         assert!(is_python_project_directory(Path::new("tests/fixtures/empty/.gitkeep")).is_err());
     }
 
     #[test]
     fn known_python_project_files_contains_all_package_manager_files() {
-        assert!(PACKAGE_MANAGER_FILE_MAPPING
-            .iter()
-            .all(|(filename, _)| { KNOWN_PYTHON_PROJECT_FILES.contains(filename) }));
+        assert!(SUPPORTED_PACKAGE_MANAGERS.iter().all(|package_manager| {
+            KNOWN_PYTHON_PROJECT_FILES.contains(&package_manager.packages_file())
+        }));
     }
 }

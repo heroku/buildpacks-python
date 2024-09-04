@@ -5,6 +5,8 @@ use std::str;
 // from which we extract/validate the version substring at compile time.
 pub(crate) const PIP_VERSION: &str =
     extract_requirement_version(include_str!("../requirements/pip.txt"));
+pub(crate) const POETRY_VERSION: &str =
+    extract_requirement_version(include_str!("../requirements/poetry.txt"));
 
 // Extract the version substring from an exact-version package specifier (such as `foo==1.2.3`).
 // This function should only be used to extract the version constants from the buildpack's own
