@@ -154,13 +154,9 @@ fn poetry_cache_invalidation_package_manager_changed() {
 #[test]
 #[ignore = "integration test"]
 fn poetry_cache_previous_buildpack_version() {
-    #![allow(unreachable_code)]
-    // TODO: Enable this test once a previous buildpack release exists that supports Poetry.
-    return;
-
     let mut config = default_build_config("tests/fixtures/poetry_basic");
     config.buildpacks([BuildpackReference::Other(
-        "docker://docker.io/heroku/buildpack-python:TODO".to_string(),
+        "docker://docker.io/heroku/buildpack-python:0.17.0".to_string(),
     )]);
     let rebuild_config = default_build_config("tests/fixtures/poetry_basic");
 
@@ -170,8 +166,23 @@ fn poetry_cache_previous_buildpack_version() {
             assert_contains!(
                 rebuild_context.pack_stdout,
                 &formatdoc! {"
-                        TODO
-                    "}
+                    [Determining Python version]
+                    No Python version specified, using the current default of Python {DEFAULT_PYTHON_VERSION}.
+                    To use a different version, see: https://devcenter.heroku.com/articles/python-runtimes
+                    
+                    [Installing Python]
+                    Using cached Python {DEFAULT_PYTHON_VERSION}
+                    
+                    [Installing Poetry]
+                    Using cached Poetry {POETRY_VERSION}
+                    
+                    [Installing dependencies using Poetry]
+                    Using cached virtual environment
+                    Running 'poetry install --sync --only main'
+                    Installing dependencies from lock file
+                    
+                    No dependencies to install or update
+                "}
             );
         });
     });
