@@ -171,17 +171,23 @@ fn poetry_cache_previous_buildpack_version() {
                     To use a different version, see: https://devcenter.heroku.com/articles/python-runtimes
                     
                     [Installing Python]
-                    Using cached Python {DEFAULT_PYTHON_VERSION}
+                    Discarding cached Python 3.12.5 since:
+                     - The Python version has changed from 3.12.5 to {DEFAULT_PYTHON_VERSION}
+                    Installing Python {DEFAULT_PYTHON_VERSION}
                     
                     [Installing Poetry]
-                    Using cached Poetry {POETRY_VERSION}
+                    Discarding cached Poetry {POETRY_VERSION}
+                    Installing Poetry {POETRY_VERSION}
                     
                     [Installing dependencies using Poetry]
-                    Using cached virtual environment
+                    Discarding cached virtual environment
+                    Creating virtual environment
                     Running 'poetry install --sync --only main'
                     Installing dependencies from lock file
                     
-                    No dependencies to install or update
+                    Package operations: 1 install, 0 updates, 0 removals
+                    
+                      - Installing typing-extensions (4.12.2)
                 "}
             );
         });

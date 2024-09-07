@@ -43,7 +43,7 @@ To install a different version, add a `runtime.txt` file to your app's root dire
 
 ```term
 $ cat runtime.txt
-python-3.12.5
+python-3.12.6
 ```
 
 In the future this buildpack will also support specifying the Python version using:

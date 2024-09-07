@@ -188,18 +188,21 @@ fn pip_cache_previous_buildpack_version() {
                     To use a different version, see: https://devcenter.heroku.com/articles/python-runtimes
                     
                     [Installing Python]
-                    Using cached Python {DEFAULT_PYTHON_VERSION}
+                    Discarding cached Python 3.12.5 since:
+                     - The Python version has changed from 3.12.5 to {DEFAULT_PYTHON_VERSION}
+                    Installing Python {DEFAULT_PYTHON_VERSION}
                     
                     [Installing pip]
-                    Using cached pip {PIP_VERSION}
+                    Discarding cached pip {PIP_VERSION}
+                    Installing pip {PIP_VERSION}
                     
                     [Installing dependencies using pip]
-                    Using cached pip download/wheel cache
+                    Discarding cached pip download/wheel cache
                     Creating virtual environment
                     Running 'pip install -r requirements.txt'
                     Collecting typing-extensions==4.12.2 (from -r requirements.txt (line 2))
-                      Using cached typing_extensions-4.12.2-py3-none-any.whl.metadata (3.0 kB)
-                    Using cached typing_extensions-4.12.2-py3-none-any.whl (37 kB)
+                      Downloading typing_extensions-4.12.2-py3-none-any.whl.metadata (3.0 kB)
+                    Downloading typing_extensions-4.12.2-py3-none-any.whl (37 kB)
                     Installing collected packages: typing-extensions
                     Successfully installed typing-extensions-4.12.2
                 "}

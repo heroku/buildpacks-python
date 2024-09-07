@@ -9,7 +9,7 @@ use std::path::Path;
 pub(crate) const DEFAULT_PYTHON_VERSION: PythonVersion = PythonVersion {
     major: 3,
     minor: 12,
-    patch: 5,
+    patch: 6,
 };
 
 /// Representation of a specific Python `X.Y.Z` version.
