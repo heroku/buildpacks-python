@@ -7,6 +7,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Changed
+
+- pip is now only available during the build, and is longer included in the final app image. ([#264](https://github.com/heroku/buildpacks-python/pull/264))
+
 ## [0.17.1] - 2024-09-07
 
 ### Changed

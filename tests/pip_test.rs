@@ -5,7 +5,6 @@ use libcnb_test::{assert_contains, assert_empty, BuildpackReference, PackResult,
 
 #[test]
 #[ignore = "integration test"]
-#[allow(clippy::too_many_lines)]
 fn pip_basic_install_and_cache_reuse() {
     let mut config = default_build_config("tests/fixtures/pip_basic");
     config.buildpacks(vec![
@@ -69,14 +68,13 @@ fn pip_basic_install_and_cache_reuse() {
 
         // Check that at run-time:
         // - The correct env vars are set.
-        // - pip is available (rather than just during the build).
-        // - Both pip and Python can find the typing-extensions package.
+        // - pip isn't available.
+        // - Python can find the typing-extensions package.
         let command_output = context.run_shell_command(
             indoc! {"
                 set -euo pipefail
                 printenv | sort | grep -vE '^(_|HOME|HOSTNAME|OLDPWD|PWD|SHLVL)='
-                echo
-                pip list
+                ! command -v pip > /dev/null || { echo 'pip unexpectedly found!' && exit 1; }
                 python -c 'import typing_extensions'
             "}
         );
@@ -85,18 +83,12 @@ fn pip_basic_install_and_cache_reuse() {
             command_output.stdout,
             formatdoc! {"
                 LANG=C.UTF-8
-                LD_LIBRARY_PATH=/layers/heroku_python/venv/lib:/layers/heroku_python/python/lib:/layers/heroku_python/pip/lib
-                PATH=/layers/heroku_python/venv/bin:/layers/heroku_python/python/bin:/layers/heroku_python/pip/bin:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin
-                PIP_DISABLE_PIP_VERSION_CHECK=1
+                LD_LIBRARY_PATH=/layers/heroku_python/venv/lib:/layers/heroku_python/python/lib
+                PATH=/layers/heroku_python/venv/bin:/layers/heroku_python/python/bin:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin
                 PIP_PYTHON=/layers/heroku_python/venv
                 PYTHONHOME=/layers/heroku_python/python
                 PYTHONUNBUFFERED=1
-                PYTHONUSERBASE=/layers/heroku_python/pip
                 VIRTUAL_ENV=/layers/heroku_python/venv
-                
-                Package           Version
-                ----------------- -------
-                typing_extensions 4.12.2
             "}
         );
 
