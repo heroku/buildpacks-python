@@ -1,5 +1,6 @@
 use crate::packaging_tool_versions::PIP_VERSION;
-use crate::tests::{default_build_config, DEFAULT_PYTHON_VERSION};
+use crate::python_version::{DEFAULT_PYTHON_FULL_VERSION, DEFAULT_PYTHON_VERSION};
+use crate::tests::default_build_config;
 use indoc::{formatdoc, indoc};
 use libcnb_test::{assert_contains, assert_empty, BuildpackReference, PackResult, TestRunner};
 
@@ -19,10 +20,11 @@ fn pip_basic_install_and_cache_reuse() {
             &formatdoc! {"
                 [Determining Python version]
                 No Python version specified, using the current default of Python {DEFAULT_PYTHON_VERSION}.
-                To use a different version, see: https://devcenter.heroku.com/articles/python-runtimes
+                We recommend setting an explicit version. In the root of your app create
+                a '.python-version' file, containing a Python version like '{DEFAULT_PYTHON_VERSION}'.
                 
                 [Installing Python]
-                Installing Python {DEFAULT_PYTHON_VERSION}
+                Installing Python {DEFAULT_PYTHON_FULL_VERSION}
                 
                 [Installing pip]
                 Installing pip {PIP_VERSION}
@@ -99,10 +101,11 @@ fn pip_basic_install_and_cache_reuse() {
                 &formatdoc! {"
                     [Determining Python version]
                     No Python version specified, using the current default of Python {DEFAULT_PYTHON_VERSION}.
-                    To use a different version, see: https://devcenter.heroku.com/articles/python-runtimes
+                    We recommend setting an explicit version. In the root of your app create
+                    a '.python-version' file, containing a Python version like '{DEFAULT_PYTHON_VERSION}'.
                     
                     [Installing Python]
-                    Using cached Python {DEFAULT_PYTHON_VERSION}
+                    Using cached Python {DEFAULT_PYTHON_FULL_VERSION}
                     
                     [Installing pip]
                     Using cached pip {PIP_VERSION}
@@ -136,10 +139,11 @@ fn pip_cache_invalidation_package_manager_changed() {
                 &formatdoc! {"
                     [Determining Python version]
                     No Python version specified, using the current default of Python {DEFAULT_PYTHON_VERSION}.
-                    To use a different version, see: https://devcenter.heroku.com/articles/python-runtimes
+                    We recommend setting an explicit version. In the root of your app create
+                    a '.python-version' file, containing a Python version like '{DEFAULT_PYTHON_VERSION}'.
                     
                     [Installing Python]
-                    Using cached Python {DEFAULT_PYTHON_VERSION}
+                    Using cached Python {DEFAULT_PYTHON_FULL_VERSION}
                     
                     [Installing pip]
                     Installing pip {PIP_VERSION}
@@ -177,12 +181,13 @@ fn pip_cache_previous_buildpack_version() {
                 &formatdoc! {"
                     [Determining Python version]
                     No Python version specified, using the current default of Python {DEFAULT_PYTHON_VERSION}.
-                    To use a different version, see: https://devcenter.heroku.com/articles/python-runtimes
+                    We recommend setting an explicit version. In the root of your app create
+                    a '.python-version' file, containing a Python version like '{DEFAULT_PYTHON_VERSION}'.
                     
                     [Installing Python]
                     Discarding cached Python 3.12.5 since:
-                     - The Python version has changed from 3.12.5 to {DEFAULT_PYTHON_VERSION}
-                    Installing Python {DEFAULT_PYTHON_VERSION}
+                     - The Python version has changed from 3.12.5 to {DEFAULT_PYTHON_FULL_VERSION}
+                    Installing Python {DEFAULT_PYTHON_FULL_VERSION}
                     
                     [Installing pip]
                     Discarding cached pip {PIP_VERSION}

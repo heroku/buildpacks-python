@@ -335,14 +335,7 @@ mod tests {
         base_env.insert("PYTHONHOME", "this-should-be-overridden");
         base_env.insert("PYTHONUNBUFFERED", "this-should-be-overridden");
 
-        let layer_env = generate_layer_env(
-            Path::new("/layer-dir"),
-            &PythonVersion {
-                major: 3,
-                minor: 11,
-                patch: 1,
-            },
-        );
+        let layer_env = generate_layer_env(Path::new("/layer-dir"), &PythonVersion::new(3, 11, 1));
 
         assert_eq!(
             utils::environment_as_sorted_vector(&layer_env.apply(Scope::Build, &base_env)),

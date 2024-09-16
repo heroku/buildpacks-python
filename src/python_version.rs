@@ -1,16 +1,68 @@
-use crate::runtime_txt::{self, RuntimeTxtError};
-use indoc::formatdoc;
+use crate::python_version_file::{self, ParsePythonVersionFileError};
+use crate::runtime_txt::{self, ParseRuntimeTxtError};
+use crate::utils;
 use libcnb::Target;
-use libherokubuildpack::log::log_info;
 use std::fmt::{self, Display};
+use std::io;
 use std::path::Path;
 
 /// The Python version that will be installed if the project does not specify an explicit version.
-pub(crate) const DEFAULT_PYTHON_VERSION: PythonVersion = PythonVersion {
+pub(crate) const DEFAULT_PYTHON_VERSION: RequestedPythonVersion = RequestedPythonVersion {
     major: 3,
     minor: 12,
-    patch: 6,
+    patch: None,
+    origin: PythonVersionOrigin::BuildpackDefault,
 };
+pub(crate) const DEFAULT_PYTHON_FULL_VERSION: PythonVersion = LATEST_PYTHON_3_12;
+
+pub(crate) const LATEST_PYTHON_3_8: PythonVersion = PythonVersion::new(3, 8, 20);
+pub(crate) const LATEST_PYTHON_3_9: PythonVersion = PythonVersion::new(3, 9, 20);
+pub(crate) const LATEST_PYTHON_3_10: PythonVersion = PythonVersion::new(3, 10, 15);
+pub(crate) const LATEST_PYTHON_3_11: PythonVersion = PythonVersion::new(3, 11, 10);
+pub(crate) const LATEST_PYTHON_3_12: PythonVersion = PythonVersion::new(3, 12, 6);
+
+/// The Python version that was requested for a project.
+#[derive(Clone, Debug, PartialEq)]
+pub(crate) struct RequestedPythonVersion {
+    pub(crate) major: u16,
+    pub(crate) minor: u16,
+    pub(crate) patch: Option<u16>,
+    pub(crate) origin: PythonVersionOrigin,
+}
+
+impl Display for RequestedPythonVersion {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        let Self {
+            major,
+            minor,
+            patch,
+            ..
+        } = self;
+        if let Some(patch) = patch {
+            write!(f, "{major}.{minor}.{patch}")
+        } else {
+            write!(f, "{major}.{minor}")
+        }
+    }
+}
+
+/// The origin of the [`RequestedPythonVersion`].
+#[derive(Clone, Debug, PartialEq)]
+pub(crate) enum PythonVersionOrigin {
+    BuildpackDefault,
+    PythonVersionFile,
+    RuntimeTxt,
+}
+
+impl Display for PythonVersionOrigin {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        match self {
+            Self::BuildpackDefault => write!(f, "buildpack default"),
+            Self::PythonVersionFile => write!(f, ".python-version"),
+            Self::RuntimeTxt => write!(f, "runtime.txt"),
+        }
+    }
+}
 
 /// Representation of a specific Python `X.Y.Z` version.
 #[derive(Clone, Debug, PartialEq)]
@@ -21,7 +73,7 @@ pub(crate) struct PythonVersion {
 }
 
 impl PythonVersion {
-    pub(crate) fn new(major: u16, minor: u16, patch: u16) -> Self {
+    pub(crate) const fn new(major: u16, minor: u16, patch: u16) -> Self {
         Self {
             major,
             minor,
@@ -50,45 +102,87 @@ impl PythonVersion {
 
 impl Display for PythonVersion {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        write!(f, "{}.{}.{}", self.major, self.minor, self.patch)
+        let Self {
+            major,
+            minor,
+            patch,
+        } = self;
+        write!(f, "{major}.{minor}.{patch}")
     }
 }
 
-/// Determine the Python version that should be installed for the project.
+/// Determine the Python version that has been requested for the project.
 ///
 /// If no known version specifier file is found a default Python version will be used.
-pub(crate) fn determine_python_version(
+pub(crate) fn read_requested_python_version(
     app_dir: &Path,
-) -> Result<PythonVersion, PythonVersionError> {
-    if let Some(runtime_txt_version) =
-        runtime_txt::read_version(app_dir).map_err(PythonVersionError::RuntimeTxt)?
+) -> Result<RequestedPythonVersion, RequestedPythonVersionError> {
+    if let Some(contents) = utils::read_optional_file(&app_dir.join("runtime.txt"))
+        .map_err(RequestedPythonVersionError::ReadRuntimeTxt)?
     {
-        // TODO: Consider passing this back as a `source` field on PythonVersion
-        // so this can be logged by the caller.
-        log_info(format!(
-            "Using Python version {runtime_txt_version} specified in runtime.txt"
-        ));
-        return Ok(runtime_txt_version);
+        runtime_txt::parse(&contents).map_err(RequestedPythonVersionError::ParseRuntimeTxt)
+    } else if let Some(contents) = utils::read_optional_file(&app_dir.join(".python-version"))
+        .map_err(RequestedPythonVersionError::ReadPythonVersionFile)?
+    {
+        python_version_file::parse(&contents)
+            .map_err(RequestedPythonVersionError::ParsePythonVersionFile)
+    } else {
+        Ok(DEFAULT_PYTHON_VERSION)
     }
-
-    // TODO: (W-12613425) Write this content inline, instead of linking out to Dev Center.
-    // Also adjust wording to mention pinning as a use-case, not just using a different version.
-    log_info(formatdoc! {"
-        No Python version specified, using the current default of Python {DEFAULT_PYTHON_VERSION}.
-        To use a different version, see: https://devcenter.heroku.com/articles/python-runtimes"});
-    Ok(DEFAULT_PYTHON_VERSION)
 }
 
-/// Errors that can occur when determining which Python version to use for a project.
+/// Errors that can occur when determining which Python version was requested for a project.
 #[derive(Debug)]
-pub(crate) enum PythonVersionError {
-    /// Errors reading and parsing a `runtime.txt` file.
-    RuntimeTxt(RuntimeTxtError),
+pub(crate) enum RequestedPythonVersionError {
+    /// Errors parsing a `.python-version` file.
+    ParsePythonVersionFile(ParsePythonVersionFileError),
+    /// Errors parsing a `runtime.txt` file.
+    ParseRuntimeTxt(ParseRuntimeTxtError),
+    /// Errors reading a `.python-version` file.
+    ReadPythonVersionFile(io::Error),
+    /// Errors reading a `runtime.txt` file.
+    ReadRuntimeTxt(io::Error),
+}
+
+pub(crate) fn resolve_python_version(
+    requested_python_version: &RequestedPythonVersion,
+) -> Result<PythonVersion, ResolvePythonVersionError> {
+    let &RequestedPythonVersion {
+        major,
+        minor,
+        patch,
+        ..
+    } = requested_python_version;
+
+    match (major, minor, patch) {
+        (..3, _, _) | (3, ..8, _) => Err(ResolvePythonVersionError::EolVersion(
+            requested_python_version.clone(),
+        )),
+        (3, 8, None) => Ok(LATEST_PYTHON_3_8),
+        (3, 9, None) => Ok(LATEST_PYTHON_3_9),
+        (3, 10, None) => Ok(LATEST_PYTHON_3_10),
+        (3, 11, None) => Ok(LATEST_PYTHON_3_11),
+        (3, 12, None) => Ok(LATEST_PYTHON_3_12),
+        (3, 13.., _) | (4.., _, _) => Err(ResolvePythonVersionError::UnknownVersion(
+            requested_python_version.clone(),
+        )),
+        (major, minor, Some(patch)) => Ok(PythonVersion::new(major, minor, patch)),
+    }
+}
+
+/// Errors that can occur when resolving a requested Python version to a specific Python version.
+#[derive(Debug, PartialEq)]
+pub(crate) enum ResolvePythonVersionError {
+    EolVersion(RequestedPythonVersion),
+    UnknownVersion(RequestedPythonVersion),
 }
 
 #[cfg(test)]
 mod tests {
     use super::*;
+
+    const OLDEST_SUPPORTED_PYTHON_3_MINOR_VERSION: u16 = 8;
+    const NEWEST_SUPPORTED_PYTHON_3_MINOR_VERSION: u16 = 12;
 
     #[test]
     fn python_version_url() {
@@ -115,32 +209,187 @@ mod tests {
     }
 
     #[test]
-    fn determine_python_version_runtime_txt_valid() {
+    fn read_requested_python_version_runtime_txt() {
         assert_eq!(
-            determine_python_version(Path::new("tests/fixtures/python_3.7")).unwrap(),
-            PythonVersion::new(3, 7, 17)
+            read_requested_python_version(Path::new(
+                "tests/fixtures/runtime_txt_and_python_version_file"
+            ))
+            .unwrap(),
+            RequestedPythonVersion {
+                major: 3,
+                minor: 10,
+                patch: Some(0),
+                origin: PythonVersionOrigin::RuntimeTxt,
+            }
         );
-        assert_eq!(
-            determine_python_version(Path::new("tests/fixtures/runtime_txt_non_existent_version"))
-                .unwrap(),
-            PythonVersion::new(999, 888, 777)
-        );
-    }
-
-    #[test]
-    fn determine_python_version_runtime_txt_error() {
         assert!(matches!(
-            determine_python_version(Path::new("tests/fixtures/runtime_txt_invalid_version"))
+            read_requested_python_version(Path::new("tests/fixtures/runtime_txt_invalid_unicode"))
                 .unwrap_err(),
-            PythonVersionError::RuntimeTxt(RuntimeTxtError::Parse(_))
+            RequestedPythonVersionError::ReadRuntimeTxt(_)
+        ));
+        assert!(matches!(
+            read_requested_python_version(Path::new("tests/fixtures/runtime_txt_invalid_version"))
+                .unwrap_err(),
+            RequestedPythonVersionError::ParseRuntimeTxt(_)
         ));
     }
 
     #[test]
-    fn determine_python_version_none_specified() {
+    fn read_requested_python_version_python_version_file() {
         assert_eq!(
-            determine_python_version(Path::new("tests/fixtures/empty")).unwrap(),
-            DEFAULT_PYTHON_VERSION
+            read_requested_python_version(Path::new("tests/fixtures/python_3.7")).unwrap(),
+            RequestedPythonVersion {
+                major: 3,
+                minor: 7,
+                patch: None,
+                origin: PythonVersionOrigin::PythonVersionFile,
+            }
+        );
+        assert!(matches!(
+            read_requested_python_version(Path::new(
+                "tests/fixtures/python_version_file_invalid_unicode"
+            ))
+            .unwrap_err(),
+            RequestedPythonVersionError::ReadPythonVersionFile(_)
+        ));
+        assert!(matches!(
+            read_requested_python_version(Path::new(
+                "tests/fixtures/python_version_file_invalid_version"
+            ))
+            .unwrap_err(),
+            RequestedPythonVersionError::ParsePythonVersionFile(_)
+        ));
+    }
+
+    #[test]
+    fn read_requested_python_version_none_specified() {
+        assert_eq!(
+            read_requested_python_version(Path::new("tests/fixtures/python_version_unspecified"))
+                .unwrap(),
+            RequestedPythonVersion {
+                major: 3,
+                minor: 12,
+                patch: None,
+                origin: PythonVersionOrigin::BuildpackDefault
+            }
+        );
+    }
+
+    #[test]
+    fn resolve_python_version_valid() {
+        // Buildpack default version
+        assert_eq!(
+            resolve_python_version(&DEFAULT_PYTHON_VERSION),
+            Ok(DEFAULT_PYTHON_FULL_VERSION)
+        );
+
+        for minor in
+            OLDEST_SUPPORTED_PYTHON_3_MINOR_VERSION..=NEWEST_SUPPORTED_PYTHON_3_MINOR_VERSION
+        {
+            // Major-minor version
+            let python_version = resolve_python_version(&RequestedPythonVersion {
+                major: 3,
+                minor,
+                patch: None,
+                origin: PythonVersionOrigin::PythonVersionFile,
+            })
+            .unwrap();
+            assert_eq!((python_version.major, python_version.minor), (3, minor));
+
+            // Exact version
+            assert_eq!(
+                resolve_python_version(&RequestedPythonVersion {
+                    major: 3,
+                    minor,
+                    patch: Some(1),
+                    origin: PythonVersionOrigin::RuntimeTxt
+                }),
+                Ok(PythonVersion::new(3, minor, 1))
+            );
+        }
+    }
+
+    #[test]
+    fn resolve_python_version_eol() {
+        let requested_python_version = RequestedPythonVersion {
+            major: 3,
+            minor: OLDEST_SUPPORTED_PYTHON_3_MINOR_VERSION - 1,
+            patch: None,
+            origin: PythonVersionOrigin::PythonVersionFile,
+        };
+        assert_eq!(
+            resolve_python_version(&requested_python_version),
+            Err(ResolvePythonVersionError::EolVersion(
+                requested_python_version
+            ))
+        );
+
+        let requested_python_version = RequestedPythonVersion {
+            major: 3,
+            minor: OLDEST_SUPPORTED_PYTHON_3_MINOR_VERSION - 1,
+            patch: Some(0),
+            origin: PythonVersionOrigin::PythonVersionFile,
+        };
+        assert_eq!(
+            resolve_python_version(&requested_python_version),
+            Err(ResolvePythonVersionError::EolVersion(
+                requested_python_version
+            ))
+        );
+
+        let requested_python_version = RequestedPythonVersion {
+            major: 2,
+            minor: 7,
+            patch: Some(18),
+            origin: PythonVersionOrigin::RuntimeTxt,
+        };
+        assert_eq!(
+            resolve_python_version(&requested_python_version),
+            Err(ResolvePythonVersionError::EolVersion(
+                requested_python_version
+            ))
+        );
+    }
+
+    #[test]
+    fn resolve_python_version_unsupported() {
+        let requested_python_version = RequestedPythonVersion {
+            major: 3,
+            minor: NEWEST_SUPPORTED_PYTHON_3_MINOR_VERSION + 1,
+            patch: None,
+            origin: PythonVersionOrigin::PythonVersionFile,
+        };
+        assert_eq!(
+            resolve_python_version(&requested_python_version),
+            Err(ResolvePythonVersionError::UnknownVersion(
+                requested_python_version
+            ))
+        );
+
+        let requested_python_version = RequestedPythonVersion {
+            major: 3,
+            minor: NEWEST_SUPPORTED_PYTHON_3_MINOR_VERSION + 1,
+            patch: Some(0),
+            origin: PythonVersionOrigin::PythonVersionFile,
+        };
+        assert_eq!(
+            resolve_python_version(&requested_python_version),
+            Err(ResolvePythonVersionError::UnknownVersion(
+                requested_python_version
+            ))
+        );
+
+        let requested_python_version = RequestedPythonVersion {
+            major: 4,
+            minor: 0,
+            patch: Some(0),
+            origin: PythonVersionOrigin::RuntimeTxt,
+        };
+        assert_eq!(
+            resolve_python_version(&requested_python_version),
+            Err(ResolvePythonVersionError::UnknownVersion(
+                requested_python_version
+            ))
         );
     }
 }

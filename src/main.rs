@@ -5,6 +5,7 @@ mod layers;
 mod package_manager;
 mod packaging_tool_versions;
 mod python_version;
+mod python_version_file;
 mod runtime_txt;
 mod utils;
 
@@ -16,7 +17,10 @@ use crate::layers::poetry_dependencies::PoetryDependenciesLayerError;
 use crate::layers::python::PythonLayerError;
 use crate::layers::{pip, pip_cache, pip_dependencies, poetry, poetry_dependencies, python};
 use crate::package_manager::{DeterminePackageManagerError, PackageManager};
-use crate::python_version::PythonVersionError;
+use crate::python_version::{
+    PythonVersionOrigin, RequestedPythonVersionError, ResolvePythonVersionError,
+};
+use indoc::formatdoc;
 use libcnb::build::{BuildContext, BuildResult, BuildResultBuilder};
 use libcnb::detect::{DetectContext, DetectResult, DetectResultBuilder};
 use libcnb::generic::{GenericMetadata, GenericPlatform};
@@ -53,8 +57,28 @@ impl Buildpack for PythonBuildpack {
             .map_err(BuildpackError::DeterminePackageManager)?;
 
         log_header("Determining Python version");
-        let python_version = python_version::determine_python_version(&context.app_dir)
-            .map_err(BuildpackError::PythonVersion)?;
+
+        let requested_python_version =
+            python_version::read_requested_python_version(&context.app_dir)
+                .map_err(BuildpackError::RequestedPythonVersion)?;
+        let python_version = python_version::resolve_python_version(&requested_python_version)
+            .map_err(BuildpackError::ResolvePythonVersion)?;
+
+        match requested_python_version.origin {
+            PythonVersionOrigin::BuildpackDefault => log_info(formatdoc! {"
+                No Python version specified, using the current default of Python {requested_python_version}.
+                We recommend setting an explicit version. In the root of your app create
+                a '.python-version' file, containing a Python version like '{requested_python_version}'."
+            }),
+            PythonVersionOrigin::PythonVersionFile => log_info(format!(
+                "Using Python version {requested_python_version} specified in .python-version"
+            )),
+            // TODO: Add a deprecation message for runtime.txt once .python-version support has been
+            // released for both the CNB and the classic buildpack.
+            PythonVersionOrigin::RuntimeTxt => log_info(format!(
+                "Using Python version {requested_python_version} specified in runtime.txt"
+            )),
+        }
 
         // We inherit the current process's env vars, since we want `PATH` and `HOME` from the OS
         // to be set (so that later commands can find tools like Git in the base image), along
@@ -100,13 +124,13 @@ impl Buildpack for PythonBuildpack {
 
 #[derive(Debug)]
 pub(crate) enum BuildpackError {
-    /// IO errors when performing buildpack detection.
+    /// I/O errors when performing buildpack detection.
     BuildpackDetection(io::Error),
     /// Errors determining which Python package manager to use for a project.
     DeterminePackageManager(DeterminePackageManagerError),
     /// Errors running the Django collectstatic command.
     DjangoCollectstatic(DjangoCollectstaticError),
-    /// IO errors when detecting whether Django is installed.
+    /// I/O errors when detecting whether Django is installed.
     DjangoDetection(io::Error),
     /// Errors installing the project's dependencies into a layer using pip.
     PipDependenciesLayer(PipDependenciesLayerError),
@@ -118,8 +142,10 @@ pub(crate) enum BuildpackError {
     PoetryLayer(PoetryLayerError),
     /// Errors installing Python into a layer.
     PythonLayer(PythonLayerError),
-    /// Errors determining which Python version to use for a project.
-    PythonVersion(PythonVersionError),
+    /// Errors determining which Python version was requested for a project.
+    RequestedPythonVersion(RequestedPythonVersionError),
+    /// Errors resolving a requested Python version to a specific Python version.
+    ResolvePythonVersion(ResolvePythonVersionError),
 }
 
 impl From<BuildpackError> for libcnb::Error<BuildpackError> {
