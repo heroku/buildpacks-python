@@ -6,7 +6,7 @@ use tar::Archive;
 use zstd::Decoder;
 
 /// Read the contents of the provided filepath if the file exists, gracefully handling
-/// the file not being present, but still returning any other form of IO error.
+/// the file not being present, but still returning any other form of I/O error.
 pub(crate) fn read_optional_file(path: &Path) -> io::Result<Option<String>> {
     fs::read_to_string(path)
         .map(Some)
@@ -139,8 +139,8 @@ mod tests {
     #[test]
     fn read_optional_file_valid_file() {
         assert_eq!(
-            read_optional_file(Path::new("tests/fixtures/python_3.7/runtime.txt")).unwrap(),
-            Some("python-3.7.17\n".to_string())
+            read_optional_file(Path::new("tests/fixtures/python_3.11/.python-version")).unwrap(),
+            Some("3.11\n".to_string())
         );
     }
 

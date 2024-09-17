@@ -39,16 +39,15 @@ A `requirements.txt` or `poetry.lock` file must be present in the root (top-leve
 
 By default, the buildpack will install the latest version of Python 3.12.
 
-To install a different version, add a `runtime.txt` file to your app's root directory that declares the exact version number to use:
+To install a different version, add a `.python-version` file to your app's root directory that declares the version number to use:
 
 ```term
-$ cat runtime.txt
-python-3.12.6
+$ cat .python-version
+3.12
 ```
 
 In the future this buildpack will also support specifying the Python version using:
 
-- A `.python-version` file: [#6](https://github.com/heroku/buildpacks-python/issues/6)
 - `tool.poetry.dependencies.python` in `pyproject.toml`: [#260](https://github.com/heroku/buildpacks-python/issues/260)
 
 ## Contributing

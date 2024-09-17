@@ -5,8 +5,12 @@ use crate::layers::poetry::PoetryLayerError;
 use crate::layers::poetry_dependencies::PoetryDependenciesLayerError;
 use crate::layers::python::PythonLayerError;
 use crate::package_manager::DeterminePackageManagerError;
-use crate::python_version::{PythonVersion, PythonVersionError, DEFAULT_PYTHON_VERSION};
-use crate::runtime_txt::{ParseRuntimeTxtError, RuntimeTxtError};
+use crate::python_version::{
+    RequestedPythonVersion, RequestedPythonVersionError, ResolvePythonVersionError,
+    DEFAULT_PYTHON_FULL_VERSION, DEFAULT_PYTHON_VERSION,
+};
+use crate::python_version_file::ParsePythonVersionFileError;
+use crate::runtime_txt::ParseRuntimeTxtError;
 use crate::utils::{CapturedCommandError, DownloadUnpackArchiveError, StreamedCommandError};
 use crate::BuildpackError;
 use indoc::{formatdoc, indoc};
@@ -53,7 +57,8 @@ fn on_buildpack_error(error: BuildpackError) {
         BuildpackError::PoetryDependenciesLayer(error) => on_poetry_dependencies_layer_error(error),
         BuildpackError::PoetryLayer(error) => on_poetry_layer_error(error),
         BuildpackError::PythonLayer(error) => on_python_layer_error(error),
-        BuildpackError::PythonVersion(error) => on_python_version_error(error),
+        BuildpackError::RequestedPythonVersion(error) => on_requested_python_version_error(error),
+        BuildpackError::ResolvePythonVersion(error) => on_resolve_python_version_error(error),
     };
 }
 
@@ -117,45 +122,137 @@ fn on_determine_package_manager_error(error: DeterminePackageManagerError) {
     };
 }
 
-fn on_python_version_error(error: PythonVersionError) {
+fn on_requested_python_version_error(error: RequestedPythonVersionError) {
     match error {
-        PythonVersionError::RuntimeTxt(error) => match error {
-            // TODO: (W-12613425) Write the supported Python versions inline, instead of linking out to Dev Center.
-            RuntimeTxtError::Parse(ParseRuntimeTxtError { cleaned_contents }) => {
-                let PythonVersion {
-                    major,
-                    minor,
-                    patch,
-                } = DEFAULT_PYTHON_VERSION;
+        RequestedPythonVersionError::ReadPythonVersionFile(io_error) => log_io_error(
+            "Unable to read .python-version",
+            "reading the .python-version file",
+            &io_error,
+        ),
+        RequestedPythonVersionError::ReadRuntimeTxt(io_error) => log_io_error(
+            "Unable to read runtime.txt",
+            "reading the runtime.txt file",
+            &io_error,
+        ),
+        RequestedPythonVersionError::ParsePythonVersionFile(error) => match error {
+            ParsePythonVersionFileError::InvalidVersion(version) => log_error(
+                "Invalid Python version in .python-version",
+                formatdoc! {"
+                    The Python version specified in '.python-version' is not in the correct format.
+                    
+                    The following version was found:
+                    {version}
+                    
+                    However, the version must be specified as either:
+                    1. '<major>.<minor>' (recommended, for automatic security updates)
+                    2. '<major>.<minor>.<patch>' (to pin to an exact Python version)
+                    
+                    Do not include quotes or a 'python-' prefix. To include comments, add them
+                    on their own line, prefixed with '#'.
+                    
+                    For example, to request the latest version of Python {DEFAULT_PYTHON_VERSION},
+                    update the '.python-version' file so it contains:
+                    {DEFAULT_PYTHON_VERSION}
+                "},
+            ),
+            ParsePythonVersionFileError::MultipleVersions(versions) => {
+                let version_list = versions.join("\n");
                 log_error(
-                    "Invalid Python version in runtime.txt",
+                    "Invalid Python version in .python-version",
                     formatdoc! {"
-                        The Python version specified in 'runtime.txt' is not in the correct format.
+                        Multiple Python versions were found in '.python-version':
                         
-                        The following file contents were found:
-                        {cleaned_contents}
+                        {version_list}
                         
-                        However, the file contents must begin with a 'python-' prefix, followed by the
-                        version specified as '<major>.<minor>.<patch>'. Comments are not supported.
+                        Update the file so it contains only one Python version.
                         
-                        For example, to request Python {DEFAULT_PYTHON_VERSION}, the correct version format is:
-                        python-{major}.{minor}.{patch}
-                        
-                        Please update 'runtime.txt' to use the correct version format, or else remove
-                        the file to instead use the default version (currently Python {DEFAULT_PYTHON_VERSION}).
-                        
-                        For a list of the supported Python versions, see:
-                        https://devcenter.heroku.com/articles/python-support#supported-runtimes
+                        If the additional versions are actually comments, prefix those lines with '#'.
                     "},
                 );
             }
-            RuntimeTxtError::Read(io_error) => log_io_error(
-                "Unable to read runtime.txt",
-                "reading the (optional) runtime.txt file",
-                &io_error,
+            ParsePythonVersionFileError::NoVersion => log_error(
+                "Invalid Python version in .python-version",
+                formatdoc! {"
+                    No Python version was found in the '.python-version' file.
+                    
+                    Update the file so that it contain a valid Python version (such as '{DEFAULT_PYTHON_VERSION}'),
+                    or else delete the file to use the default version (currently Python {DEFAULT_PYTHON_VERSION}).
+
+                    If the file already contains a version, check the line is not prefixed by
+                    a '#', since otherwise it will be treated as a comment.
+                "},
             ),
         },
+        RequestedPythonVersionError::ParseRuntimeTxt(ParseRuntimeTxtError { cleaned_contents }) => {
+            log_error(
+                "Invalid Python version in runtime.txt",
+                formatdoc! {"
+                    The Python version specified in 'runtime.txt' is not in the correct format.
+                    
+                    The following file contents were found:
+                    {cleaned_contents}
+                    
+                    However, the file contents must begin with a 'python-' prefix, followed by the
+                    version specified as '<major>.<minor>.<patch>'. Comments are not supported.
+                    
+                    For example, to request Python {DEFAULT_PYTHON_FULL_VERSION}, update the 'runtime.txt' file so it
+                    contains exactly:
+                    python-{DEFAULT_PYTHON_FULL_VERSION}
+                "},
+            );
+        }
     };
+}
+
+fn on_resolve_python_version_error(error: ResolvePythonVersionError) {
+    match error {
+        ResolvePythonVersionError::EolVersion(requested_python_version) => {
+            let RequestedPythonVersion {
+                major,
+                minor,
+                origin,
+                ..
+            } = requested_python_version;
+            log_error(
+                "Requested Python version has reached end-of-life",
+                formatdoc! {"
+                    The requested Python version {major}.{minor} has reached its upstream end-of-life,
+                    and is therefore no longer receiving security updates:
+                    https://devguide.python.org/versions/#supported-versions
+                    
+                    As such, it is no longer supported by this buildpack.
+                    
+                    Please upgrade to a newer Python version by updating the version
+                    configured via the {origin} file.
+                    
+                    If possible, we recommend upgrading all the way to Python {DEFAULT_PYTHON_VERSION},
+                    since it contains many performance and usability improvements.
+                "},
+            );
+        }
+        ResolvePythonVersionError::UnknownVersion(requested_python_version) => {
+            let RequestedPythonVersion {
+                major,
+                minor,
+                origin,
+                ..
+            } = requested_python_version;
+            log_error(
+                "Requested Python version is not recognised",
+                formatdoc! {"
+                    The requested Python version {major}.{minor} is not recognised.
+                    
+                    Check that this Python version has been officially released:
+                    https://devguide.python.org/versions/#supported-versions
+                    
+                    If it has, make sure that you are using the latest version of this buildpack.
+                    
+                    If it has not, please switch to a supported version (such as Python {DEFAULT_PYTHON_VERSION})
+                    by updating the version configured via the {origin} file.
+                "},
+            );
+        }
+    }
 }
 
 fn on_python_layer_error(error: PythonLayerError) {
@@ -186,8 +283,8 @@ fn on_python_layer_error(error: PythonLayerError) {
             formatdoc! {"
                 The requested Python version ({python_version}) is not available for this builder image.
                 
-                Please update the version in 'runtime.txt' to a supported Python version, or else
-                remove the file to instead use the default version (currently Python {DEFAULT_PYTHON_VERSION}).
+                Please switch to a supported Python version, or else don't specify a version
+                and the buildpack will use a default version (currently Python {DEFAULT_PYTHON_VERSION}).
                 
                 For a list of the supported Python versions, see:
                 https://devcenter.heroku.com/articles/python-support#supported-runtimes

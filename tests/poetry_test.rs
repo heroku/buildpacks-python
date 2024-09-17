@@ -1,5 +1,6 @@
 use crate::packaging_tool_versions::POETRY_VERSION;
-use crate::tests::{default_build_config, DEFAULT_PYTHON_VERSION};
+use crate::python_version::{DEFAULT_PYTHON_FULL_VERSION, DEFAULT_PYTHON_VERSION};
+use crate::tests::default_build_config;
 use indoc::{formatdoc, indoc};
 use libcnb_test::{assert_contains, assert_empty, BuildpackReference, PackResult, TestRunner};
 
@@ -19,10 +20,11 @@ fn poetry_basic_install_and_cache_reuse() {
             &formatdoc! {"
                 [Determining Python version]
                 No Python version specified, using the current default of Python {DEFAULT_PYTHON_VERSION}.
-                To use a different version, see: https://devcenter.heroku.com/articles/python-runtimes
+                We recommend setting an explicit version. In the root of your app create
+                a '.python-version' file, containing a Python version like '{DEFAULT_PYTHON_VERSION}'.
                 
                 [Installing Python]
-                Installing Python {DEFAULT_PYTHON_VERSION}
+                Installing Python {DEFAULT_PYTHON_FULL_VERSION}
                 
                 [Installing Poetry]
                 Installing Poetry {POETRY_VERSION}
@@ -93,10 +95,11 @@ fn poetry_basic_install_and_cache_reuse() {
                 &formatdoc! {"
                     [Determining Python version]
                     No Python version specified, using the current default of Python {DEFAULT_PYTHON_VERSION}.
-                    To use a different version, see: https://devcenter.heroku.com/articles/python-runtimes
+                    We recommend setting an explicit version. In the root of your app create
+                    a '.python-version' file, containing a Python version like '{DEFAULT_PYTHON_VERSION}'.
                     
                     [Installing Python]
-                    Using cached Python {DEFAULT_PYTHON_VERSION}
+                    Using cached Python {DEFAULT_PYTHON_FULL_VERSION}
                     
                     [Installing Poetry]
                     Using cached Poetry {POETRY_VERSION}
@@ -127,10 +130,11 @@ fn poetry_cache_invalidation_package_manager_changed() {
                 &formatdoc! {"
                     [Determining Python version]
                     No Python version specified, using the current default of Python {DEFAULT_PYTHON_VERSION}.
-                    To use a different version, see: https://devcenter.heroku.com/articles/python-runtimes
+                    We recommend setting an explicit version. In the root of your app create
+                    a '.python-version' file, containing a Python version like '{DEFAULT_PYTHON_VERSION}'.
                     
                     [Installing Python]
-                    Using cached Python {DEFAULT_PYTHON_VERSION}
+                    Using cached Python {DEFAULT_PYTHON_FULL_VERSION}
                     
                     [Installing Poetry]
                     Installing Poetry {POETRY_VERSION}
@@ -168,12 +172,13 @@ fn poetry_cache_previous_buildpack_version() {
                 &formatdoc! {"
                     [Determining Python version]
                     No Python version specified, using the current default of Python {DEFAULT_PYTHON_VERSION}.
-                    To use a different version, see: https://devcenter.heroku.com/articles/python-runtimes
+                    We recommend setting an explicit version. In the root of your app create
+                    a '.python-version' file, containing a Python version like '{DEFAULT_PYTHON_VERSION}'.
                     
                     [Installing Python]
                     Discarding cached Python 3.12.5 since:
-                     - The Python version has changed from 3.12.5 to {DEFAULT_PYTHON_VERSION}
-                    Installing Python {DEFAULT_PYTHON_VERSION}
+                     - The Python version has changed from 3.12.5 to {DEFAULT_PYTHON_FULL_VERSION}
+                    Installing Python {DEFAULT_PYTHON_FULL_VERSION}
                     
                     [Installing Poetry]
                     Discarding cached Poetry {POETRY_VERSION}
@@ -241,21 +246,21 @@ fn poetry_install_error() {
         assert_contains!(
             context.pack_stdout,
             indoc! {"
-                    [Installing dependencies using Poetry]
-                    Creating virtual environment
-                    Running 'poetry install --sync --only main'
-                    Installing dependencies from lock file
-                "}
+                [Installing dependencies using Poetry]
+                Creating virtual environment
+                Running 'poetry install --sync --only main'
+                Installing dependencies from lock file
+            "}
         );
         assert_contains!(
             context.pack_stderr,
             indoc! {"
                 pyproject.toml changed significantly since poetry.lock was last generated. Run `poetry lock [--no-update]` to fix the lock file.
-
+                
                 [Error: Unable to install dependencies using Poetry]
                 The 'poetry install --sync --only main' command to install the app's
                 dependencies failed (exit status: 1).
-
+                
                 See the log output above for more information.
             "}
         );

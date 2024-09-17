@@ -1,27 +1,10 @@
-use crate::python_version::PythonVersion;
-use crate::utils;
-use std::io;
-use std::path::Path;
+use crate::python_version::{PythonVersionOrigin, RequestedPythonVersion};
 
-/// Retrieve a parsed Python version from a `runtime.txt` file if it exists in the
-/// specified project directory.
-///
-/// Returns `Ok(None)` if the file does not exist, but returns the error for all other
-/// forms of IO or parsing errors.
-pub(crate) fn read_version(app_dir: &Path) -> Result<Option<PythonVersion>, RuntimeTxtError> {
-    let runtime_txt_path = app_dir.join("runtime.txt");
-
-    utils::read_optional_file(&runtime_txt_path)
-        .map_err(RuntimeTxtError::Read)?
-        .map(|contents| parse(&contents).map_err(RuntimeTxtError::Parse))
-        .transpose()
-}
-
-/// Parse the contents of a `runtime.txt` file into a [`PythonVersion`].
+/// Parse the contents of a `runtime.txt` file into a [`RequestedPythonVersion`].
 ///
 /// The file is expected to contain a string of form `python-X.Y.Z`.
 /// Any leading or trailing whitespace will be removed.
-fn parse(contents: &str) -> Result<PythonVersion, ParseRuntimeTxtError> {
+pub(crate) fn parse(contents: &str) -> Result<RequestedPythonVersion, ParseRuntimeTxtError> {
     // All leading/trailing whitespace is trimmed, since that's what the classic buildpack
     // permitted (however it's primarily trailing newlines that we need to support). The
     // string is then escaped, to aid debugging when non-ascii characters have inadvertently
@@ -38,22 +21,19 @@ fn parse(contents: &str) -> Result<PythonVersion, ParseRuntimeTxtError> {
     match version_substring
         .split('.')
         .map(str::parse)
-        .collect::<Result<Vec<_>, _>>()
-        .unwrap_or_default()
-        .as_slice()
+        .collect::<Result<Vec<u16>, _>>()
+        .unwrap_or_default()[..]
     {
-        &[major, minor, patch] => Ok(PythonVersion::new(major, minor, patch)),
+        [major, minor, patch] => Ok(RequestedPythonVersion {
+            major,
+            minor,
+            patch: Some(patch),
+            origin: PythonVersionOrigin::RuntimeTxt,
+        }),
         _ => Err(ParseRuntimeTxtError {
             cleaned_contents: cleaned_contents.clone(),
         }),
     }
-}
-
-/// Errors that can occur when reading and parsing a `runtime.txt` file.
-#[derive(Debug)]
-pub(crate) enum RuntimeTxtError {
-    Parse(ParseRuntimeTxtError),
-    Read(io::Error),
 }
 
 /// Errors that can occur when parsing the contents of a `runtime.txt` file.
@@ -68,14 +48,32 @@ mod tests {
 
     #[test]
     fn parse_valid() {
-        assert_eq!(parse("python-1.2.3"), Ok(PythonVersion::new(1, 2, 3)));
+        assert_eq!(
+            parse("python-1.2.3"),
+            Ok(RequestedPythonVersion {
+                major: 1,
+                minor: 2,
+                patch: Some(3),
+                origin: PythonVersionOrigin::RuntimeTxt
+            })
+        );
         assert_eq!(
             parse("python-987.654.3210"),
-            Ok(PythonVersion::new(987, 654, 3210))
+            Ok(RequestedPythonVersion {
+                major: 987,
+                minor: 654,
+                patch: Some(3210),
+                origin: PythonVersionOrigin::RuntimeTxt
+            })
         );
         assert_eq!(
             parse("\n   python-1.2.3   \n"),
-            Ok(PythonVersion::new(1, 2, 3))
+            Ok(RequestedPythonVersion {
+                major: 1,
+                minor: 2,
+                patch: Some(3),
+                origin: PythonVersionOrigin::RuntimeTxt
+            })
         );
     }
 
@@ -190,45 +188,5 @@ mod tests {
                 cleaned_contents: "python-1.2.3+abc".to_string(),
             })
         );
-    }
-
-    #[test]
-    fn read_version_valid_runtime_txt() {
-        assert_eq!(
-            read_version(Path::new("tests/fixtures/python_3.7")).unwrap(),
-            Some(PythonVersion::new(3, 7, 17))
-        );
-        assert_eq!(
-            read_version(Path::new("tests/fixtures/runtime_txt_non_existent_version")).unwrap(),
-            Some(PythonVersion::new(999, 888, 777))
-        );
-    }
-
-    #[test]
-    fn read_version_runtime_txt_not_present() {
-        assert_eq!(
-            read_version(Path::new("tests/fixtures/empty")).unwrap(),
-            None
-        );
-    }
-
-    #[test]
-    fn read_version_io_error() {
-        assert!(matches!(
-            read_version(Path::new("tests/fixtures/empty/.gitkeep")).unwrap_err(),
-            RuntimeTxtError::Read(_)
-        ));
-        assert!(matches!(
-            read_version(Path::new("tests/fixtures/runtime_txt_invalid_unicode")).unwrap_err(),
-            RuntimeTxtError::Read(_)
-        ));
-    }
-
-    #[test]
-    fn read_version_parse_error() {
-        assert!(matches!(
-            read_version(Path::new("tests/fixtures/runtime_txt_invalid_version")).unwrap_err(),
-            RuntimeTxtError::Parse(_)
-        ));
     }
 }
