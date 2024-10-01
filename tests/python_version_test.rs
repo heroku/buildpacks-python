@@ -356,7 +356,7 @@ fn runtime_txt_invalid_version() {
                 However, the file contents must begin with a 'python-' prefix, followed by the
                 version specified as '<major>.<minor>.<patch>'. Comments are not supported.
                 
-                For example, to request Python 3.12.6, update the 'runtime.txt' file so it
+                For example, to request Python {DEFAULT_PYTHON_FULL_VERSION}, update the 'runtime.txt' file so it
                 contains exactly:
                 python-{DEFAULT_PYTHON_FULL_VERSION}
             "}

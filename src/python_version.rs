@@ -19,7 +19,7 @@ pub(crate) const LATEST_PYTHON_3_8: PythonVersion = PythonVersion::new(3, 8, 20)
 pub(crate) const LATEST_PYTHON_3_9: PythonVersion = PythonVersion::new(3, 9, 20);
 pub(crate) const LATEST_PYTHON_3_10: PythonVersion = PythonVersion::new(3, 10, 15);
 pub(crate) const LATEST_PYTHON_3_11: PythonVersion = PythonVersion::new(3, 11, 10);
-pub(crate) const LATEST_PYTHON_3_12: PythonVersion = PythonVersion::new(3, 12, 6);
+pub(crate) const LATEST_PYTHON_3_12: PythonVersion = PythonVersion::new(3, 12, 7);
 
 /// The Python version that was requested for a project.
 #[derive(Clone, Debug, PartialEq)]
