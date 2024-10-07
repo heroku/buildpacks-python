@@ -217,7 +217,7 @@ mod tests {
             .unwrap(),
             RequestedPythonVersion {
                 major: 3,
-                minor: 10,
+                minor: 9,
                 patch: Some(0),
                 origin: PythonVersionOrigin::RuntimeTxt,
             }

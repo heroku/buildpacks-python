@@ -26,7 +26,7 @@ fn django_staticfiles_latest_django() {
     );
 }
 
-// This tests the oldest Django version that works on Python 3.10 (which is the
+// This tests the oldest Django version that works on Python 3.9 (which is the
 // oldest Python that is available on all of our supported builders).
 #[test]
 #[ignore = "integration test"]
@@ -40,6 +40,7 @@ fn django_staticfiles_legacy_django() {
                 indoc! {"
                     [Generating Django static files]
                     Running 'manage.py collectstatic'
+                    Linking '/workspace/testapp/static/robots.txt'
                     
                     1 static file symlinked to '/workspace/staticfiles'.
                 "}

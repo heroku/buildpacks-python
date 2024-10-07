@@ -69,14 +69,7 @@ fn python_3_8() {
 #[test]
 #[ignore = "integration test"]
 fn python_3_9() {
-    // Python 3.9 is only available on Heroku-22 and older.
-    let fixture = "tests/fixtures/python_3.9";
-    match builder().as_str() {
-        "heroku/builder:20" | "heroku/builder:22" => {
-            builds_with_python_version(fixture, &LATEST_PYTHON_3_9);
-        }
-        _ => rejects_non_existent_python_version(fixture, &LATEST_PYTHON_3_9),
-    };
+    builds_with_python_version("tests/fixtures/python_3.9", &LATEST_PYTHON_3_9);
 }
 
 #[test]
@@ -309,10 +302,10 @@ fn runtime_txt() {
             context.pack_stdout,
             indoc! {"
                 [Determining Python version]
-                Using Python version 3.10.0 specified in runtime.txt
+                Using Python version 3.9.0 specified in runtime.txt
                 
                 [Installing Python]
-                Installing Python 3.10.0
+                Installing Python 3.9.0
             "}
         );
     });
