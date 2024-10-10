@@ -20,6 +20,7 @@ pub(crate) const LATEST_PYTHON_3_9: PythonVersion = PythonVersion::new(3, 9, 20)
 pub(crate) const LATEST_PYTHON_3_10: PythonVersion = PythonVersion::new(3, 10, 15);
 pub(crate) const LATEST_PYTHON_3_11: PythonVersion = PythonVersion::new(3, 11, 10);
 pub(crate) const LATEST_PYTHON_3_12: PythonVersion = PythonVersion::new(3, 12, 7);
+pub(crate) const LATEST_PYTHON_3_13: PythonVersion = PythonVersion::new(3, 13, 0);
 
 /// The Python version that was requested for a project.
 #[derive(Clone, Debug, PartialEq)]
@@ -163,7 +164,8 @@ pub(crate) fn resolve_python_version(
         (3, 10, None) => Ok(LATEST_PYTHON_3_10),
         (3, 11, None) => Ok(LATEST_PYTHON_3_11),
         (3, 12, None) => Ok(LATEST_PYTHON_3_12),
-        (3, 13.., _) | (4.., _, _) => Err(ResolvePythonVersionError::UnknownVersion(
+        (3, 13, None) => Ok(LATEST_PYTHON_3_13),
+        (3, 14.., _) | (4.., _, _) => Err(ResolvePythonVersionError::UnknownVersion(
             requested_python_version.clone(),
         )),
         (major, minor, Some(patch)) => Ok(PythonVersion::new(major, minor, patch)),
@@ -182,7 +184,7 @@ mod tests {
     use super::*;
 
     const OLDEST_SUPPORTED_PYTHON_3_MINOR_VERSION: u16 = 8;
-    const NEWEST_SUPPORTED_PYTHON_3_MINOR_VERSION: u16 = 12;
+    const NEWEST_SUPPORTED_PYTHON_3_MINOR_VERSION: u16 = 13;
 
     #[test]
     fn python_version_url() {
