@@ -43,12 +43,8 @@ To install a different version, add a `.python-version` file to your app's root 
 
 ```term
 $ cat .python-version
-3.12
+3.13
 ```
-
-In the future this buildpack will also support specifying the Python version using:
-
-- `tool.poetry.dependencies.python` in `pyproject.toml`: [#260](https://github.com/heroku/buildpacks-python/issues/260)
 
 ## Contributing
 

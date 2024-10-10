@@ -176,7 +176,7 @@ fn generate_layer_env(layer_path: &Path, python_version: &PythonVersion) -> Laye
             )),
         )
         .chainable_insert(Scope::Build, ModificationBehavior::Delimiter, "CPATH", ":")
-        // Ensure Python uses a Unicode locate, to prevent the issues described in:
+        // Ensure Python uses a Unicode locale, to prevent the issues described in:
         // https://github.com/docker-library/python/pull/570
         .chainable_insert(
             Scope::All,
