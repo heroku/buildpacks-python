@@ -9,6 +9,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Changed
 
+- Updated pip from 24.2 to 24.3.1. ([#285](https://github.com/heroku/buildpacks-python/pull/285))
 - Updated Poetry from 1.8.3 to 1.8.4. ([#286](https://github.com/heroku/buildpacks-python/pull/286))
 
 ## [0.19.0] - 2024-10-10
