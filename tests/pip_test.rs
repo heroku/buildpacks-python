@@ -190,7 +190,7 @@ fn pip_cache_previous_buildpack_version() {
                     Installing Python {DEFAULT_PYTHON_FULL_VERSION}
                     
                     [Installing pip]
-                    Discarding cached pip {PIP_VERSION}
+                    Discarding cached pip 24.2
                     Installing pip {PIP_VERSION}
                     
                     [Installing dependencies using pip]
