@@ -181,7 +181,7 @@ fn poetry_cache_previous_buildpack_version() {
                     Installing Python {DEFAULT_PYTHON_FULL_VERSION}
                     
                     [Installing Poetry]
-                    Discarding cached Poetry {POETRY_VERSION}
+                    Discarding cached Poetry 1.8.3
                     Installing Poetry {POETRY_VERSION}
                     
                     [Installing dependencies using Poetry]
