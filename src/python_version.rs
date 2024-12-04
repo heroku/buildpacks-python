@@ -16,11 +16,11 @@ pub(crate) const DEFAULT_PYTHON_VERSION: RequestedPythonVersion = RequestedPytho
 pub(crate) const DEFAULT_PYTHON_FULL_VERSION: PythonVersion = LATEST_PYTHON_3_12;
 
 pub(crate) const LATEST_PYTHON_3_8: PythonVersion = PythonVersion::new(3, 8, 20);
-pub(crate) const LATEST_PYTHON_3_9: PythonVersion = PythonVersion::new(3, 9, 20);
-pub(crate) const LATEST_PYTHON_3_10: PythonVersion = PythonVersion::new(3, 10, 15);
-pub(crate) const LATEST_PYTHON_3_11: PythonVersion = PythonVersion::new(3, 11, 10);
-pub(crate) const LATEST_PYTHON_3_12: PythonVersion = PythonVersion::new(3, 12, 7);
-pub(crate) const LATEST_PYTHON_3_13: PythonVersion = PythonVersion::new(3, 13, 0);
+pub(crate) const LATEST_PYTHON_3_9: PythonVersion = PythonVersion::new(3, 9, 21);
+pub(crate) const LATEST_PYTHON_3_10: PythonVersion = PythonVersion::new(3, 10, 16);
+pub(crate) const LATEST_PYTHON_3_11: PythonVersion = PythonVersion::new(3, 11, 11);
+pub(crate) const LATEST_PYTHON_3_12: PythonVersion = PythonVersion::new(3, 12, 8);
+pub(crate) const LATEST_PYTHON_3_13: PythonVersion = PythonVersion::new(3, 13, 1);
 
 /// The Python version that was requested for a project.
 #[derive(Clone, Debug, PartialEq)]
