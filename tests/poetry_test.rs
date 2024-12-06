@@ -19,9 +19,7 @@ fn poetry_basic_install_and_cache_reuse() {
             context.pack_stdout,
             &formatdoc! {"
                 [Determining Python version]
-                No Python version specified, using the current default of Python {DEFAULT_PYTHON_VERSION}.
-                We recommend setting an explicit version. In the root of your app create
-                a '.python-version' file, containing a Python version like '{DEFAULT_PYTHON_VERSION}'.
+                Using Python version {DEFAULT_PYTHON_VERSION} specified in .python-version
                 
                 [Installing Python]
                 Installing Python {DEFAULT_PYTHON_FULL_VERSION}
@@ -39,7 +37,7 @@ fn poetry_basic_install_and_cache_reuse() {
                   - Installing typing-extensions (4.12.2)
                 
                 ## Testing buildpack ##
-                CPATH=/layers/heroku_python/venv/include:/layers/heroku_python/python/include/python3.12:/layers/heroku_python/python/include
+                CPATH=/layers/heroku_python/venv/include:/layers/heroku_python/python/include/python3.13:/layers/heroku_python/python/include
                 LANG=C.UTF-8
                 LD_LIBRARY_PATH=/layers/heroku_python/venv/lib:/layers/heroku_python/python/lib:/layers/heroku_python/poetry/lib
                 LIBRARY_PATH=/layers/heroku_python/venv/lib:/layers/heroku_python/python/lib:/layers/heroku_python/poetry/lib
@@ -52,14 +50,14 @@ fn poetry_basic_install_and_cache_reuse() {
                 VIRTUAL_ENV=/layers/heroku_python/venv
                 
                 ['',
-                 '/layers/heroku_python/python/lib/python312.zip',
-                 '/layers/heroku_python/python/lib/python3.12',
-                 '/layers/heroku_python/python/lib/python3.12/lib-dynload',
-                 '/layers/heroku_python/venv/lib/python3.12/site-packages']
+                 '/layers/heroku_python/python/lib/python313.zip',
+                 '/layers/heroku_python/python/lib/python3.13',
+                 '/layers/heroku_python/python/lib/python3.13/lib-dynload',
+                 '/layers/heroku_python/venv/lib/python3.13/site-packages']
                 
                 Poetry (version {POETRY_VERSION})
                 typing-extensions 4.12.2 Backported and Experimental Type Hints for Python ...
-                <module 'typing_extensions' from '/layers/heroku_python/venv/lib/python3.12/site-packages/typing_extensions.py'>
+                <module 'typing_extensions' from '/layers/heroku_python/venv/lib/python3.13/site-packages/typing_extensions.py'>
             "}
         );
 
@@ -94,9 +92,7 @@ fn poetry_basic_install_and_cache_reuse() {
                 rebuild_context.pack_stdout,
                 &formatdoc! {"
                     [Determining Python version]
-                    No Python version specified, using the current default of Python {DEFAULT_PYTHON_VERSION}.
-                    We recommend setting an explicit version. In the root of your app create
-                    a '.python-version' file, containing a Python version like '{DEFAULT_PYTHON_VERSION}'.
+                    Using Python version {DEFAULT_PYTHON_VERSION} specified in .python-version
                     
                     [Installing Python]
                     Using cached Python {DEFAULT_PYTHON_FULL_VERSION}
@@ -129,9 +125,7 @@ fn poetry_cache_invalidation_package_manager_changed() {
                 rebuild_context.pack_stdout,
                 &formatdoc! {"
                     [Determining Python version]
-                    No Python version specified, using the current default of Python {DEFAULT_PYTHON_VERSION}.
-                    We recommend setting an explicit version. In the root of your app create
-                    a '.python-version' file, containing a Python version like '{DEFAULT_PYTHON_VERSION}'.
+                    Using Python version {DEFAULT_PYTHON_VERSION} specified in .python-version
                     
                     [Installing Python]
                     Using cached Python {DEFAULT_PYTHON_FULL_VERSION}
@@ -160,7 +154,7 @@ fn poetry_cache_invalidation_package_manager_changed() {
 fn poetry_cache_previous_buildpack_version() {
     let mut config = default_build_config("tests/fixtures/poetry_basic");
     config.buildpacks([BuildpackReference::Other(
-        "docker://docker.io/heroku/buildpack-python:0.17.0".to_string(),
+        "docker://docker.io/heroku/buildpack-python:0.19.0".to_string(),
     )]);
     let rebuild_config = default_build_config("tests/fixtures/poetry_basic");
 
@@ -171,13 +165,11 @@ fn poetry_cache_previous_buildpack_version() {
                 rebuild_context.pack_stdout,
                 &formatdoc! {"
                     [Determining Python version]
-                    No Python version specified, using the current default of Python {DEFAULT_PYTHON_VERSION}.
-                    We recommend setting an explicit version. In the root of your app create
-                    a '.python-version' file, containing a Python version like '{DEFAULT_PYTHON_VERSION}'.
+                    Using Python version {DEFAULT_PYTHON_VERSION} specified in .python-version
                     
                     [Installing Python]
-                    Discarding cached Python 3.12.5 since:
-                     - The Python version has changed from 3.12.5 to {DEFAULT_PYTHON_FULL_VERSION}
+                    Discarding cached Python 3.13.0 since:
+                     - The Python version has changed from 3.13.0 to {DEFAULT_PYTHON_FULL_VERSION}
                     Installing Python {DEFAULT_PYTHON_FULL_VERSION}
                     
                     [Installing Poetry]

@@ -7,6 +7,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Changed
+
+- Updated the default Python version from 3.12 to 3.13. ([#299](https://github.com/heroku/buildpacks-python/pull/299))
+
 ## [0.19.2] - 2024-12-04
 
 ### Changed
