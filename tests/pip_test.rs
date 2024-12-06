@@ -39,7 +39,7 @@ fn pip_basic_install_and_cache_reuse() {
                 Successfully installed typing-extensions-4.12.2
                 
                 ## Testing buildpack ##
-                CPATH=/layers/heroku_python/venv/include:/layers/heroku_python/python/include/python3.12:/layers/heroku_python/python/include
+                CPATH=/layers/heroku_python/venv/include:/layers/heroku_python/python/include/python3.13:/layers/heroku_python/python/include
                 LANG=C.UTF-8
                 LD_LIBRARY_PATH=/layers/heroku_python/venv/lib:/layers/heroku_python/python/lib:/layers/heroku_python/pip/lib
                 LIBRARY_PATH=/layers/heroku_python/venv/lib:/layers/heroku_python/python/lib:/layers/heroku_python/pip/lib
@@ -55,16 +55,16 @@ fn pip_basic_install_and_cache_reuse() {
                 VIRTUAL_ENV=/layers/heroku_python/venv
                 
                 ['',
-                 '/layers/heroku_python/python/lib/python312.zip',
-                 '/layers/heroku_python/python/lib/python3.12',
-                 '/layers/heroku_python/python/lib/python3.12/lib-dynload',
-                 '/layers/heroku_python/venv/lib/python3.12/site-packages']
+                 '/layers/heroku_python/python/lib/python313.zip',
+                 '/layers/heroku_python/python/lib/python3.13',
+                 '/layers/heroku_python/python/lib/python3.13/lib-dynload',
+                 '/layers/heroku_python/venv/lib/python3.13/site-packages']
                 
-                pip {PIP_VERSION} from /layers/heroku_python/pip/lib/python3.12/site-packages/pip (python 3.12)
+                pip {PIP_VERSION} from /layers/heroku_python/pip/lib/python3.13/site-packages/pip (python 3.13)
                 Package           Version
                 ----------------- -------
                 typing_extensions 4.12.2
-                <module 'typing_extensions' from '/layers/heroku_python/venv/lib/python3.12/site-packages/typing_extensions.py'>
+                <module 'typing_extensions' from '/layers/heroku_python/venv/lib/python3.13/site-packages/typing_extensions.py'>
             "}
         );
 
