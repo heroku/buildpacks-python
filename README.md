@@ -37,7 +37,7 @@ A `requirements.txt` or `poetry.lock` file must be present in the root (top-leve
 
 ### Python Version
 
-By default, the buildpack will install the latest version of Python 3.12.
+By default, the buildpack will install the latest version of Python 3.13.
 
 To install a different version, add a `.python-version` file to your app's root directory that declares the version number to use:
 
