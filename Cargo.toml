@@ -22,14 +22,12 @@ result_large_err = "allow"
 
 [dependencies]
 indoc = "2"
-# libcnb has a much bigger impact on buildpack behaviour than any other dependencies,
-# so it's pinned to an exact version to isolate it from lockfile refreshes.
-libcnb = "=0.26.0"
-libherokubuildpack = { version = "=0.26.0", default-features = false, features = ["log"] }
+libcnb = "0.26"
+libherokubuildpack = { version = "0.26", default-features = false, features = ["log"] }
 serde = "1"
 tar = { version = "0.4", default-features = false }
 ureq = { version = "2", default-features = false, features = ["tls"] }
 zstd = { version = "0.13", default-features = false }
 
 [dev-dependencies]
-libcnb-test = "=0.26.0"
+libcnb-test = "0.26"
