@@ -7,6 +7,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Fixed
+
+- Fixed colour resetting for build output header, error and warning messages. ([#303](https://github.com/heroku/buildpacks-python/pull/303) / [heroku/libcnb.rs#890](https://github.com/heroku/libcnb.rs/pull/890))
+
 ## [0.20.0] - 2024-12-10
 
 ### Changed
