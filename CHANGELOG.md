@@ -7,6 +7,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Removed
+
+- Stopped setting the `LANG` env var. ([#306](https://github.com/heroku/buildpacks-python/pull/306))
+
 ## [0.20.1] - 2024-12-13
 
 ### Fixed

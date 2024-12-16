@@ -176,14 +176,6 @@ fn generate_layer_env(layer_path: &Path, python_version: &PythonVersion) -> Laye
             )),
         )
         .chainable_insert(Scope::Build, ModificationBehavior::Delimiter, "CPATH", ":")
-        // Ensure Python uses a Unicode locale, to prevent the issues described in:
-        // https://github.com/docker-library/python/pull/570
-        .chainable_insert(
-            Scope::All,
-            ModificationBehavior::Override,
-            "LANG",
-            "C.UTF-8",
-        )
         // We have to set `PKG_CONFIG_PATH` explicitly, since the automatic path set by lifecycle/libcnb
         // is `<layer>/pkgconfig/`, whereas Python's pkgconfig files are at `<layer>/lib/pkgconfig/`.
         .chainable_insert(
@@ -330,7 +322,6 @@ mod tests {
     fn python_layer_env() {
         let mut base_env = Env::new();
         base_env.insert("CPATH", "/base");
-        base_env.insert("LANG", "this-should-be-overridden");
         base_env.insert("PKG_CONFIG_PATH", "/base");
         base_env.insert("PYTHONHOME", "this-should-be-overridden");
         base_env.insert("PYTHONUNBUFFERED", "this-should-be-overridden");
@@ -341,7 +332,6 @@ mod tests {
             utils::environment_as_sorted_vector(&layer_env.apply(Scope::Build, &base_env)),
             [
                 ("CPATH", "/layer-dir/include/python3.11:/base"),
-                ("LANG", "C.UTF-8"),
                 ("PKG_CONFIG_PATH", "/layer-dir/lib/pkgconfig:/base"),
                 ("PYTHONHOME", "/layer-dir"),
                 ("PYTHONUNBUFFERED", "1"),
@@ -352,7 +342,6 @@ mod tests {
             utils::environment_as_sorted_vector(&layer_env.apply(Scope::Launch, &base_env)),
             [
                 ("CPATH", "/base"),
-                ("LANG", "C.UTF-8"),
                 ("PKG_CONFIG_PATH", "/base"),
                 ("PYTHONHOME", "/layer-dir"),
                 ("PYTHONUNBUFFERED", "1"),

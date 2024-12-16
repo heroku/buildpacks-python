@@ -40,7 +40,6 @@ fn pip_basic_install_and_cache_reuse() {
                 
                 ## Testing buildpack ##
                 CPATH=/layers/heroku_python/venv/include:/layers/heroku_python/python/include/python3.13:/layers/heroku_python/python/include
-                LANG=C.UTF-8
                 LD_LIBRARY_PATH=/layers/heroku_python/venv/lib:/layers/heroku_python/python/lib:/layers/heroku_python/pip/lib
                 LIBRARY_PATH=/layers/heroku_python/venv/lib:/layers/heroku_python/python/lib:/layers/heroku_python/pip/lib
                 PATH=/layers/heroku_python/venv/bin:/layers/heroku_python/python/bin:/layers/heroku_python/pip/bin:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin
@@ -84,7 +83,6 @@ fn pip_basic_install_and_cache_reuse() {
         assert_eq!(
             command_output.stdout,
             formatdoc! {"
-                LANG=C.UTF-8
                 LD_LIBRARY_PATH=/layers/heroku_python/venv/lib:/layers/heroku_python/python/lib
                 PATH=/layers/heroku_python/venv/bin:/layers/heroku_python/python/bin:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin
                 PIP_PYTHON=/layers/heroku_python/venv
