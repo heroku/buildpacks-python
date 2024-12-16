@@ -7,6 +7,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Changed
+
+- The `PIP_PYTHON` env var is now only set at build time. ([#307](https://github.com/heroku/buildpacks-python/pull/307))
+
 ### Removed
 
 - Stopped setting the `LANG` env var. ([#306](https://github.com/heroku/buildpacks-python/pull/306))

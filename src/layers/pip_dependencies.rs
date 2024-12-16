@@ -54,11 +54,11 @@ pub(crate) fn install_dependencies(
     .map_err(PipDependenciesLayerError::CreateVenvCommand)?;
 
     let mut layer_env = LayerEnv::new()
-        // Since pip is installed in a different layer (outside of this venv), we have to explicitly
-        // tell it to perform operations against this venv instead of the global Python install.
+        // pip is installed in a separate build-only layer, we have to explicitly tell it to
+        // perform operations against this venv instead of the global Python install.
         // https://pip.pypa.io/en/stable/cli/pip/#cmdoption-python
         .chainable_insert(
-            Scope::All,
+            Scope::Build,
             ModificationBehavior::Override,
             "PIP_PYTHON",
             &layer_path,
