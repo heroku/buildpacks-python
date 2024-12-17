@@ -15,6 +15,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Removed
 
 - Stopped setting the `LANG` env var. ([#306](https://github.com/heroku/buildpacks-python/pull/306))
+- Stopped setting the `PYTHONHOME` env var. ([#309](https://github.com/heroku/buildpacks-python/pull/309))
 
 ## [0.20.1] - 2024-12-13
 

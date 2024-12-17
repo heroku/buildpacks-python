@@ -190,20 +190,6 @@ fn generate_layer_env(layer_path: &Path, python_version: &PythonVersion) -> Laye
             "PKG_CONFIG_PATH",
             ":",
         )
-        // We relocate Python (install into a different location to which it was compiled), which
-        // Python handles fine since it recalculates its actual location at startup. However, the
-        // uWSGI package uses the wrong `sysconfig` APIs so tries to reference the old compile
-        // location, unless we override that by setting `PYTHONHOME`. See:
-        // https://docs.python.org/3/library/sys_path_init.html
-        // https://github.com/unbit/uwsgi/issues/2525
-        // In addition, some legacy apps have `PYTHONHOME` set to an invalid value, so if we did not
-        // set it explicitly here, they would fail to run both during the build and at run-time.
-        .chainable_insert(
-            Scope::All,
-            ModificationBehavior::Override,
-            "PYTHONHOME",
-            layer_path,
-        )
         // Disable Python's output buffering to ensure logs aren't dropped if an app crashes.
         .chainable_insert(
             Scope::All,
@@ -323,7 +309,6 @@ mod tests {
         let mut base_env = Env::new();
         base_env.insert("CPATH", "/base");
         base_env.insert("PKG_CONFIG_PATH", "/base");
-        base_env.insert("PYTHONHOME", "this-should-be-overridden");
         base_env.insert("PYTHONUNBUFFERED", "this-should-be-overridden");
 
         let layer_env = generate_layer_env(Path::new("/layer-dir"), &PythonVersion::new(3, 11, 1));
@@ -333,7 +318,6 @@ mod tests {
             [
                 ("CPATH", "/layer-dir/include/python3.11:/base"),
                 ("PKG_CONFIG_PATH", "/layer-dir/lib/pkgconfig:/base"),
-                ("PYTHONHOME", "/layer-dir"),
                 ("PYTHONUNBUFFERED", "1"),
                 ("SOURCE_DATE_EPOCH", "315532801"),
             ]
@@ -343,7 +327,6 @@ mod tests {
             [
                 ("CPATH", "/base"),
                 ("PKG_CONFIG_PATH", "/base"),
-                ("PYTHONHOME", "/layer-dir"),
                 ("PYTHONUNBUFFERED", "1"),
             ]
         );
