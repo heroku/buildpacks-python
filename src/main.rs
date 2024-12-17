@@ -1,3 +1,4 @@
+mod checks;
 mod detect;
 mod django;
 mod errors;
@@ -9,6 +10,7 @@ mod python_version_file;
 mod runtime_txt;
 mod utils;
 
+use crate::checks::ChecksError;
 use crate::django::DjangoCollectstaticError;
 use crate::layers::pip::PipLayerError;
 use crate::layers::pip_dependencies::PipDependenciesLayerError;
@@ -51,6 +53,15 @@ impl Buildpack for PythonBuildpack {
     }
 
     fn build(&self, context: BuildContext<Self>) -> libcnb::Result<BuildResult, Self::Error> {
+        // We inherit the current process's env vars, since we want `PATH` and `HOME` from the OS
+        // to be set (so that later commands can find tools like Git in the base image), along
+        // with previous-buildpack or user-provided env vars (so that features like env vars in
+        // in requirements files work). We protect against broken user-provided env vars via the
+        // checks feature and making sure that buildpack env vars take precedence in layers envs.
+        let mut env = Env::from_current();
+
+        checks::check_environment(&env).map_err(BuildpackError::Checks)?;
+
         // We perform all project analysis up front, so the build can fail early if the config is invalid.
         // TODO: Add a "Build config" header and list all config in one place?
         let package_manager = package_manager::determine_package_manager(&context.app_dir)
@@ -79,13 +90,6 @@ impl Buildpack for PythonBuildpack {
                 "Using Python version {requested_python_version} specified in runtime.txt"
             )),
         }
-
-        // We inherit the current process's env vars, since we want `PATH` and `HOME` from the OS
-        // to be set (so that later commands can find tools like Git in the base image), along
-        // with previous-buildpack or user-provided env vars (so that features like env vars in
-        // in requirements files work). We protect against broken user-provided env vars by
-        // making sure that buildpack env vars take precedence in layers envs and command usage.
-        let mut env = Env::from_current();
 
         log_header("Installing Python");
         let python_layer_path = python::install_python(&context, &mut env, &python_version)?;
@@ -126,6 +130,8 @@ impl Buildpack for PythonBuildpack {
 pub(crate) enum BuildpackError {
     /// I/O errors when performing buildpack detection.
     BuildpackDetection(io::Error),
+    /// Errors due to one of the environment checks failing.
+    Checks(ChecksError),
     /// Errors determining which Python package manager to use for a project.
     DeterminePackageManager(DeterminePackageManagerError),
     /// Errors running the Django collectstatic command.

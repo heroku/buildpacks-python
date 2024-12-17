@@ -9,6 +9,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Changed
 
+- The build now fails early if known problematic Python and pip-related env vars have been set by the user or earlier buildpacks. ([#308](https://github.com/heroku/buildpacks-python/pull/308))
 - The `PIP_PYTHON` env var is now only set at build time. ([#307](https://github.com/heroku/buildpacks-python/pull/307))
 
 ### Removed

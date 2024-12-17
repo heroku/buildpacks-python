@@ -3,6 +3,7 @@
 //! These tests are not run via automatic integration test discovery, but instead are
 //! imported in main.rs so that they have access to private APIs (see comment in main.rs).
 
+mod checks_test;
 mod detect_test;
 mod django_test;
 mod package_manager_test;
@@ -38,13 +39,9 @@ fn default_build_config(fixture_path: impl AsRef<Path>) -> BuildConfig {
         ("LD_LIBRARY_PATH", "/invalid"),
         ("LIBRARY_PATH", "/invalid"),
         ("PATH", "/invalid"),
-        ("PIP_CACHE_DIR", "/invalid"),
         ("PIP_DISABLE_PIP_VERSION_CHECK", "0"),
         ("PKG_CONFIG_PATH", "/invalid"),
-        ("PYTHONHOME", "/invalid"),
         ("PYTHONPATH", "/invalid"),
-        ("PYTHONUSERBASE", "/invalid"),
-        ("VIRTUAL_ENV", "/invalid"),
     ]);
 
     config

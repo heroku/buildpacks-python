@@ -1,3 +1,4 @@
+use crate::checks::ChecksError;
 use crate::django::DjangoCollectstaticError;
 use crate::layers::pip::PipLayerError;
 use crate::layers::pip_dependencies::PipDependenciesLayerError;
@@ -49,6 +50,7 @@ pub(crate) fn on_error(error: libcnb::Error<BuildpackError>) {
 fn on_buildpack_error(error: BuildpackError) {
     match error {
         BuildpackError::BuildpackDetection(error) => on_buildpack_detection_error(&error),
+        BuildpackError::Checks(error) => on_buildpack_checks_error(error),
         BuildpackError::DeterminePackageManager(error) => on_determine_package_manager_error(error),
         BuildpackError::DjangoCollectstatic(error) => on_django_collectstatic_error(error),
         BuildpackError::DjangoDetection(error) => on_django_detection_error(&error),
@@ -68,6 +70,21 @@ fn on_buildpack_detection_error(error: &io::Error) {
         "determining if the Python buildpack should be run for this application",
         error,
     );
+}
+
+fn on_buildpack_checks_error(error: ChecksError) {
+    match error {
+        ChecksError::ForbiddenEnvVar(name) => log_error(
+            "Unsafe environment variable found",
+            formatdoc! {"
+                The environment variable '{name}' is set, however, it can
+                cause problems with the build so we do not allow using it.
+
+                You must unset that environment variable. If you didn't set it
+                yourself, check that it wasn't set by an earlier buildpack.
+            "},
+        ),
+    };
 }
 
 fn on_determine_package_manager_error(error: DeterminePackageManagerError) {
