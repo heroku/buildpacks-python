@@ -47,7 +47,6 @@ fn pip_basic_install_and_cache_reuse() {
                 PIP_DISABLE_PIP_VERSION_CHECK=1
                 PIP_PYTHON=/layers/heroku_python/venv
                 PKG_CONFIG_PATH=/layers/heroku_python/python/lib/pkgconfig
-                PYTHONHOME=/layers/heroku_python/python
                 PYTHONUNBUFFERED=1
                 PYTHONUSERBASE=/layers/heroku_python/pip
                 SOURCE_DATE_EPOCH=315532801
@@ -85,7 +84,6 @@ fn pip_basic_install_and_cache_reuse() {
             formatdoc! {"
                 LD_LIBRARY_PATH=/layers/heroku_python/venv/lib:/layers/heroku_python/python/lib
                 PATH=/layers/heroku_python/venv/bin:/layers/heroku_python/python/bin:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin
-                PYTHONHOME=/layers/heroku_python/python
                 PYTHONUNBUFFERED=1
                 VIRTUAL_ENV=/layers/heroku_python/venv
             "}

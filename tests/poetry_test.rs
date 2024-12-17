@@ -42,7 +42,6 @@ fn poetry_basic_install_and_cache_reuse() {
                 LIBRARY_PATH=/layers/heroku_python/venv/lib:/layers/heroku_python/python/lib:/layers/heroku_python/poetry/lib
                 PATH=/layers/heroku_python/venv/bin:/layers/heroku_python/python/bin:/layers/heroku_python/poetry/bin:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin
                 PKG_CONFIG_PATH=/layers/heroku_python/python/lib/pkgconfig
-                PYTHONHOME=/layers/heroku_python/python
                 PYTHONUNBUFFERED=1
                 PYTHONUSERBASE=/layers/heroku_python/poetry
                 SOURCE_DATE_EPOCH=315532801
@@ -78,7 +77,6 @@ fn poetry_basic_install_and_cache_reuse() {
             formatdoc! {"
                 LD_LIBRARY_PATH=/layers/heroku_python/venv/lib:/layers/heroku_python/python/lib
                 PATH=/layers/heroku_python/venv/bin:/layers/heroku_python/python/bin:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin
-                PYTHONHOME=/layers/heroku_python/python
                 PYTHONUNBUFFERED=1
                 VIRTUAL_ENV=/layers/heroku_python/venv
             "}
