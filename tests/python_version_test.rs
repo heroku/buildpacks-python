@@ -60,14 +60,38 @@ fn python_3_13() {
 }
 
 fn builds_with_python_version(fixture_path: &str, python_version: &PythonVersion) {
-    let PythonVersion {
+    let &PythonVersion {
         major,
         minor,
         patch,
     } = python_version;
 
     TestRunner::default().build(default_build_config(fixture_path), |context| {
-        assert_empty!(context.pack_stderr);
+        if major == 3 && minor == 9 {
+            assert_eq!(
+                context.pack_stderr,
+                indoc! {"
+                    
+                    [Warning: Support for Python 3.9 is deprecated]
+                    Python 3.9 will reach its upstream end-of-life in October 2025,
+                    at which point it will no longer receive security updates:
+                    https://devguide.python.org/versions/#supported-versions
+                    
+                    As such, support for Python 3.9 will be removed from this
+                    buildpack on 7th January 2026.
+                    
+                    Upgrade to a newer Python version as soon as possible, by
+                    changing the version in your .python-version file.
+                    
+                    For more information, see:
+                    https://devcenter.heroku.com/articles/python-support#supported-python-versions
+                    
+                "}
+            );
+        } else {
+            assert_empty!(context.pack_stderr);
+        }
+
         assert_contains!(
             context.pack_stdout,
             &formatdoc! {"
@@ -78,6 +102,7 @@ fn builds_with_python_version(fixture_path: &str, python_version: &PythonVersion
                 Installing Python {major}.{minor}.{patch}
             "}
         );
+
         // There's no sensible default process type we can set for Python apps.
         assert_contains!(context.pack_stdout, "no default process type");
 
@@ -294,13 +319,36 @@ fn python_version_non_existent_minor() {
     });
 }
 
+// This tests that:
+// - The Python version can be specified using runtime.txt
+// - pip works with the oldest currently supported Python version (3.9.0).
+// - The Python 3.9 deprecation warning correctly lists the origin as runtime.txt.
 #[test]
 #[ignore = "integration test"]
 fn runtime_txt() {
     let config = default_build_config("tests/fixtures/runtime_txt_and_python_version_file");
 
     TestRunner::default().build(config, |context| {
-        assert_empty!(context.pack_stderr);
+        assert_eq!(
+            context.pack_stderr,
+            indoc! {"
+                
+                [Warning: Support for Python 3.9 is deprecated]
+                Python 3.9 will reach its upstream end-of-life in October 2025,
+                at which point it will no longer receive security updates:
+                https://devguide.python.org/versions/#supported-versions
+                
+                As such, support for Python 3.9 will be removed from this
+                buildpack on 7th January 2026.
+                
+                Upgrade to a newer Python version as soon as possible, by
+                changing the version in your runtime.txt file.
+                
+                For more information, see:
+                https://devcenter.heroku.com/articles/python-support#supported-python-versions
+                
+            "}
+        );
         assert_contains!(
             context.pack_stdout,
             indoc! {"
