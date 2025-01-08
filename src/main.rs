@@ -20,14 +20,15 @@ use crate::layers::python::PythonLayerError;
 use crate::layers::{pip, pip_cache, pip_dependencies, poetry, poetry_dependencies, python};
 use crate::package_manager::{DeterminePackageManagerError, PackageManager};
 use crate::python_version::{
-    PythonVersionOrigin, RequestedPythonVersionError, ResolvePythonVersionError,
+    PythonVersionOrigin, RequestedPythonVersion, RequestedPythonVersionError,
+    ResolvePythonVersionError,
 };
 use indoc::formatdoc;
 use libcnb::build::{BuildContext, BuildResult, BuildResultBuilder};
 use libcnb::detect::{DetectContext, DetectResult, DetectResultBuilder};
 use libcnb::generic::{GenericMetadata, GenericPlatform};
 use libcnb::{buildpack_main, Buildpack, Env};
-use libherokubuildpack::log::{log_header, log_info};
+use libherokubuildpack::log::{log_header, log_info, log_warning};
 use std::io;
 
 struct PythonBuildpack;
@@ -89,6 +90,32 @@ impl Buildpack for PythonBuildpack {
             PythonVersionOrigin::RuntimeTxt => log_info(format!(
                 "Using Python version {requested_python_version} specified in runtime.txt"
             )),
+        }
+
+        if let RequestedPythonVersion {
+            major: 3,
+            minor: 9,
+            origin,
+            ..
+        } = requested_python_version
+        {
+            log_warning(
+                "Support for Python 3.9 is deprecated",
+                formatdoc! {"
+                    Python 3.9 will reach its upstream end-of-life in October 2025,
+                    at which point it will no longer receive security updates:
+                    https://devguide.python.org/versions/#supported-versions
+
+                    As such, support for Python 3.9 will be removed from this
+                    buildpack on 7th January 2026.
+
+                    Upgrade to a newer Python version as soon as possible, by
+                    changing the version in your {origin} file.
+
+                    For more information, see:
+                    https://devcenter.heroku.com/articles/python-support#supported-python-versions
+                "},
+            );
         }
 
         log_header("Installing Python");

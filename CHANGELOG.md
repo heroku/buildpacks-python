@@ -13,6 +13,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Changed
 
+- Deprecated support for Python 3.9. ([#314](https://github.com/heroku/buildpacks-python/pull/314))
 - Buildpack detection now recognises more Python-related file and directory names. ([#312](https://github.com/heroku/buildpacks-python/pull/312))
 - Improved the error messages shown for EOL or unrecognised major Python versions. ([#313](https://github.com/heroku/buildpacks-python/pull/313))
 

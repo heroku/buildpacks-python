@@ -34,7 +34,7 @@ fn django_staticfiles_legacy_django() {
     TestRunner::default().build(
         default_build_config("tests/fixtures/django_staticfiles_legacy_django"),
         |context| {
-            assert_empty!(context.pack_stderr);
+            // We can't `assert_empty!(context.pack_stderr)` here, due to the Python 3.9 deprecation warning.
             assert_contains!(
                 context.pack_stdout,
                 indoc! {"
