@@ -8,7 +8,8 @@ use crate::layers::python::PythonLayerError;
 use crate::package_manager::DeterminePackageManagerError;
 use crate::python_version::{
     RequestedPythonVersion, RequestedPythonVersionError, ResolvePythonVersionError,
-    DEFAULT_PYTHON_FULL_VERSION, DEFAULT_PYTHON_VERSION,
+    DEFAULT_PYTHON_FULL_VERSION, DEFAULT_PYTHON_VERSION, NEWEST_SUPPORTED_PYTHON_3_MINOR_VERSION,
+    OLDEST_SUPPORTED_PYTHON_3_MINOR_VERSION,
 };
 use crate::python_version_file::ParsePythonVersionFileError;
 use crate::runtime_txt::ParseRuntimeTxtError;
@@ -231,16 +232,17 @@ fn on_resolve_python_version_error(error: ResolvePythonVersionError) {
                 ..
             } = requested_python_version;
             log_error(
-                "Requested Python version has reached end-of-life",
+                "The requested Python version has reached end-of-life",
                 formatdoc! {"
-                    The requested Python version {major}.{minor} has reached its upstream end-of-life,
-                    and is therefore no longer receiving security updates:
+                    Python {major}.{minor} has reached its upstream end-of-life, and is
+                    therefore no longer receiving security updates:
                     https://devguide.python.org/versions/#supported-versions
                     
-                    As such, it is no longer supported by this buildpack.
+                    As such, it's no longer supported by this buildpack:
+                    https://devcenter.heroku.com/articles/python-support#supported-python-versions
                     
-                    Please upgrade to a newer Python version by updating the version
-                    configured via the {origin} file.
+                    Please upgrade to at least Python 3.{OLDEST_SUPPORTED_PYTHON_3_MINOR_VERSION} by changing the
+                    version in your {origin} file.
                     
                     If possible, we recommend upgrading all the way to Python {DEFAULT_PYTHON_VERSION},
                     since it contains many performance and usability improvements.
@@ -255,17 +257,21 @@ fn on_resolve_python_version_error(error: ResolvePythonVersionError) {
                 ..
             } = requested_python_version;
             log_error(
-                "Requested Python version is not recognised",
+                "The requested Python version isn't recognised",
                 formatdoc! {"
-                    The requested Python version {major}.{minor} is not recognised.
+                    The requested Python version {major}.{minor} isn't recognised.
                     
-                    Check that this Python version has been officially released:
+                    Check that this Python version has been officially released,
+                    and that the Python buildpack has added support for it:
                     https://devguide.python.org/versions/#supported-versions
+                    https://devcenter.heroku.com/articles/python-support#supported-python-versions
                     
-                    If it has, make sure that you are using the latest version of this buildpack.
+                    If it has, make sure that you are using the latest version
+                    of this buildpack, and haven't pinned to an older release
+                    via a custom buildpack configuration in project.toml.
                     
-                    If it has not, please switch to a supported version (such as Python {DEFAULT_PYTHON_VERSION})
-                    by updating the version configured via the {origin} file.
+                    Otherwise, switch to a supported version (such as Python 3.{NEWEST_SUPPORTED_PYTHON_3_MINOR_VERSION})
+                    by changing the version in your {origin} file.
                 "},
             );
         }
@@ -294,11 +300,12 @@ fn on_python_layer_error(error: PythonLayerError) {
         },
         // This error will change once the Python version is validated against a manifest.
         // TODO: (W-12613425) Write the supported Python versions inline, instead of linking out to Dev Center.
-        // TODO: Decide how to explain to users how stacks, base images and builder images versions relate to each other.
+        // TODO: Update this error message to suggest switching to the major version syntax in .python-version,
+        // which will prevent the error from ever occurring (now that all stacks support the same versions).
         PythonLayerError::PythonArchiveNotFound { python_version } => log_error(
-            "Requested Python version is not available",
+            "The requested Python version wasn't found",
             formatdoc! {"
-                The requested Python version ({python_version}) is not available for this builder image.
+                The requested Python version ({python_version}) wasn't found.
                 
                 Please switch to a supported Python version, or else don't specify a version
                 and the buildpack will use a default version (currently Python {DEFAULT_PYTHON_VERSION}).

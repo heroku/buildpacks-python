@@ -1,9 +1,9 @@
 use crate::python_version::{
     PythonVersion, DEFAULT_PYTHON_FULL_VERSION, DEFAULT_PYTHON_VERSION, LATEST_PYTHON_3_10,
-    LATEST_PYTHON_3_11, LATEST_PYTHON_3_12, LATEST_PYTHON_3_13, LATEST_PYTHON_3_8,
-    LATEST_PYTHON_3_9,
+    LATEST_PYTHON_3_11, LATEST_PYTHON_3_12, LATEST_PYTHON_3_13, LATEST_PYTHON_3_9,
+    NEWEST_SUPPORTED_PYTHON_3_MINOR_VERSION,
 };
-use crate::tests::{builder, default_build_config};
+use crate::tests::default_build_config;
 use indoc::{formatdoc, indoc};
 use libcnb_test::{assert_contains, assert_empty, PackResult, TestRunner};
 
@@ -27,44 +27,6 @@ fn python_version_unspecified() {
             "}
         );
     });
-}
-
-#[test]
-#[ignore = "integration test"]
-fn python_3_7() {
-    let mut config = default_build_config("tests/fixtures/python_3.7");
-    config.expected_pack_result(PackResult::Failure);
-
-    TestRunner::default().build(config, |context| {
-        assert_contains!(
-            context.pack_stderr,
-            &formatdoc! {"
-                [Error: Requested Python version has reached end-of-life]
-                The requested Python version 3.7 has reached its upstream end-of-life,
-                and is therefore no longer receiving security updates:
-                https://devguide.python.org/versions/#supported-versions
-                
-                As such, it is no longer supported by this buildpack.
-                
-                Please upgrade to a newer Python version by updating the version
-                configured via the .python-version file.
-                
-                If possible, we recommend upgrading all the way to Python {DEFAULT_PYTHON_VERSION},
-                since it contains many performance and usability improvements.
-            "}
-        );
-    });
-}
-
-#[test]
-#[ignore = "integration test"]
-fn python_3_8() {
-    // Python 3.8 is only available on Heroku-20 and older.
-    let fixture = "tests/fixtures/python_3.8";
-    match builder().as_str() {
-        "heroku/builder:20" => builds_with_python_version(fixture, &LATEST_PYTHON_3_8),
-        _ => rejects_non_existent_python_version(fixture, &LATEST_PYTHON_3_8),
-    };
 }
 
 #[test]
@@ -150,27 +112,6 @@ fn builds_with_python_version(fixture_path: &str, python_version: &PythonVersion
         assert_eq!(
             command_output.stdout,
             format!("Python {major}.{minor}.{patch}\n")
-        );
-    });
-}
-
-fn rejects_non_existent_python_version(fixture_path: &str, python_version: &PythonVersion) {
-    let mut config = default_build_config(fixture_path);
-    config.expected_pack_result(PackResult::Failure);
-
-    TestRunner::default().build(config, |context| {
-        assert_contains!(
-            context.pack_stderr,
-            &formatdoc! {"
-                [Error: Requested Python version is not available]
-                The requested Python version ({python_version}) is not available for this builder image.
-                
-                Please switch to a supported Python version, or else don't specify a version
-                and the buildpack will use a default version (currently Python {DEFAULT_PYTHON_VERSION}).
-                
-                For a list of the supported Python versions, see:
-                https://devcenter.heroku.com/articles/python-support#supported-runtimes
-            "}
         );
     });
 }
@@ -275,24 +216,79 @@ fn python_version_file_no_version() {
 
 #[test]
 #[ignore = "integration test"]
-fn python_version_file_unknown_version() {
-    let mut config = default_build_config("tests/fixtures/python_version_file_unknown_version");
+fn python_version_eol() {
+    let mut config = default_build_config("tests/fixtures/python_version_eol");
     config.expected_pack_result(PackResult::Failure);
 
     TestRunner::default().build(config, |context| {
         assert_contains!(
             context.pack_stderr,
             &formatdoc! {"
-                [Error: Requested Python version is not recognised]
-                The requested Python version 3.99 is not recognised.
-                
-                Check that this Python version has been officially released:
+                [Error: The requested Python version has reached end-of-life]
+                Python 3.8 has reached its upstream end-of-life, and is
+                therefore no longer receiving security updates:
                 https://devguide.python.org/versions/#supported-versions
+
+                As such, it's no longer supported by this buildpack:
+                https://devcenter.heroku.com/articles/python-support#supported-python-versions
+
+                Please upgrade to at least Python 3.9 by changing the
+                version in your .python-version file.
+
+                If possible, we recommend upgrading all the way to Python {DEFAULT_PYTHON_VERSION},
+                since it contains many performance and usability improvements.
+            "}
+        );
+    });
+}
+
+#[test]
+#[ignore = "integration test"]
+fn python_version_non_existent_major() {
+    let mut config = default_build_config("tests/fixtures/python_version_non_existent_major");
+    config.expected_pack_result(PackResult::Failure);
+
+    TestRunner::default().build(config, |context| {
+        assert_contains!(
+            context.pack_stderr,
+            &formatdoc! {"
+                [Error: The requested Python version isn't recognised]
+                The requested Python version 3.99 isn't recognised.
+
+                Check that this Python version has been officially released,
+                and that the Python buildpack has added support for it:
+                https://devguide.python.org/versions/#supported-versions
+                https://devcenter.heroku.com/articles/python-support#supported-python-versions
+
+                If it has, make sure that you are using the latest version
+                of this buildpack, and haven't pinned to an older release
+                via a custom buildpack configuration in project.toml.
+
+                Otherwise, switch to a supported version (such as Python 3.{NEWEST_SUPPORTED_PYTHON_3_MINOR_VERSION})
+                by changing the version in your .python-version file.
+            "}
+        );
+    });
+}
+
+#[test]
+#[ignore = "integration test"]
+fn python_version_non_existent_minor() {
+    let mut config = default_build_config("tests/fixtures/python_version_non_existent_minor");
+    config.expected_pack_result(PackResult::Failure);
+
+    TestRunner::default().build(config, |context| {
+        assert_contains!(
+            context.pack_stderr,
+            &formatdoc! {"
+                [Error: The requested Python version wasn't found]
+                The requested Python version (3.12.999) wasn't found.
                 
-                If it has, make sure that you are using the latest version of this buildpack.
+                Please switch to a supported Python version, or else don't specify a version
+                and the buildpack will use a default version (currently Python {DEFAULT_PYTHON_VERSION}).
                 
-                If it has not, please switch to a supported version (such as Python {DEFAULT_PYTHON_VERSION})
-                by updating the version configured via the .python-version file.
+                For a list of the supported Python versions, see:
+                https://devcenter.heroku.com/articles/python-support#supported-runtimes
             "}
         );
     });
