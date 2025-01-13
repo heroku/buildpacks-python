@@ -27,8 +27,8 @@ use std::process::Command;
 //
 // We cache the virtual environment, since:
 // - It results in faster builds than only caching Poetry's download/wheel cache.
-// - It's safe to do so, since `poetry install --sync` fully manages the environment
-//   (including e.g. uninstalling packages when they are removed from the lockfile).
+// - It's safe to do so, since `poetry sync` fully manages the environment (including
+//   e.g. uninstalling packages when they are removed from the lockfile).
 //
 // With the venv cached there is no need to persist Poetry's download/wheel cache in its
 // own layer, so we let Poetry write it to the home directory where it will be discarded
@@ -107,17 +107,16 @@ pub(crate) fn install_dependencies(
     layer_env = layer.read_env()?;
     env.clone_from(&layer_env.apply(Scope::Build, env));
 
-    log_info("Running 'poetry install --sync --only main'");
+    log_info("Running 'poetry sync --only main'");
     utils::run_command_and_stream_output(
         Command::new("poetry")
             .args([
-                "install",
+                "sync",
                 // Compile Python bytecode up front to improve app boot times (pip does this by default).
                 "--compile",
                 "--only",
                 "main",
                 "--no-interaction",
-                "--sync",
             ])
             .current_dir(&context.app_dir)
             .env_clear()

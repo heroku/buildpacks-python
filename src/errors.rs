@@ -448,7 +448,7 @@ fn on_poetry_dependencies_layer_error(error: PoetryDependenciesLayerError) {
             StreamedCommandError::NonZeroExitStatus(exit_status) => log_error(
                 "Unable to install dependencies using Poetry",
                 formatdoc! {"
-                    The 'poetry install --sync --only main' command to install the app's
+                    The 'poetry sync --only main' command to install the app's
                     dependencies failed ({exit_status}).
                     
                     See the log output above for more information.
