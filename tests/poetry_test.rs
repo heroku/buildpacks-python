@@ -29,7 +29,7 @@ fn poetry_basic_install_and_cache_reuse() {
                 
                 [Installing dependencies using Poetry]
                 Creating virtual environment
-                Running 'poetry install --sync --only main'
+                Running 'poetry sync --only main'
                 Installing dependencies from lock file
                 
                 Package operations: 1 install, 0 updates, 0 removals
@@ -98,7 +98,7 @@ fn poetry_basic_install_and_cache_reuse() {
                     
                     [Installing dependencies using Poetry]
                     Using cached virtual environment
-                    Running 'poetry install --sync --only main'
+                    Running 'poetry sync --only main'
                     Installing dependencies from lock file
                     
                     No dependencies to install or update
@@ -131,7 +131,7 @@ fn poetry_cache_invalidation_package_manager_changed() {
                     
                     [Installing dependencies using Poetry]
                     Creating virtual environment
-                    Running 'poetry install --sync --only main'
+                    Running 'poetry sync --only main'
                     Installing dependencies from lock file
                     
                     Package operations: 1 install, 0 updates, 0 removals
@@ -175,7 +175,7 @@ fn poetry_cache_previous_buildpack_version() {
                     [Installing dependencies using Poetry]
                     Discarding cached virtual environment
                     Creating virtual environment
-                    Running 'poetry install --sync --only main'
+                    Running 'poetry sync --only main'
                     Installing dependencies from lock file
                     
                     Package operations: 1 install, 0 updates, 0 removals
@@ -203,7 +203,7 @@ fn poetry_editable_git_compiled() {
             indoc! {"
                 [Installing dependencies using Poetry]
                 Creating virtual environment
-                Running 'poetry install --sync --only main'
+                Running 'poetry sync --only main'
                 Installing dependencies from lock file
                 
                 Package operations: 1 install, 0 updates, 0 removals
@@ -236,7 +236,7 @@ fn poetry_install_error() {
             indoc! {"
                 [Installing dependencies using Poetry]
                 Creating virtual environment
-                Running 'poetry install --sync --only main'
+                Running 'poetry sync --only main'
                 Installing dependencies from lock file
             "}
         );
@@ -246,7 +246,7 @@ fn poetry_install_error() {
                 pyproject.toml changed significantly since poetry.lock was last generated. Run `poetry lock [--no-update]` to fix the lock file.
                 
                 [Error: Unable to install dependencies using Poetry]
-                The 'poetry install --sync --only main' command to install the app's
+                The 'poetry sync --only main' command to install the app's
                 dependencies failed (exit status: 1).
                 
                 See the log output above for more information.
