@@ -243,7 +243,7 @@ fn poetry_install_error() {
         assert_contains!(
             context.pack_stderr,
             indoc! {"
-                pyproject.toml changed significantly since poetry.lock was last generated. Run `poetry lock [--no-update]` to fix the lock file.
+                pyproject.toml changed significantly since poetry.lock was last generated. Run `poetry lock` to fix the lock file.
                 
                 [Error: Unable to install dependencies using Poetry]
                 The 'poetry sync --only main' command to install the app's
