@@ -8,7 +8,7 @@ use crate::layers::python::PythonLayerError;
 use crate::package_manager::DeterminePackageManagerError;
 use crate::python_version::{
     RequestedPythonVersion, RequestedPythonVersionError, ResolvePythonVersionError,
-    DEFAULT_PYTHON_FULL_VERSION, DEFAULT_PYTHON_VERSION, NEWEST_SUPPORTED_PYTHON_3_MINOR_VERSION,
+    DEFAULT_PYTHON_VERSION, NEWEST_SUPPORTED_PYTHON_3_MINOR_VERSION,
     OLDEST_SUPPORTED_PYTHON_3_MINOR_VERSION,
 };
 use crate::python_version_file::ParsePythonVersionFileError;
@@ -205,17 +205,22 @@ fn on_requested_python_version_error(error: RequestedPythonVersionError) {
             log_error(
                 "Invalid Python version in runtime.txt",
                 formatdoc! {"
-                    The Python version specified in 'runtime.txt' is not in the correct format.
+                    The Python version specified in 'runtime.txt' isn't in
+                    the correct format.
                     
                     The following file contents were found:
                     {cleaned_contents}
                     
-                    However, the file contents must begin with a 'python-' prefix, followed by the
-                    version specified as '<major>.<minor>.<patch>'. Comments are not supported.
+                    However, the version must be specified as either:
+                    1. 'python-<major>.<minor>' (recommended, for automatic updates)
+                    2. 'python-<major>.<minor>.<patch>' (to pin to an exact version)
                     
-                    For example, to request Python {DEFAULT_PYTHON_FULL_VERSION}, update the 'runtime.txt' file so it
-                    contains exactly:
-                    python-{DEFAULT_PYTHON_FULL_VERSION}
+                    Remember to include the 'python-' prefix. Comments aren't
+                    supported.
+                    
+                    For example, to request the latest version of Python {DEFAULT_PYTHON_VERSION},
+                    update the 'runtime.txt' file so it contains:
+                    python-{DEFAULT_PYTHON_VERSION}
                 "},
             );
         }

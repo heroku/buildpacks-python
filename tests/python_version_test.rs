@@ -392,17 +392,22 @@ fn runtime_txt_invalid_version() {
             context.pack_stderr,
             &formatdoc! {"
                 [Error: Invalid Python version in runtime.txt]
-                The Python version specified in 'runtime.txt' is not in the correct format.
+                The Python version specified in 'runtime.txt' isn't in
+                the correct format.
                 
                 The following file contents were found:
                 python-an.invalid.version
                 
-                However, the file contents must begin with a 'python-' prefix, followed by the
-                version specified as '<major>.<minor>.<patch>'. Comments are not supported.
+                However, the version must be specified as either:
+                1. 'python-<major>.<minor>' (recommended, for automatic updates)
+                2. 'python-<major>.<minor>.<patch>' (to pin to an exact version)
                 
-                For example, to request Python {DEFAULT_PYTHON_FULL_VERSION}, update the 'runtime.txt' file so it
-                contains exactly:
-                python-{DEFAULT_PYTHON_FULL_VERSION}
+                Remember to include the 'python-' prefix. Comments aren't
+                supported.
+                
+                For example, to request the latest version of Python {DEFAULT_PYTHON_VERSION},
+                update the 'runtime.txt' file so it contains:
+                python-{DEFAULT_PYTHON_VERSION}
             "}
         );
     });
