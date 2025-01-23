@@ -22,7 +22,7 @@ result_large_err = "allow"
 
 [dependencies]
 indoc = "2"
-libcnb = "0.26"
+libcnb = { version = "0.26", features = ["trace"] }
 libherokubuildpack = { version = "0.26", default-features = false, features = ["log"] }
 serde = "1"
 tar = { version = "0.4", default-features = false }
