@@ -2,7 +2,7 @@ use crate::python_version::{PythonVersionOrigin, RequestedPythonVersion};
 
 /// Parse the contents of a `runtime.txt` file into a [`RequestedPythonVersion`].
 ///
-/// The file is expected to contain a string of form `python-X.Y.Z`.
+/// The file is expected to contain a string of form `python-X.Y.Z` or `python-X.Y`.
 /// Any leading or trailing whitespace will be removed.
 pub(crate) fn parse(contents: &str) -> Result<RequestedPythonVersion, ParseRuntimeTxtError> {
     // All leading/trailing whitespace is trimmed, since that's what the classic buildpack
@@ -30,6 +30,12 @@ pub(crate) fn parse(contents: &str) -> Result<RequestedPythonVersion, ParseRunti
             patch: Some(patch),
             origin: PythonVersionOrigin::RuntimeTxt,
         }),
+        [major, minor] => Ok(RequestedPythonVersion {
+            major,
+            minor,
+            patch: None,
+            origin: PythonVersionOrigin::RuntimeTxt,
+        }),
         _ => Err(ParseRuntimeTxtError {
             cleaned_contents: cleaned_contents.clone(),
         }),
@@ -48,6 +54,15 @@ mod tests {
 
     #[test]
     fn parse_valid() {
+        assert_eq!(
+            parse("python-1.2"),
+            Ok(RequestedPythonVersion {
+                major: 1,
+                minor: 2,
+                patch: None,
+                origin: PythonVersionOrigin::RuntimeTxt
+            })
+        );
         assert_eq!(
             parse("python-1.2.3"),
             Ok(RequestedPythonVersion {
@@ -137,12 +152,6 @@ mod tests {
             parse("python-1"),
             Err(ParseRuntimeTxtError {
                 cleaned_contents: "python-1".to_string(),
-            })
-        );
-        assert_eq!(
-            parse("python-1.2"),
-            Err(ParseRuntimeTxtError {
-                cleaned_contents: "python-1.2".to_string(),
             })
         );
         assert_eq!(

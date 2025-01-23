@@ -13,6 +13,8 @@ pub(crate) const DEFAULT_PYTHON_VERSION: RequestedPythonVersion = RequestedPytho
     patch: None,
     origin: PythonVersionOrigin::BuildpackDefault,
 };
+
+#[cfg(test)]
 pub(crate) const DEFAULT_PYTHON_FULL_VERSION: PythonVersion = LATEST_PYTHON_3_13;
 
 pub(crate) const OLDEST_SUPPORTED_PYTHON_3_MINOR_VERSION: u16 = 9;

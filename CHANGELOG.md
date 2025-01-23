@@ -9,6 +9,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
+- Added `runtime.txt` support for the `python-3.X` major Python version form. ([#322](https://github.com/heroku/buildpacks-python/pull/322))
 - Enabled `libcnb`'s `trace` feature. ([#320](https://github.com/heroku/buildpacks-python/pull/320))
 
 ## [0.23.0] - 2025-01-13
