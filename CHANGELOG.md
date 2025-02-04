@@ -14,6 +14,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Changed
 
+- The Python 3.13 version alias now resolves to Python 3.13.2. ([#326](https://github.com/heroku/buildpacks-python/pull/326))
+- The Python 3.12 version alias now resolves to Python 3.12.9. ([#326](https://github.com/heroku/buildpacks-python/pull/326))
 - Deprecated support for the `runtime.txt` file. ([#325](https://github.com/heroku/buildpacks-python/pull/325))
 - Improved the error messages shown when the `.python-version` file contents aren't valid. ([#325](https://github.com/heroku/buildpacks-python/pull/325))
 
