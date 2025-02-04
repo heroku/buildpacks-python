@@ -156,21 +156,26 @@ fn on_requested_python_version_error(error: RequestedPythonVersionError) {
             ParsePythonVersionFileError::InvalidVersion(version) => log_error(
                 "Invalid Python version in .python-version",
                 formatdoc! {"
-                    The Python version specified in '.python-version' is not in the correct format.
+                    The Python version specified in your .python-version file
+                    isn't in the correct format.
                     
                     The following version was found:
                     {version}
                     
-                    However, the version must be specified as either:
-                    1. '<major>.<minor>' (recommended, for automatic security updates)
-                    2. '<major>.<minor>.<patch>' (to pin to an exact Python version)
+                    However, the Python version must be specified as either:
+                    1. The major version only: 3.X  (recommended)
+                    2. An exact patch version: 3.X.Y
                     
-                    Do not include quotes or a 'python-' prefix. To include comments, add them
-                    on their own line, prefixed with '#'.
+                    Don't include quotes or a 'python-' prefix. To include
+                    comments, add them on their own line, prefixed with '#'.
                     
                     For example, to request the latest version of Python {DEFAULT_PYTHON_VERSION},
-                    update the '.python-version' file so it contains:
+                    update your .python-version file so it contains:
                     {DEFAULT_PYTHON_VERSION}
+                    
+                    We strongly recommend that you use the major version form
+                    instead of pinning to an exact version, since it will allow
+                    your app to receive Python security updates.
                 "},
             ),
             ParsePythonVersionFileError::MultipleVersions(versions) => {
@@ -178,26 +183,30 @@ fn on_requested_python_version_error(error: RequestedPythonVersionError) {
                 log_error(
                     "Invalid Python version in .python-version",
                     formatdoc! {"
-                        Multiple Python versions were found in '.python-version':
+                        Multiple versions were found in your .python-version file:
                         
                         {version_list}
                         
                         Update the file so it contains only one Python version.
                         
-                        If the additional versions are actually comments, prefix those lines with '#'.
+                        If you have added comments to the file, make sure that those
+                        lines begin with a '#', so that they are ignored.
                     "},
                 );
             }
             ParsePythonVersionFileError::NoVersion => log_error(
                 "Invalid Python version in .python-version",
                 formatdoc! {"
-                    No Python version was found in the '.python-version' file.
+                    No Python version was found in your .python-version file.
                     
-                    Update the file so that it contain a valid Python version (such as '{DEFAULT_PYTHON_VERSION}'),
-                    or else delete the file to use the default version (currently Python {DEFAULT_PYTHON_VERSION}).
+                    Update the file so that it contains a valid Python version.
 
-                    If the file already contains a version, check the line is not prefixed by
-                    a '#', since otherwise it will be treated as a comment.
+                    For example, to request the latest version of Python {DEFAULT_PYTHON_VERSION},
+                    update your .python-version file so it contains:
+                    {DEFAULT_PYTHON_VERSION}
+
+                    If the file already contains a version, check the line doesn't
+                    begin with a '#', otherwise it will be treated as a comment.
                 "},
             ),
         },
@@ -205,22 +214,29 @@ fn on_requested_python_version_error(error: RequestedPythonVersionError) {
             log_error(
                 "Invalid Python version in runtime.txt",
                 formatdoc! {"
-                    The Python version specified in 'runtime.txt' isn't in
-                    the correct format.
+                    The Python version specified in your runtime.txt file isn't
+                    in the correct format.
                     
-                    The following file contents were found:
+                    The following file contents were found, which aren't valid:
                     {cleaned_contents}
                     
-                    However, the version must be specified as either:
-                    1. 'python-<major>.<minor>' (recommended, for automatic updates)
-                    2. 'python-<major>.<minor>.<patch>' (to pin to an exact version)
+                    However, the runtime.txt file is deprecated since it has
+                    been replaced by the .python-version file. As such, we
+                    recommend that you switch to using a .python-version file
+                    instead of fixing your runtime.txt file.
                     
-                    Remember to include the 'python-' prefix. Comments aren't
-                    supported.
+                    Please delete your runtime.txt file and create a new file named:
+                    .python-version
                     
-                    For example, to request the latest version of Python {DEFAULT_PYTHON_VERSION},
-                    update the 'runtime.txt' file so it contains:
-                    python-{DEFAULT_PYTHON_VERSION}
+                    Make sure to include the '.' at the start of the filename.
+                    
+                    In the new file, specify your app's Python version without
+                    quotes or a 'python-' prefix. For example:
+                    {DEFAULT_PYTHON_VERSION}
+                    
+                    We strongly recommend that you use the major version form
+                    instead of pinning to an exact version, since it will allow
+                    your app to receive Python security updates.
                 "},
             );
         }

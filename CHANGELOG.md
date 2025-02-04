@@ -12,6 +12,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Added `runtime.txt` support for the `python-3.X` major Python version form. ([#322](https://github.com/heroku/buildpacks-python/pull/322))
 - Enabled `libcnb`'s `trace` feature. ([#320](https://github.com/heroku/buildpacks-python/pull/320))
 
+### Changed
+
+- Deprecated support for the `runtime.txt` file. ([#325](https://github.com/heroku/buildpacks-python/pull/325))
+- Improved the error messages shown when the `.python-version` file contents aren't valid. ([#325](https://github.com/heroku/buildpacks-python/pull/325))
+
 ## [0.23.0] - 2025-01-13
 
 ### Changed
