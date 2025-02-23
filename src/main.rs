@@ -27,7 +27,7 @@ use indoc::formatdoc;
 use libcnb::build::{BuildContext, BuildResult, BuildResultBuilder};
 use libcnb::detect::{DetectContext, DetectResult, DetectResultBuilder};
 use libcnb::generic::{GenericMetadata, GenericPlatform};
-use libcnb::{buildpack_main, Buildpack, Env};
+use libcnb::{Buildpack, Env, buildpack_main};
 use libherokubuildpack::log::{log_header, log_info, log_warning};
 use std::io;
 
@@ -48,7 +48,9 @@ impl Buildpack for PythonBuildpack {
         {
             DetectResultBuilder::pass().build()
         } else {
-            log_info("No Python project files found (such as pyproject.toml, requirements.txt or poetry.lock).");
+            log_info(
+                "No Python project files found (such as pyproject.toml, requirements.txt or poetry.lock).",
+            );
             DetectResultBuilder::fail().build()
         }
     }

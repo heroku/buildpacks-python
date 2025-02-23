@@ -1,6 +1,6 @@
 use crate::tests::default_build_config;
 use indoc::indoc;
-use libcnb_test::{assert_contains, assert_empty, PackResult, TestRunner};
+use libcnb_test::{PackResult, TestRunner, assert_contains, assert_empty};
 
 // This test uses symlinks for requirements.txt and manage.py to confirm that it's possible to use
 // them when the Django app is nested inside a subdirectory (such as in backend+frontend monorepos).

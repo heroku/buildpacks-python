@@ -1,3 +1,4 @@
+use crate::BuildpackError;
 use crate::checks::ChecksError;
 use crate::django::DjangoCollectstaticError;
 use crate::layers::pip::PipLayerError;
@@ -7,14 +8,13 @@ use crate::layers::poetry_dependencies::PoetryDependenciesLayerError;
 use crate::layers::python::PythonLayerError;
 use crate::package_manager::DeterminePackageManagerError;
 use crate::python_version::{
-    RequestedPythonVersion, RequestedPythonVersionError, ResolvePythonVersionError,
     DEFAULT_PYTHON_VERSION, NEWEST_SUPPORTED_PYTHON_3_MINOR_VERSION,
-    OLDEST_SUPPORTED_PYTHON_3_MINOR_VERSION,
+    OLDEST_SUPPORTED_PYTHON_3_MINOR_VERSION, RequestedPythonVersion, RequestedPythonVersionError,
+    ResolvePythonVersionError,
 };
 use crate::python_version_file::ParsePythonVersionFileError;
 use crate::runtime_txt::ParseRuntimeTxtError;
 use crate::utils::{CapturedCommandError, DownloadUnpackArchiveError, StreamedCommandError};
-use crate::BuildpackError;
 use indoc::{formatdoc, indoc};
 use libherokubuildpack::log::log_error;
 use std::io;
@@ -45,7 +45,7 @@ pub(crate) fn on_error(error: libcnb::Error<BuildpackError>) {
                 Details: {libcnb_error}
             "},
         ),
-    };
+    }
 }
 
 fn on_buildpack_error(error: BuildpackError) {
@@ -62,7 +62,7 @@ fn on_buildpack_error(error: BuildpackError) {
         BuildpackError::PythonLayer(error) => on_python_layer_error(error),
         BuildpackError::RequestedPythonVersion(error) => on_requested_python_version_error(error),
         BuildpackError::ResolvePythonVersion(error) => on_resolve_python_version_error(error),
-    };
+    }
 }
 
 fn on_buildpack_detection_error(error: &io::Error) {
@@ -85,7 +85,7 @@ fn on_buildpack_checks_error(error: ChecksError) {
                 yourself, check that it wasn't set by an earlier buildpack.
             "},
         ),
-    };
+    }
 }
 
 fn on_determine_package_manager_error(error: DeterminePackageManagerError) {
@@ -137,7 +137,7 @@ fn on_determine_package_manager_error(error: DeterminePackageManagerError) {
                 no dependencies, then create an empty 'requirements.txt' file.
             "},
         ),
-    };
+    }
 }
 
 fn on_requested_python_version_error(error: RequestedPythonVersionError) {
@@ -240,7 +240,7 @@ fn on_requested_python_version_error(error: RequestedPythonVersionError) {
                 "},
             );
         }
-    };
+    }
 }
 
 fn on_resolve_python_version_error(error: ResolvePythonVersionError) {
@@ -335,7 +335,7 @@ fn on_python_layer_error(error: PythonLayerError) {
                 https://devcenter.heroku.com/articles/python-support#supported-runtimes
             "},
         ),
-    };
+    }
 }
 
 fn on_pip_layer_error(error: PipLayerError) {
@@ -367,7 +367,7 @@ fn on_pip_layer_error(error: PipLayerError) {
             "locating the pip wheel file bundled inside the Python 'ensurepip' module",
             &io_error,
         ),
-    };
+    }
 }
 
 fn on_pip_dependencies_layer_error(error: PipDependenciesLayerError) {
@@ -406,7 +406,7 @@ fn on_pip_dependencies_layer_error(error: PipDependenciesLayerError) {
                 "},
             ),
         },
-    };
+    }
 }
 
 fn on_poetry_layer_error(error: PoetryLayerError) {
@@ -438,7 +438,7 @@ fn on_poetry_layer_error(error: PoetryLayerError) {
             "locating the pip wheel file bundled inside the Python 'ensurepip' module",
             &io_error,
         ),
-    };
+    }
 }
 
 fn on_poetry_dependencies_layer_error(error: PoetryDependenciesLayerError) {
@@ -476,7 +476,7 @@ fn on_poetry_dependencies_layer_error(error: PoetryDependenciesLayerError) {
                 "},
             ),
         },
-    };
+    }
 }
 
 fn on_django_detection_error(error: &io::Error) {
@@ -546,7 +546,7 @@ fn on_django_collectstatic_error(error: DjangoCollectstaticError) {
                 "},
             ),
         },
-    };
+    }
 }
 
 fn log_io_error(header: &str, occurred_whilst: &str, io_error: &io::Error) {

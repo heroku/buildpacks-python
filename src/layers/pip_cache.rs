@@ -1,13 +1,13 @@
 use crate::packaging_tool_versions::PIP_VERSION;
 use crate::python_version::PythonVersion;
 use crate::{BuildpackError, PythonBuildpack};
+use libcnb::Env;
 use libcnb::build::BuildContext;
 use libcnb::data::layer_name;
 use libcnb::layer::{
     CachedLayerDefinition, EmptyLayerCause, InvalidMetadataAction, LayerState, RestoredLayerAction,
 };
 use libcnb::layer_env::{LayerEnv, ModificationBehavior, Scope};
-use libcnb::Env;
 use libherokubuildpack::log::log_info;
 use serde::{Deserialize, Serialize};
 

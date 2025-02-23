@@ -1,11 +1,11 @@
 use crate::python_version::{
-    PythonVersion, DEFAULT_PYTHON_FULL_VERSION, DEFAULT_PYTHON_VERSION, LATEST_PYTHON_3_10,
-    LATEST_PYTHON_3_11, LATEST_PYTHON_3_12, LATEST_PYTHON_3_13, LATEST_PYTHON_3_9,
-    NEWEST_SUPPORTED_PYTHON_3_MINOR_VERSION,
+    DEFAULT_PYTHON_FULL_VERSION, DEFAULT_PYTHON_VERSION, LATEST_PYTHON_3_9, LATEST_PYTHON_3_10,
+    LATEST_PYTHON_3_11, LATEST_PYTHON_3_12, LATEST_PYTHON_3_13,
+    NEWEST_SUPPORTED_PYTHON_3_MINOR_VERSION, PythonVersion,
 };
 use crate::tests::default_build_config;
 use indoc::{formatdoc, indoc};
-use libcnb_test::{assert_contains, assert_empty, PackResult, TestRunner};
+use libcnb_test::{PackResult, TestRunner, assert_contains, assert_empty};
 
 #[test]
 #[ignore = "integration test"]
