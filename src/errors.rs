@@ -308,7 +308,7 @@ fn on_python_layer_error(error: PythonLayerError) {
                     An error occurred whilst downloading the Python runtime archive.
                     
                     In some cases, this happens due to an unstable network connection.
-                    Please try again and to see if the error resolves itself.
+                    Please try again to see if the error resolves itself.
                     
                     Details: {ureq_error}
                 "},
