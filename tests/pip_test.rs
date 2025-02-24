@@ -2,7 +2,7 @@ use crate::packaging_tool_versions::PIP_VERSION;
 use crate::python_version::{DEFAULT_PYTHON_FULL_VERSION, DEFAULT_PYTHON_VERSION};
 use crate::tests::default_build_config;
 use indoc::{formatdoc, indoc};
-use libcnb_test::{assert_contains, assert_empty, BuildpackReference, PackResult, TestRunner};
+use libcnb_test::{BuildpackReference, PackResult, TestRunner, assert_contains, assert_empty};
 
 #[test]
 #[ignore = "integration test"]

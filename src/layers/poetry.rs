@@ -1,14 +1,14 @@
 use crate::packaging_tool_versions::POETRY_VERSION;
 use crate::python_version::PythonVersion;
 use crate::utils::StreamedCommandError;
-use crate::{utils, BuildpackError, PythonBuildpack};
+use crate::{BuildpackError, PythonBuildpack, utils};
+use libcnb::Env;
 use libcnb::build::BuildContext;
 use libcnb::data::layer_name;
 use libcnb::layer::{
     CachedLayerDefinition, EmptyLayerCause, InvalidMetadataAction, LayerState, RestoredLayerAction,
 };
 use libcnb::layer_env::{LayerEnv, ModificationBehavior, Scope};
-use libcnb::Env;
 use libherokubuildpack::log::log_info;
 use serde::{Deserialize, Serialize};
 use std::io;

@@ -1,10 +1,10 @@
 use crate::utils::{self, StreamedCommandError};
 use crate::{BuildpackError, PythonBuildpack};
+use libcnb::Env;
 use libcnb::build::BuildContext;
 use libcnb::data::layer_name;
 use libcnb::layer::UncachedLayerDefinition;
 use libcnb::layer_env::{LayerEnv, ModificationBehavior, Scope};
-use libcnb::Env;
 use libherokubuildpack::log::log_info;
 use std::path::PathBuf;
 use std::process::Command;

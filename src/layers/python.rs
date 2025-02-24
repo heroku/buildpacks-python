@@ -1,13 +1,13 @@
 use crate::python_version::PythonVersion;
 use crate::utils::{self, DownloadUnpackArchiveError};
 use crate::{BuildpackError, PythonBuildpack};
+use libcnb::Env;
 use libcnb::build::BuildContext;
 use libcnb::data::layer_name;
 use libcnb::layer::{
     CachedLayerDefinition, EmptyLayerCause, InvalidMetadataAction, LayerState, RestoredLayerAction,
 };
 use libcnb::layer_env::{LayerEnv, ModificationBehavior, Scope};
-use libcnb::Env;
 use libherokubuildpack::log::log_info;
 use serde::{Deserialize, Serialize};
 use std::path::{Path, PathBuf};
@@ -62,7 +62,7 @@ pub(crate) fn install_python(
                     log_info("Discarding cached Python since its layer metadata can't be parsed");
                 }
                 EmptyLayerCause::RestoredLayerAction {
-                    cause: (ref cached_python_version, reasons),
+                    cause: (cached_python_version, reasons),
                 } => {
                     // TODO: Move this type of detailed change messaging to a build config summary
                     // at the start of the build. This message could then be simplified to:
