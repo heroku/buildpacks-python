@@ -257,6 +257,41 @@ fn poetry_oldest_python() {
     });
 }
 
+// This tests that Poetry doesn't download its own Python or fall back to system Python
+// if the Python version in pyproject.toml doesn't match that in .python-version.
+#[test]
+#[ignore = "integration test"]
+fn poetry_mismatched_python_version() {
+    let mut config = default_build_config("tests/fixtures/poetry_mismatched_python_version");
+    config.expected_pack_result(PackResult::Failure);
+
+    TestRunner::default().build(config, |context| {
+        // Ideally we could test a combined stdout/stderr, however libcnb-test doesn't support this:
+        // https://github.com/heroku/libcnb.rs/issues/536
+        assert_contains!(
+            context.pack_stdout,
+            indoc! {"
+                [Installing dependencies using Poetry]
+                Creating virtual environment
+                Running 'poetry sync --only main'
+            "}
+        );
+        assert_contains!(
+            context.pack_stderr,
+            &formatdoc! {r#"
+                Current Python version ({DEFAULT_PYTHON_FULL_VERSION}) is not allowed by the project (3.12.*).
+                Please change python executable via the "env use" command.
+                
+                [Error: Unable to install dependencies using Poetry]
+                The 'poetry sync --only main' command to install the app's
+                dependencies failed (exit status: 1).
+                
+                See the log output above for more information.
+            "#}
+        );
+    });
+}
+
 #[test]
 #[ignore = "integration test"]
 fn poetry_lockfile_out_of_sync() {
