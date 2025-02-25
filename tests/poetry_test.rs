@@ -259,8 +259,8 @@ fn poetry_oldest_python() {
 
 #[test]
 #[ignore = "integration test"]
-fn poetry_install_error() {
-    let mut config = default_build_config("tests/fixtures/poetry_outdated_lockfile");
+fn poetry_lockfile_out_of_sync() {
+    let mut config = default_build_config("tests/fixtures/poetry_lockfile_out_of_sync");
     config.expected_pack_result(PackResult::Failure);
 
     TestRunner::default().build(config, |context| {
