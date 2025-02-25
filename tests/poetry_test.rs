@@ -222,6 +222,41 @@ fn poetry_editable_git_compiled() {
     });
 }
 
+// This checks that the Poetry bootstrap works even with older bundled pip, and that our chosen
+// Poetry version also supports our oldest supported Python version. The fixture also includes
+// a `brotli` directory to the buildpack isn't affected by an `ensurepip` bug in older Python
+// versions: https://github.com/heroku/heroku-buildpack-python/issues/1697
+#[test]
+#[ignore = "integration test"]
+fn poetry_oldest_python() {
+    let config = default_build_config("tests/fixtures/poetry_oldest_python");
+
+    TestRunner::default().build(config, |context| {
+        assert_contains!(
+            context.pack_stdout,
+            indoc! {"
+                [Determining Python version]
+                Using Python version 3.9.0 specified in .python-version
+                
+                [Installing Python]
+                Installing Python 3.9.0
+                
+                [Installing Poetry]
+                Installing Poetry 2.1.1
+                
+                [Installing dependencies using Poetry]
+                Creating virtual environment
+                Running 'poetry sync --only main'
+                Installing dependencies from lock file
+                
+                Package operations: 1 install, 0 updates, 0 removals
+                
+                  - Installing typing-extensions (4.12.2)
+            "}
+        );
+    });
+}
+
 #[test]
 #[ignore = "integration test"]
 fn poetry_install_error() {
