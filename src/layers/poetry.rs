@@ -91,6 +91,8 @@ pub(crate) fn install_poetry(
                     .args([
                         &bundled_pip_module_path.to_string_lossy(),
                         "install",
+                        // Setting this via CLI args since for Poetry we aren't setting `PIP_DISABLE_PIP_VERSION_CHECK`.
+                        "--disable-pip-version-check",
                         // There is no point using pip's cache here, since the layer itself will be cached.
                         "--no-cache-dir",
                         "--no-input",
