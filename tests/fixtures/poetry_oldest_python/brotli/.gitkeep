@@ -1,0 +1,2 @@
+The brotli directory tests that the buildpack isn't affected by an `ensurepip` bug in older Python versions:
+https://github.com/heroku/heroku-buildpack-python/issues/1697

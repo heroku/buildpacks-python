@@ -150,7 +150,7 @@ fn poetry_cache_invalidation_package_manager_changed() {
 fn poetry_cache_previous_buildpack_version() {
     let mut config = default_build_config("tests/fixtures/poetry_basic");
     config.buildpacks([BuildpackReference::Other(
-        "docker://docker.io/heroku/buildpack-python:0.19.0".to_string(),
+        "docker://docker.io/heroku/buildpack-python:0.23.0".to_string(),
     )]);
     let rebuild_config = default_build_config("tests/fixtures/poetry_basic");
 
@@ -164,12 +164,12 @@ fn poetry_cache_previous_buildpack_version() {
                     Using Python version {DEFAULT_PYTHON_VERSION} specified in .python-version
                     
                     [Installing Python]
-                    Discarding cached Python 3.13.0 since:
-                     - The Python version has changed from 3.13.0 to {DEFAULT_PYTHON_FULL_VERSION}
+                    Discarding cached Python 3.13.1 since:
+                     - The Python version has changed from 3.13.1 to {DEFAULT_PYTHON_FULL_VERSION}
                     Installing Python {DEFAULT_PYTHON_FULL_VERSION}
                     
                     [Installing Poetry]
-                    Discarding cached Poetry 1.8.3
+                    Discarding cached Poetry 2.0.1
                     Installing Poetry {POETRY_VERSION}
                     
                     [Installing dependencies using Poetry]
@@ -222,10 +222,80 @@ fn poetry_editable_git_compiled() {
     });
 }
 
+// This checks that the Poetry bootstrap works even with older bundled pip, and that our chosen
+// Poetry version also supports our oldest supported Python version. The fixture also includes
+// a `brotli` directory to the buildpack isn't affected by an `ensurepip` bug in older Python
+// versions: https://github.com/heroku/heroku-buildpack-python/issues/1697
 #[test]
 #[ignore = "integration test"]
-fn poetry_install_error() {
-    let mut config = default_build_config("tests/fixtures/poetry_outdated_lockfile");
+fn poetry_oldest_python() {
+    let config = default_build_config("tests/fixtures/poetry_oldest_python");
+
+    TestRunner::default().build(config, |context| {
+        assert_contains!(
+            context.pack_stdout,
+            indoc! {"
+                [Determining Python version]
+                Using Python version 3.9.0 specified in .python-version
+                
+                [Installing Python]
+                Installing Python 3.9.0
+                
+                [Installing Poetry]
+                Installing Poetry 2.1.1
+                
+                [Installing dependencies using Poetry]
+                Creating virtual environment
+                Running 'poetry sync --only main'
+                Installing dependencies from lock file
+                
+                Package operations: 1 install, 0 updates, 0 removals
+                
+                  - Installing typing-extensions (4.12.2)
+            "}
+        );
+    });
+}
+
+// This tests that Poetry doesn't download its own Python or fall back to system Python
+// if the Python version in pyproject.toml doesn't match that in .python-version.
+#[test]
+#[ignore = "integration test"]
+fn poetry_mismatched_python_version() {
+    let mut config = default_build_config("tests/fixtures/poetry_mismatched_python_version");
+    config.expected_pack_result(PackResult::Failure);
+
+    TestRunner::default().build(config, |context| {
+        // Ideally we could test a combined stdout/stderr, however libcnb-test doesn't support this:
+        // https://github.com/heroku/libcnb.rs/issues/536
+        assert_contains!(
+            context.pack_stdout,
+            indoc! {"
+                [Installing dependencies using Poetry]
+                Creating virtual environment
+                Running 'poetry sync --only main'
+            "}
+        );
+        assert_contains!(
+            context.pack_stderr,
+            &formatdoc! {r#"
+                Current Python version ({DEFAULT_PYTHON_FULL_VERSION}) is not allowed by the project (3.12.*).
+                Please change python executable via the "env use" command.
+                
+                [Error: Unable to install dependencies using Poetry]
+                The 'poetry sync --only main' command to install the app's
+                dependencies failed (exit status: 1).
+                
+                See the log output above for more information.
+            "#}
+        );
+    });
+}
+
+#[test]
+#[ignore = "integration test"]
+fn poetry_lockfile_out_of_sync() {
+    let mut config = default_build_config("tests/fixtures/poetry_lockfile_out_of_sync");
     config.expected_pack_result(PackResult::Failure);
 
     TestRunner::default().build(config, |context| {
