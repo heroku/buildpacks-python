@@ -7,6 +7,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.24.2] - 2025-03-03
+
 ### Changed
 
 - Updated libcnb to 0.27.0, which includes opentelemetry 0.28 and the new custom OTLP File Exporter. ([#334](https://github.com/heroku/buildpacks-python/pull/334))
@@ -308,7 +310,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - Initial implementation. ([#3](https://github.com/heroku/buildpacks-python/pull/3))
 
-[unreleased]: https://github.com/heroku/buildpacks-python/compare/v0.24.1...HEAD
+[unreleased]: https://github.com/heroku/buildpacks-python/compare/v0.24.2...HEAD
+[0.24.2]: https://github.com/heroku/buildpacks-python/compare/v0.24.1...v0.24.2
 [0.24.1]: https://github.com/heroku/buildpacks-python/compare/v0.24.0...v0.24.1
 [0.24.0]: https://github.com/heroku/buildpacks-python/compare/v0.23.0...v0.24.0
 [0.23.0]: https://github.com/heroku/buildpacks-python/compare/v0.22.0...v0.23.0
