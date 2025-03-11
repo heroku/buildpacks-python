@@ -19,7 +19,7 @@ fn django_staticfiles_latest_django() {
                     [Generating Django static files]
                     Running 'manage.py collectstatic'
                     
-                    1 static file symlinked to '/workspace/backend/staticfiles'.
+                    1 static file copied to '/workspace/backend/staticfiles'.
                 "}
             );
         },
@@ -40,9 +40,9 @@ fn django_staticfiles_legacy_django() {
                 indoc! {"
                     [Generating Django static files]
                     Running 'manage.py collectstatic'
-                    Linking '/workspace/testapp/static/robots.txt'
+                    Copying '/workspace/testapp/static/robots.txt'
                     
-                    1 static file symlinked to '/workspace/staticfiles'.
+                    1 static file copied to '/workspace/staticfiles'.
                 "}
             );
         },
@@ -148,7 +148,7 @@ fn django_staticfiles_misconfigured() {
                 context.pack_stderr,
                 indoc! {"
                     [Error: Unable to generate Django static files]
-                    The 'python manage.py collectstatic --link --noinput' Django management
+                    The 'python manage.py collectstatic --noinput' Django management
                     command to generate static files failed (exit status: 1).
                     
                     This is most likely due an issue in your application code or Django
