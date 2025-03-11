@@ -7,6 +7,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Changed
+
+- Stopped using `--link` when running Django's collectstatic command, since it doesn't work with remote storage backends. ([#339](https://github.com/heroku/buildpacks-python/pull/339))
+
 ## [0.24.2] - 2025-03-03
 
 ### Changed
