@@ -8,6 +8,9 @@ on:
         type: boolean
         default: false
 
+# Disable all GITHUB_TOKEN permissions, since the GitHub App token is used instead.
+permissions: {}
+
 jobs:
   release:
     name: Release
