@@ -21,6 +21,11 @@ updates:
       - "dependencies"
       - "github actions"
       - "skip changelog"
+    groups:
+      github-actions:
+        update-types:
+          - "minor"
+          - "patch"
   - package-ecosystem: "pip"
     directory: "/"
     schedule:
