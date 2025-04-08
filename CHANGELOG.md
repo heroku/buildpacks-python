@@ -10,6 +10,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Changed
 
 - Updated pip from 24.3.1 to 25.0.1. ([#332](https://github.com/heroku/buildpacks-python/pull/332))
+- Updated Poetry from 2.1.1 to 2.1.2. ([#343](https://github.com/heroku/buildpacks-python/pull/343))
 - Updated libcnb to 0.28.1, which includes tracing improvements/fixes. ([#344](https://github.com/heroku/buildpacks-python/pull/344))
 
 ## [0.25.0] - 2025-03-11
