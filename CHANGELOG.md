@@ -7,6 +7,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.26.1] - 2025-04-08
+
 ### Changed
 
 - The Python 3.13 version alias now resolves to Python 3.13.3. ([#349](https://github.com/heroku/buildpacks-python/pull/349))
@@ -332,7 +334,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - Initial implementation. ([#3](https://github.com/heroku/buildpacks-python/pull/3))
 
-[unreleased]: https://github.com/heroku/buildpacks-python/compare/v0.26.0...HEAD
+[unreleased]: https://github.com/heroku/buildpacks-python/compare/v0.26.1...HEAD
+[0.26.1]: https://github.com/heroku/buildpacks-python/compare/v0.26.0...v0.26.1
 [0.26.0]: https://github.com/heroku/buildpacks-python/compare/v0.25.0...v0.26.0
 [0.25.0]: https://github.com/heroku/buildpacks-python/compare/v0.24.2...v0.25.0
 [0.24.2]: https://github.com/heroku/buildpacks-python/compare/v0.24.1...v0.24.2
