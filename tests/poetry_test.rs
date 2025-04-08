@@ -234,7 +234,7 @@ fn poetry_oldest_python() {
     TestRunner::default().build(config, |context| {
         assert_contains!(
             context.pack_stdout,
-            indoc! {"
+            &formatdoc! {"
                 [Determining Python version]
                 Using Python version 3.9.0 specified in .python-version
                 
@@ -242,7 +242,7 @@ fn poetry_oldest_python() {
                 Installing Python 3.9.0
                 
                 [Installing Poetry]
-                Installing Poetry 2.1.1
+                Installing Poetry {POETRY_VERSION}
                 
                 [Installing dependencies using Poetry]
                 Creating virtual environment
