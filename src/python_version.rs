@@ -189,6 +189,35 @@ mod tests {
     use super::*;
 
     #[test]
+    fn requested_python_version_display() {
+        assert_eq!(
+            RequestedPythonVersion {
+                major: 3,
+                minor: 13,
+                patch: None,
+                origin: PythonVersionOrigin::PythonVersionFile
+            }
+            .to_string(),
+            "3.13"
+        );
+        assert_eq!(
+            RequestedPythonVersion {
+                major: 3,
+                minor: 9,
+                patch: Some(0),
+                origin: PythonVersionOrigin::PythonVersionFile
+            }
+            .to_string(),
+            "3.9.0"
+        );
+    }
+
+    #[test]
+    fn python_version_display() {
+        assert_eq!(PythonVersion::new(3, 12, 0).to_string(), "3.12.0");
+    }
+
+    #[test]
     fn python_version_url() {
         assert_eq!(
             PythonVersion::new(3, 11, 0).url(&Target {
