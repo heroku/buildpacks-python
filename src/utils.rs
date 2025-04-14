@@ -159,4 +159,49 @@ mod tests {
     fn read_optional_file_io_error() {
         assert!(read_optional_file(Path::new("tests/fixtures/")).is_err());
     }
+
+    #[test]
+    fn run_command_and_stream_output_success() {
+        run_command_and_stream_output(Command::new("bash").args(["-c", "true"])).unwrap();
+    }
+
+    #[test]
+    fn run_command_and_stream_output_io_error() {
+        assert!(matches!(
+            run_command_and_stream_output(&mut Command::new("non-existent-command")).unwrap_err(),
+            StreamedCommandError::Io(_)
+        ));
+    }
+
+    #[test]
+    fn run_command_and_stream_output_non_zero_exit_status() {
+        assert!(matches!(
+            run_command_and_stream_output(Command::new("bash").args(["-c", "false"])).unwrap_err(),
+            StreamedCommandError::NonZeroExitStatus(_)
+        ));
+    }
+
+    #[test]
+    fn run_command_and_capture_output_success() {
+        let output =
+            run_command_and_capture_output(Command::new("bash").args(["-c", "echo output"]))
+                .unwrap();
+        assert_eq!(String::from_utf8_lossy(&output.stdout), "output\n");
+    }
+
+    #[test]
+    fn run_command_and_capture_output_io_error() {
+        assert!(matches!(
+            run_command_and_capture_output(&mut Command::new("non-existent-command")).unwrap_err(),
+            CapturedCommandError::Io(_)
+        ));
+    }
+
+    #[test]
+    fn run_command_and_capture_output_non_zero_exit_status() {
+        assert!(matches!(
+            run_command_and_capture_output(Command::new("bash").args(["-c", "false"])).unwrap_err(),
+            CapturedCommandError::NonZeroExitStatus(_)
+        ));
+    }
 }

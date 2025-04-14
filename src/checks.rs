@@ -34,7 +34,30 @@ pub(crate) fn check_environment(env: &Env) -> Result<(), ChecksError> {
 }
 
 /// Errors due to one of the environment checks failing.
-#[derive(Debug)]
+#[derive(Debug, PartialEq)]
 pub(crate) enum ChecksError {
     ForbiddenEnvVar(String),
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn check_environment_valid() {
+        let mut env = Env::new();
+        env.insert("PYTHONPATH", "/example");
+        env.insert("PIP_EXTRA_INDEX_URL", "https://example.tld/simple");
+        assert_eq!(check_environment(&env), Ok(()));
+    }
+
+    #[test]
+    fn check_environment_invalid() {
+        let mut env = Env::new();
+        env.insert("PYTHONHOME", "/example");
+        assert_eq!(
+            check_environment(&env),
+            Err(ChecksError::ForbiddenEnvVar("PYTHONHOME".to_string()))
+        );
+    }
 }
