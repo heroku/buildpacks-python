@@ -223,6 +223,47 @@ fn pip_editable_git_compiled() {
     });
 }
 
+// This checks that the pip bootstrap works even with older bundled pip, and that our chosen
+// pip version also supports our oldest supported Python version.
+#[test]
+#[ignore = "integration test"]
+fn pip_oldest_python() {
+    let config = default_build_config("tests/fixtures/pip_oldest_python");
+
+    TestRunner::default().build(config, |context| {
+        assert_eq!(
+            context.pack_stderr,
+            indoc! {"
+                
+                [Warning: Support for Python 3.9 is deprecated]
+                Python 3.9 will reach its upstream end-of-life in October 2025,
+                at which point it will no longer receive security updates:
+                https://devguide.python.org/versions/#supported-versions
+                
+                As such, support for Python 3.9 will be removed from this
+                buildpack on 7th January 2026.
+                
+                Upgrade to a newer Python version as soon as possible, by
+                changing the version in your .python-version file.
+                
+                For more information, see:
+                https://devcenter.heroku.com/articles/python-support#supported-python-versions
+                
+            "}
+        );
+        assert_contains!(
+            context.pack_stdout,
+            indoc! {"
+                [Determining Python version]
+                Using Python version 3.9.0 specified in .python-version
+                
+                [Installing Python]
+                Installing Python 3.9.0
+            "}
+        );
+    });
+}
+
 #[test]
 #[ignore = "integration test"]
 fn pip_install_error() {
