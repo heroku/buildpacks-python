@@ -181,16 +181,17 @@ fn python_version_file_invalid_version() {
                 1. The major version only: 3.X  (recommended)
                 2. An exact patch version: 3.X.Y
                 
-                Don't include quotes or a 'python-' prefix. To include
-                comments, add them on their own line, prefixed with '#'.
+                Don't include quotes or a 'python-' prefix. Any code comments
+                must be on a separate line and be prefixed with '#'.
                 
                 For example, to request the latest version of Python {DEFAULT_PYTHON_VERSION},
-                update your .python-version file so it contains:
+                update your .python-version file so it contains exactly:
                 {DEFAULT_PYTHON_VERSION}
-
-                We strongly recommend that you use the major version form
-                instead of pinning to an exact version, since it will allow
-                your app to receive Python security updates.
+                
+                We strongly recommend that you don't specify the Python patch
+                version number, since it will pin your app to an exact Python
+                version and so stop your app from receiving security updates
+                each time it builds.
             "}
         );
     });
@@ -215,6 +216,10 @@ fn python_version_file_multiple_versions() {
                 
                 Update the file so it contains only one Python version.
                 
+                For example, to request the latest version of Python 3.13,
+                update your .python-version file so it contains exactly:
+                3.13
+                
                 If you have added comments to the file, make sure that those
                 lines begin with a '#', so that they are ignored.
             "}
@@ -235,7 +240,8 @@ fn python_version_file_no_version() {
                 [Error: Invalid Python version in .python-version]
                 No Python version was found in your .python-version file.
                 
-                Update the file so that it contains a valid Python version.
+                Update the file so that it contains your app's major Python
+                version number. Don't include quotes or a 'python-' prefix.
                 
                 For example, to request the latest version of Python {DEFAULT_PYTHON_VERSION},
                 update your .python-version file so it contains:
@@ -325,85 +331,37 @@ fn python_version_non_existent_minor() {
     });
 }
 
-// This tests that:
-// - The Python version can be specified using runtime.txt.
-// - A runtime.txt deprecation warning is shown.
-// - pip works with the oldest currently supported Python version (3.9.0).
-// - The Python 3.9 deprecation warning correctly lists the origin as runtime.txt.
 #[test]
 #[ignore = "integration test"]
 fn runtime_txt() {
-    let config = default_build_config("tests/fixtures/runtime_txt_and_python_version_file");
-
-    TestRunner::default().build(config, |context| {
-        assert_eq!(
-            context.pack_stderr,
-            indoc! {"
-
-                [Warning: The runtime.txt file is deprecated]
-                The runtime.txt file is deprecated since it has been replaced
-                by the more widely supported .python-version file.
-                
-                Please delete your runtime.txt file and create a new file named:
-                .python-version
-                
-                Make sure to include the '.' at the start of the filename.
-                
-                In the new file, specify your app's Python version without
-                quotes or a 'python-' prefix. For example:
-                3.9
-                
-                We strongly recommend that you use the major version form
-                instead of pinning to an exact version, since it will allow
-                your app to receive Python security updates.
-                
-                In the near future support for runtime.txt will be removed
-                and this warning will be made an error.
-                
-                
-                [Warning: Support for Python 3.9 is deprecated]
-                Python 3.9 will reach its upstream end-of-life in October 2025,
-                at which point it will no longer receive security updates:
-                https://devguide.python.org/versions/#supported-versions
-                
-                As such, support for Python 3.9 will be removed from this
-                buildpack on 7th January 2026.
-                
-                Upgrade to a newer Python version as soon as possible, by
-                changing the version in your runtime.txt file.
-                
-                For more information, see:
-                https://devcenter.heroku.com/articles/python-support#supported-python-versions
-                
-            "}
-        );
-        assert_contains!(
-            context.pack_stdout,
-            indoc! {"
-                [Determining Python version]
-                Using Python version 3.9.0 specified in runtime.txt
-                
-                [Installing Python]
-                Installing Python 3.9.0
-            "}
-        );
-    });
-}
-
-#[test]
-#[ignore = "integration test"]
-fn runtime_txt_io_error() {
-    let mut config = default_build_config("tests/fixtures/runtime_txt_invalid_unicode");
+    let mut config = default_build_config("tests/fixtures/runtime_txt_and_python_version_file");
     config.expected_pack_result(PackResult::Failure);
 
     TestRunner::default().build(config, |context| {
         assert_contains!(
             context.pack_stderr,
-            indoc! {"
-                [Error: Unable to read runtime.txt]
-                An unexpected error occurred whilst reading the runtime.txt file.
+            &formatdoc! {"
+                [Error: The runtime.txt file isn't supported]
+                The runtime.txt file can longer be used, since it has been
+                replaced by the more widely supported .python-version file.
                 
-                Details: I/O Error: stream did not contain valid UTF-8
+                Please delete your runtime.txt file and create a new file named:
+                .python-version
+                
+                Make sure to include the '.' character at the start of the
+                filename. Don't add a file extension such as '.txt'.
+                
+                In the new file, specify your app's major Python version number
+                only. Don't include quotes or a 'python-' prefix.
+                
+                For example, to request the latest version of Python {DEFAULT_PYTHON_VERSION},
+                update your .python-version file so it contains exactly:
+                {DEFAULT_PYTHON_VERSION}
+                
+                We strongly recommend that you don't specify the Python patch
+                version number, since it will pin your app to an exact Python
+                version and so stop your app from receiving security updates
+                each time it builds.
             "}
         );
     });
@@ -419,30 +377,27 @@ fn runtime_txt_invalid_version() {
         assert_contains!(
             context.pack_stderr,
             &formatdoc! {"
-                [Error: Invalid Python version in runtime.txt]
-                The Python version specified in your runtime.txt file isn't
-                in the correct format.
-                
-                The following file contents were found, which aren't valid:
-                python-an.invalid.version
-                
-                However, the runtime.txt file is deprecated since it has
-                been replaced by the .python-version file. As such, we
-                recommend that you switch to using a .python-version file
-                instead of fixing your runtime.txt file.
+                [Error: The runtime.txt file isn't supported]
+                The runtime.txt file can longer be used, since it has been
+                replaced by the more widely supported .python-version file.
                 
                 Please delete your runtime.txt file and create a new file named:
                 .python-version
                 
-                Make sure to include the '.' at the start of the filename.
+                Make sure to include the '.' character at the start of the
+                filename. Don't add a file extension such as '.txt'.
                 
-                In the new file, specify your app's Python version without
-                quotes or a 'python-' prefix. For example:
+                In the new file, specify your app's major Python version number
+                only. Don't include quotes or a 'python-' prefix.
+                
+                For example, to request the latest version of Python {DEFAULT_PYTHON_VERSION},
+                update your .python-version file so it contains exactly:
                 {DEFAULT_PYTHON_VERSION}
                 
-                We strongly recommend that you use the major version form
-                instead of pinning to an exact version, since it will allow
-                your app to receive Python security updates.
+                We strongly recommend that you don't specify the Python patch
+                version number, since it will pin your app to an exact Python
+                version and so stop your app from receiving security updates
+                each time it builds.
             "}
         );
     });

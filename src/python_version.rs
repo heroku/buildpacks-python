@@ -1,5 +1,4 @@
 use crate::python_version_file::{self, ParsePythonVersionFileError};
-use crate::runtime_txt::{self, ParseRuntimeTxtError};
 use crate::utils;
 use libcnb::Target;
 use std::fmt::{self, Display};
@@ -58,7 +57,6 @@ impl Display for RequestedPythonVersion {
 pub(crate) enum PythonVersionOrigin {
     BuildpackDefault,
     PythonVersionFile,
-    RuntimeTxt,
 }
 
 impl Display for PythonVersionOrigin {
@@ -66,7 +64,6 @@ impl Display for PythonVersionOrigin {
         match self {
             Self::BuildpackDefault => write!(f, "buildpack default"),
             Self::PythonVersionFile => write!(f, ".python-version"),
-            Self::RuntimeTxt => write!(f, "runtime.txt"),
         }
     }
 }
@@ -124,10 +121,12 @@ impl Display for PythonVersion {
 pub(crate) fn read_requested_python_version(
     app_dir: &Path,
 ) -> Result<RequestedPythonVersion, RequestedPythonVersionError> {
-    if let Some(contents) = utils::read_optional_file(&app_dir.join("runtime.txt"))
-        .map_err(RequestedPythonVersionError::ReadRuntimeTxt)?
+    if app_dir
+        .join("runtime.txt")
+        .try_exists()
+        .map_err(RequestedPythonVersionError::CheckRuntimeTxtExists)?
     {
-        runtime_txt::parse(&contents).map_err(RequestedPythonVersionError::ParseRuntimeTxt)
+        Err(RequestedPythonVersionError::RuntimeTxtNotSupported)
     } else if let Some(contents) = utils::read_optional_file(&app_dir.join(".python-version"))
         .map_err(RequestedPythonVersionError::ReadPythonVersionFile)?
     {
@@ -141,14 +140,14 @@ pub(crate) fn read_requested_python_version(
 /// Errors that can occur when determining which Python version was requested for a project.
 #[derive(Debug)]
 pub(crate) enum RequestedPythonVersionError {
+    /// I/O errors when checking whether a runtime.txt file exists.
+    CheckRuntimeTxtExists(io::Error),
     /// Errors parsing a `.python-version` file.
     ParsePythonVersionFile(ParsePythonVersionFileError),
-    /// Errors parsing a `runtime.txt` file.
-    ParseRuntimeTxt(ParseRuntimeTxtError),
     /// Errors reading a `.python-version` file.
     ReadPythonVersionFile(io::Error),
-    /// Errors reading a `runtime.txt` file.
-    ReadRuntimeTxt(io::Error),
+    /// The project has a `runtime.txt` file, which is no longer supported.
+    RuntimeTxtNotSupported,
 }
 
 pub(crate) fn resolve_python_version(
@@ -243,27 +242,26 @@ mod tests {
 
     #[test]
     fn read_requested_python_version_runtime_txt() {
-        assert_eq!(
+        assert!(matches!(
             read_requested_python_version(Path::new(
                 "tests/fixtures/runtime_txt_and_python_version_file"
             ))
-            .unwrap(),
-            RequestedPythonVersion {
-                major: 3,
-                minor: 9,
-                patch: Some(0),
-                origin: PythonVersionOrigin::RuntimeTxt,
-            }
-        );
+            .unwrap_err(),
+            RequestedPythonVersionError::RuntimeTxtNotSupported
+        ));
         assert!(matches!(
             read_requested_python_version(Path::new("tests/fixtures/runtime_txt_invalid_unicode"))
                 .unwrap_err(),
-            RequestedPythonVersionError::ReadRuntimeTxt(_)
+            RequestedPythonVersionError::RuntimeTxtNotSupported
         ));
         assert!(matches!(
             read_requested_python_version(Path::new("tests/fixtures/runtime_txt_invalid_version"))
                 .unwrap_err(),
-            RequestedPythonVersionError::ParseRuntimeTxt(_)
+            RequestedPythonVersionError::RuntimeTxtNotSupported
+        ));
+        assert!(matches!(
+            read_requested_python_version(Path::new("tests/fixtures/empty/.gitkeep")).unwrap_err(),
+            RequestedPythonVersionError::CheckRuntimeTxtExists(_)
         ));
     }
 
@@ -335,7 +333,7 @@ mod tests {
                     major: 3,
                     minor,
                     patch: Some(1),
-                    origin: PythonVersionOrigin::RuntimeTxt
+                    origin: PythonVersionOrigin::PythonVersionFile
                 }),
                 Ok(PythonVersion::new(3, minor, 1))
             );
@@ -374,7 +372,7 @@ mod tests {
             major: 2,
             minor: 7,
             patch: Some(18),
-            origin: PythonVersionOrigin::RuntimeTxt,
+            origin: PythonVersionOrigin::PythonVersionFile,
         };
         assert_eq!(
             resolve_python_version(&requested_python_version),
@@ -416,7 +414,7 @@ mod tests {
             major: 4,
             minor: 0,
             patch: Some(0),
-            origin: PythonVersionOrigin::RuntimeTxt,
+            origin: PythonVersionOrigin::PythonVersionFile,
         };
         assert_eq!(
             resolve_python_version(&requested_python_version),

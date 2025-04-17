@@ -7,7 +7,6 @@ mod package_manager;
 mod packaging_tool_versions;
 mod python_version;
 mod python_version_file;
-mod runtime_txt;
 mod utils;
 
 use crate::checks::ChecksError;
@@ -87,37 +86,6 @@ impl Buildpack for PythonBuildpack {
             PythonVersionOrigin::PythonVersionFile => log_info(format!(
                 "Using Python version {requested_python_version} specified in .python-version"
             )),
-            PythonVersionOrigin::RuntimeTxt => {
-                log_info(format!(
-                    "Using Python version {requested_python_version} specified in runtime.txt"
-                ));
-                log_warning(
-                    "The runtime.txt file is deprecated",
-                    formatdoc! {"
-                        The runtime.txt file is deprecated since it has been replaced
-                        by the more widely supported .python-version file.
-                        
-                        Please delete your runtime.txt file and create a new file named:
-                        .python-version
-                        
-                        Make sure to include the '.' at the start of the filename.
-                        
-                        In the new file, specify your app's Python version without
-                        quotes or a 'python-' prefix. For example:
-                        {major}.{minor}
-                        
-                        We strongly recommend that you use the major version form
-                        instead of pinning to an exact version, since it will allow
-                        your app to receive Python security updates.
-
-                        In the near future support for runtime.txt will be removed
-                        and this warning will be made an error.
-                        ",
-                        major = requested_python_version.major,
-                        minor = requested_python_version.minor,
-                    },
-                );
-            }
         }
 
         if let RequestedPythonVersion {

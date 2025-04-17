@@ -13,7 +13,6 @@ use crate::python_version::{
     ResolvePythonVersionError,
 };
 use crate::python_version_file::ParsePythonVersionFileError;
-use crate::runtime_txt::ParseRuntimeTxtError;
 use crate::utils::{CapturedCommandError, DownloadUnpackArchiveError, StreamedCommandError};
 use indoc::{formatdoc, indoc};
 use libherokubuildpack::log::log_error;
@@ -142,14 +141,14 @@ fn on_determine_package_manager_error(error: DeterminePackageManagerError) {
 
 fn on_requested_python_version_error(error: RequestedPythonVersionError) {
     match error {
+        RequestedPythonVersionError::CheckRuntimeTxtExists(io_error) => log_io_error(
+            "Unable to check for runtime.txt",
+            "checking if a runtime.txt file exists",
+            &io_error,
+        ),
         RequestedPythonVersionError::ReadPythonVersionFile(io_error) => log_io_error(
             "Unable to read .python-version",
             "reading the .python-version file",
-            &io_error,
-        ),
-        RequestedPythonVersionError::ReadRuntimeTxt(io_error) => log_io_error(
-            "Unable to read runtime.txt",
-            "reading the runtime.txt file",
             &io_error,
         ),
         RequestedPythonVersionError::ParsePythonVersionFile(error) => match error {
@@ -166,16 +165,17 @@ fn on_requested_python_version_error(error: RequestedPythonVersionError) {
                     1. The major version only: 3.X  (recommended)
                     2. An exact patch version: 3.X.Y
                     
-                    Don't include quotes or a 'python-' prefix. To include
-                    comments, add them on their own line, prefixed with '#'.
+                    Don't include quotes or a 'python-' prefix. Any code comments
+                    must be on a separate line and be prefixed with '#'.
                     
                     For example, to request the latest version of Python {DEFAULT_PYTHON_VERSION},
-                    update your .python-version file so it contains:
+                    update your .python-version file so it contains exactly:
                     {DEFAULT_PYTHON_VERSION}
                     
-                    We strongly recommend that you use the major version form
-                    instead of pinning to an exact version, since it will allow
-                    your app to receive Python security updates.
+                    We strongly recommend that you don't specify the Python patch
+                    version number, since it will pin your app to an exact Python
+                    version and so stop your app from receiving security updates
+                    each time it builds.
                 "},
             ),
             ParsePythonVersionFileError::MultipleVersions(versions) => {
@@ -189,6 +189,10 @@ fn on_requested_python_version_error(error: RequestedPythonVersionError) {
                         
                         Update the file so it contains only one Python version.
                         
+                        For example, to request the latest version of Python {DEFAULT_PYTHON_VERSION},
+                        update your .python-version file so it contains exactly:
+                        {DEFAULT_PYTHON_VERSION}
+                        
                         If you have added comments to the file, make sure that those
                         lines begin with a '#', so that they are ignored.
                     "},
@@ -199,47 +203,43 @@ fn on_requested_python_version_error(error: RequestedPythonVersionError) {
                 formatdoc! {"
                     No Python version was found in your .python-version file.
                     
-                    Update the file so that it contains a valid Python version.
-
+                    Update the file so that it contains your app's major Python
+                    version number. Don't include quotes or a 'python-' prefix.
+                    
                     For example, to request the latest version of Python {DEFAULT_PYTHON_VERSION},
                     update your .python-version file so it contains:
                     {DEFAULT_PYTHON_VERSION}
-
+                    
                     If the file already contains a version, check the line doesn't
                     begin with a '#', otherwise it will be treated as a comment.
                 "},
             ),
         },
-        RequestedPythonVersionError::ParseRuntimeTxt(ParseRuntimeTxtError { cleaned_contents }) => {
-            log_error(
-                "Invalid Python version in runtime.txt",
-                formatdoc! {"
-                    The Python version specified in your runtime.txt file isn't
-                    in the correct format.
-                    
-                    The following file contents were found, which aren't valid:
-                    {cleaned_contents}
-                    
-                    However, the runtime.txt file is deprecated since it has
-                    been replaced by the .python-version file. As such, we
-                    recommend that you switch to using a .python-version file
-                    instead of fixing your runtime.txt file.
-                    
-                    Please delete your runtime.txt file and create a new file named:
-                    .python-version
-                    
-                    Make sure to include the '.' at the start of the filename.
-                    
-                    In the new file, specify your app's Python version without
-                    quotes or a 'python-' prefix. For example:
-                    {DEFAULT_PYTHON_VERSION}
-                    
-                    We strongly recommend that you use the major version form
-                    instead of pinning to an exact version, since it will allow
-                    your app to receive Python security updates.
-                "},
-            );
-        }
+        RequestedPythonVersionError::RuntimeTxtNotSupported => log_error(
+            "The runtime.txt file isn't supported",
+            formatdoc! {"
+                The runtime.txt file can longer be used, since it has been
+                replaced by the more widely supported .python-version file.
+                
+                Please delete your runtime.txt file and create a new file named:
+                .python-version
+                
+                Make sure to include the '.' character at the start of the
+                filename. Don't add a file extension such as '.txt'.
+                
+                In the new file, specify your app's major Python version number
+                only. Don't include quotes or a 'python-' prefix.
+                
+                For example, to request the latest version of Python {DEFAULT_PYTHON_VERSION},
+                update your .python-version file so it contains exactly:
+                {DEFAULT_PYTHON_VERSION}
+                
+                We strongly recommend that you don't specify the Python patch
+                version number, since it will pin your app to an exact Python
+                version and so stop your app from receiving security updates
+                each time it builds.
+            "},
+        ),
     }
 }
 
