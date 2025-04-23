@@ -1,6 +1,6 @@
 use crate::python_version::PythonVersion;
 use crate::utils::{self, DownloadUnpackArchiveError};
-use crate::{BuildpackError, PythonBuildpack};
+use crate::{BuildpackError, PythonBuildpack, RequestedPythonVersion};
 use libcnb::Env;
 use libcnb::build::BuildContext;
 use libcnb::data::layer_name;
@@ -17,6 +17,7 @@ pub(crate) fn install_python(
     context: &BuildContext<PythonBuildpack>,
     env: &mut Env,
     python_version: &PythonVersion,
+    requested_python_version: &RequestedPythonVersion,
 ) -> Result<PathBuf, libcnb::Error<BuildpackError>> {
     let new_metadata = PythonLayerMetadata {
         arch: context.target.arch.clone(),
@@ -79,12 +80,24 @@ pub(crate) fn install_python(
             let archive_url = python_version.url(&context.target);
             utils::download_and_unpack_zstd_archive(&archive_url, &layer_path).map_err(
                 |error| match error {
-                    // TODO: Remove this once the Python version is validated against a manifest (at
-                    // which point 404s can be treated as an internal error, instead of user error)
-                    DownloadUnpackArchiveError::Request(ureq::Error::Status(404, _)) => {
-                        PythonLayerError::PythonArchiveNotFound {
-                            python_version: python_version.clone(),
-                        }
+                    // If the request 404s then the most likely cause is that the user specified an
+                    // invalid Python version. However, there is a chance there is an issue with the
+                    // S3 bucket (eg files removed, or bucket made private). To try and tell the two
+                    // cases apart, we check whether the requested version included a patch component.
+                    // If it did, then it's most likely user error, but if it didn't, then the patch
+                    // version is the one we resolved, and so know it should be valid.
+                    //
+                    // We have to check for 403s too, since S3 will return a 403 instead of a 404 for
+                    // missing files, if the S3 bucket does not have public list permissions enabled.
+                    //
+                    // TODO: Remove this once versions are validated against a manifest (at which point
+                    // all HTTP 403s/404s can be treated as an internal error).
+                    DownloadUnpackArchiveError::Request(ureq::Error::Status(403 | 404, _))
+                        if requested_python_version.patch.is_some() =>
+                    {
+                        PythonLayerError::PythonArchiveNotAvailable(
+                            requested_python_version.clone(),
+                        )
                     }
                     other_error => PythonLayerError::DownloadUnpackPythonArchive(other_error),
                 },
@@ -240,7 +253,7 @@ fn generate_layer_env(layer_path: &Path, python_version: &PythonVersion) -> Laye
 #[derive(Debug)]
 pub(crate) enum PythonLayerError {
     DownloadUnpackPythonArchive(DownloadUnpackArchiveError),
-    PythonArchiveNotFound { python_version: PythonVersion },
+    PythonArchiveNotAvailable(RequestedPythonVersion),
 }
 
 impl From<PythonLayerError> for libcnb::Error<BuildpackError> {

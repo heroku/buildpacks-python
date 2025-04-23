@@ -11,6 +11,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - Removed support for the deprecated `runtime.txt` file. Python versions must now be specified using a `.python-version` file instead. ([#352](https://github.com/heroku/buildpacks-python/pull/352))
 
+### Changed
+
+- Improved the error messages shown when `.python-version` contains an invalid Python version. ([#353](https://github.com/heroku/buildpacks-python/pull/353))
+
 ## [0.26.1] - 2025-04-08
 
 ### Changed

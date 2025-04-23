@@ -162,11 +162,11 @@ fn on_requested_python_version_error(error: RequestedPythonVersionError) {
                     {version}
                     
                     However, the Python version must be specified as either:
-                    1. The major version only: 3.X  (recommended)
-                    2. An exact patch version: 3.X.Y
+                    1. The major version only, for example: {DEFAULT_PYTHON_VERSION} (recommended)
+                    2. An exact patch version, for example: {DEFAULT_PYTHON_VERSION}.999
                     
-                    Don't include quotes or a 'python-' prefix. Any code comments
-                    must be on a separate line and be prefixed with '#'.
+                    Don't include quotes, a 'python-' prefix or wildcards. Any
+                    code comments must be on a separate line prefixed with '#'.
                     
                     For example, to request the latest version of Python {DEFAULT_PYTHON_VERSION},
                     update your .python-version file so it contains exactly:
@@ -207,7 +207,7 @@ fn on_requested_python_version_error(error: RequestedPythonVersionError) {
                     version number. Don't include quotes or a 'python-' prefix.
                     
                     For example, to request the latest version of Python {DEFAULT_PYTHON_VERSION},
-                    update your .python-version file so it contains:
+                    update your .python-version file so it contains exactly:
                     {DEFAULT_PYTHON_VERSION}
                     
                     If the file already contains a version, check the line doesn't
@@ -305,10 +305,16 @@ fn on_python_layer_error(error: PythonLayerError) {
             DownloadUnpackArchiveError::Request(ureq_error) => log_error(
                 "Unable to download Python",
                 formatdoc! {"
-                    An error occurred whilst downloading the Python runtime archive.
+                    An error occurred while downloading the Python runtime archive.
                     
-                    In some cases, this happens due to an unstable network connection.
-                    Please try again to see if the error resolves itself.
+                    In some cases, this happens due to a temporary issue with
+                    the network connection or server.
+                    
+                    First, make sure that you are using the latest version
+                    of this buildpack, and haven't pinned to an older release
+                    via a custom buildpack configuration in project.toml.
+                    
+                    Then try building again to see if the error resolves itself.
                     
                     Details: {ureq_error}
                 "},
@@ -319,22 +325,38 @@ fn on_python_layer_error(error: PythonLayerError) {
                 &io_error,
             ),
         },
-        // This error will change once the Python version is validated against a manifest.
-        // TODO: (W-12613425) Write the supported Python versions inline, instead of linking out to Dev Center.
-        // TODO: Update this error message to suggest switching to the major version syntax in .python-version,
-        // which will prevent the error from ever occurring (now that all stacks support the same versions).
-        PythonLayerError::PythonArchiveNotFound { python_version } => log_error(
-            "The requested Python version wasn't found",
-            formatdoc! {"
-                The requested Python version ({python_version}) wasn't found.
-                
-                Please switch to a supported Python version, or else don't specify a version
-                and the buildpack will use a default version (currently Python {DEFAULT_PYTHON_VERSION}).
-                
-                For a list of the supported Python versions, see:
-                https://devcenter.heroku.com/articles/python-support#supported-runtimes
-            "},
-        ),
+        // TODO: Remove this once versions are validated against a manifest (at which point all
+        // HTTP 403s/404s can be treated as an internal error).
+        PythonLayerError::PythonArchiveNotAvailable(requested_python_version) => {
+            let RequestedPythonVersion {
+                major,
+                minor,
+                origin,
+                ..
+            } = &requested_python_version;
+            log_error(
+                "The requested Python version isn't available",
+                formatdoc! {"
+                    Your app's {origin} file specifies a Python version
+                    of {requested_python_version}, however, we couldn't find that version on S3.
+                    
+                    Check that this Python version has been released upstream,
+                    and that the Python buildpack has added support for it:
+                    https://www.python.org/downloads/
+                    https://github.com/heroku/buildpacks-python/blob/main/CHANGELOG.md
+                    
+                    If it has, make sure that you are using the latest version
+                    of this buildpack, and haven't pinned to an older release
+                    via a custom buildpack configuration in project.toml.
+                    
+                    We also strongly recommend that you do not pin your app to an
+                    exact Python version such as {requested_python_version}, and instead only specify
+                    the major Python version of {major}.{minor} in your {origin} file.
+                    This will allow your app to receive the latest available Python
+                    patch version automatically, and prevent this type of error.
+                "},
+            );
+        }
     }
 }
 

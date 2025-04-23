@@ -93,7 +93,7 @@ impl Buildpack for PythonBuildpack {
             minor: 9,
             origin,
             ..
-        } = requested_python_version
+        } = &requested_python_version
         {
             log_warning(
                 "Support for Python 3.9 is deprecated",
@@ -115,7 +115,12 @@ impl Buildpack for PythonBuildpack {
         }
 
         log_header("Installing Python");
-        let python_layer_path = python::install_python(&context, &mut env, &python_version)?;
+        let python_layer_path = python::install_python(
+            &context,
+            &mut env,
+            &python_version,
+            &requested_python_version,
+        )?;
 
         let dependencies_layer_dir = match package_manager {
             PackageManager::Pip => {
