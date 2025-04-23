@@ -178,11 +178,11 @@ fn python_version_file_invalid_version() {
                 3.12.0invalid
                 
                 However, the Python version must be specified as either:
-                1. The major version only: 3.X  (recommended)
-                2. An exact patch version: 3.X.Y
+                1. The major version only, for example: {DEFAULT_PYTHON_VERSION} (recommended)
+                2. An exact patch version, for example: {DEFAULT_PYTHON_VERSION}.999
                 
-                Don't include quotes or a 'python-' prefix. Any code comments
-                must be on a separate line and be prefixed with '#'.
+                Don't include quotes, a 'python-' prefix or wildcards. Any
+                code comments must be on a separate line prefixed with '#'.
                 
                 For example, to request the latest version of Python {DEFAULT_PYTHON_VERSION},
                 update your .python-version file so it contains exactly:
@@ -244,7 +244,7 @@ fn python_version_file_no_version() {
                 version number. Don't include quotes or a 'python-' prefix.
                 
                 For example, to request the latest version of Python {DEFAULT_PYTHON_VERSION},
-                update your .python-version file so it contains:
+                update your .python-version file so it contains exactly:
                 {DEFAULT_PYTHON_VERSION}
             "}
         );
@@ -318,14 +318,24 @@ fn python_version_non_existent_minor() {
         assert_contains!(
             context.pack_stderr,
             &formatdoc! {"
-                [Error: The requested Python version wasn't found]
-                The requested Python version (3.12.999) wasn't found.
+                [Error: The requested Python version isn't available]
+                Your app's .python-version file specifies a Python version
+                of 3.12.999, however, we couldn't find that version on S3.
                 
-                Please switch to a supported Python version, or else don't specify a version
-                and the buildpack will use a default version (currently Python {DEFAULT_PYTHON_VERSION}).
+                Check that this Python version has been released upstream,
+                and that the Python buildpack has added support for it:
+                https://www.python.org/downloads/
+                https://github.com/heroku/buildpacks-python/blob/main/CHANGELOG.md
                 
-                For a list of the supported Python versions, see:
-                https://devcenter.heroku.com/articles/python-support#supported-runtimes
+                If it has, make sure that you are using the latest version
+                of this buildpack, and haven't pinned to an older release
+                via a custom buildpack configuration in project.toml.
+                
+                We also strongly recommend that you do not pin your app to an
+                exact Python version such as 3.12.999, and instead only specify
+                the major Python version of 3.12 in your .python-version file.
+                This will allow your app to receive the latest available Python
+                patch version automatically, and prevent this type of error.
             "}
         );
     });
