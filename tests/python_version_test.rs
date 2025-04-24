@@ -175,7 +175,7 @@ fn python_version_file_invalid_version() {
                 isn't in the correct format.
                 
                 The following version was found:
-                3.12.0invalid
+                3.12.0�
                 
                 However, the Python version must be specified as either:
                 1. The major version only, for example: {DEFAULT_PYTHON_VERSION} (recommended)
