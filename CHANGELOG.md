@@ -13,7 +13,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Changed
 
-- Improved the error messages shown when `.python-version` contains an invalid Python version. ([#353](https://github.com/heroku/buildpacks-python/pull/353))
+- Improved the error messages shown when `.python-version` contains an invalid Python version or stray invisible characters (such as ASCII control codes). ([#353](https://github.com/heroku/buildpacks-python/pull/353) and [#354](https://github.com/heroku/buildpacks-python/pull/354))
 
 ## [0.26.1] - 2025-04-08
 

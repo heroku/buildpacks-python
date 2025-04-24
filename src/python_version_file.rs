@@ -9,11 +9,14 @@ pub(crate) fn parse(contents: &str) -> Result<RequestedPythonVersion, ParsePytho
     let versions = contents
         .lines()
         .filter_map(|line| {
-            let trimmed = line.trim();
-            if trimmed.is_empty() || trimmed.starts_with('#') {
+            let trimmed_line = line.trim();
+            if trimmed_line.is_empty() || trimmed_line.starts_with('#') {
                 None
             } else {
-                Some(trimmed.to_string())
+                // ASCII control characters and Unicode are replaced to make the error messages
+                // easier to understand when non-visible characters are present in the file.
+                // We can't use `escape_default()` here because it also escapes quotes.
+                Some(trimmed_line.replace(|c: char| c.is_ascii_control() || !c.is_ascii(), "�"))
             }
         })
         .collect::<Vec<String>>();
@@ -86,7 +89,7 @@ mod tests {
             })
         );
         assert_eq!(
-            parse("  # Comment 1\n  1.2.3  \n  # Comment 2"),
+            parse("  # Comment 1\n\n \t 1.2.3  \r\n  # Comment 2"),
             Ok(RequestedPythonVersion {
                 major: 1,
                 minor: 2,
@@ -147,9 +150,30 @@ mod tests {
             ))
         );
         assert_eq!(
-            parse("  # Comment 1\n  1 2 3  \n  # Comment 2"),
+            parse("  # Comment 1\n ' 1 2 3 ' \n  # Comment 2"),
             Err(ParsePythonVersionFileError::InvalidVersion(
-                "1 2 3".to_string()
+                "' 1 2 3 '".to_string()
+            ))
+        );
+        // ASCII control character `ESC`.
+        assert_eq!(
+            parse("3.12\u{1b}"),
+            Err(ParsePythonVersionFileError::InvalidVersion(
+                "3.12�".to_string()
+            ))
+        );
+        // Extended ASCII soft hyphen.
+        assert_eq!(
+            parse("\u{ad}3.12"),
+            Err(ParsePythonVersionFileError::InvalidVersion(
+                "�3.12".to_string()
+            ))
+        );
+        // Unicode zero width no-break space.
+        assert_eq!(
+            parse("\u{feff}3.12\u{feff}"),
+            Err(ParsePythonVersionFileError::InvalidVersion(
+                "�3.12�".to_string()
             ))
         );
     }
@@ -174,10 +198,10 @@ mod tests {
             ]))
         );
         assert_eq!(
-            parse("  # Comment 1\n  1.2  \n  # Comment 2\npython-3.4"),
+            parse("  # Comment 1\n  1.2  \n  # Comment 2\n\t'python-\u{ad}3.4'"),
             Err(ParsePythonVersionFileError::MultipleVersions(vec![
                 "1.2".to_string(),
-                "python-3.4".to_string()
+                "'python-�3.4'".to_string()
             ]))
         );
     }
