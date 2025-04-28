@@ -22,13 +22,13 @@ use crate::python_version::{
     PythonVersionOrigin, RequestedPythonVersion, RequestedPythonVersionError,
     ResolvePythonVersionError,
 };
+use crate::utils::FileExistsError;
 use indoc::formatdoc;
 use libcnb::build::{BuildContext, BuildResult, BuildResultBuilder};
 use libcnb::detect::{DetectContext, DetectResult, DetectResultBuilder};
 use libcnb::generic::{GenericMetadata, GenericPlatform};
 use libcnb::{Buildpack, Env, buildpack_main};
 use libherokubuildpack::log::{log_header, log_info, log_warning};
-use std::io;
 
 struct PythonBuildpack;
 
@@ -157,7 +157,7 @@ impl Buildpack for PythonBuildpack {
 #[derive(Debug)]
 pub(crate) enum BuildpackError {
     /// I/O errors when performing buildpack detection.
-    BuildpackDetection(io::Error),
+    BuildpackDetection(FileExistsError),
     /// Errors due to one of the environment checks failing.
     Checks(ChecksError),
     /// Errors determining which Python package manager to use for a project.
@@ -165,7 +165,7 @@ pub(crate) enum BuildpackError {
     /// Errors running the Django collectstatic command.
     DjangoCollectstatic(DjangoCollectstaticError),
     /// I/O errors when detecting whether Django is installed.
-    DjangoDetection(io::Error),
+    DjangoDetection(FileExistsError),
     /// Errors installing the project's dependencies into a layer using pip.
     PipDependenciesLayer(PipDependenciesLayerError),
     /// Errors installing pip into a layer.

@@ -1,4 +1,4 @@
-use std::io;
+use crate::{FileExistsError, utils};
 use std::path::Path;
 
 pub(crate) const SUPPORTED_PACKAGE_MANAGERS: [PackageManager; 2] =
@@ -34,9 +34,7 @@ pub(crate) fn determine_package_manager(
     let package_managers_found = SUPPORTED_PACKAGE_MANAGERS
         .into_iter()
         .filter_map(|package_manager| {
-            app_dir
-                .join(package_manager.packages_file())
-                .try_exists()
+            utils::file_exists(&app_dir.join(package_manager.packages_file()))
                 .map_err(DeterminePackageManagerError::CheckFileExists)
                 .map(|exists| exists.then_some(package_manager))
                 .transpose()
@@ -55,7 +53,7 @@ pub(crate) fn determine_package_manager(
 /// Errors that can occur when determining which Python package manager to use for a project.
 #[derive(Debug)]
 pub(crate) enum DeterminePackageManagerError {
-    CheckFileExists(io::Error),
+    CheckFileExists(FileExistsError),
     MultipleFound(Vec<PackageManager>),
     NoneFound,
 }
@@ -93,6 +91,15 @@ mod tests {
         assert!(matches!(
             determine_package_manager(Path::new("tests/fixtures/pyproject_toml_only")).unwrap_err(),
             DeterminePackageManagerError::NoneFound
+        ));
+    }
+
+    #[test]
+    fn determine_package_manager_io_error() {
+        // We pass a path containing a NUL byte as an easy way to trigger an I/O error.
+        assert!(matches!(
+            determine_package_manager(Path::new("\0/invalid")).unwrap_err(),
+            DeterminePackageManagerError::CheckFileExists(err) if err.path == Path::new("\0/invalid/requirements.txt")
         ));
     }
 }
