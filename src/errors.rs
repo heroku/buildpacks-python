@@ -14,37 +14,27 @@ use crate::python_version::{
 };
 use crate::python_version_file::ParsePythonVersionFileError;
 use crate::utils::{
-    CapturedCommandError, DownloadUnpackArchiveError, FileExistsError, FindBundledPipError,
-    ReadOptionalFileError, StreamedCommandError,
+    CapturedCommandError, CommandIoError, DownloadUnpackArchiveError, FileExistsError,
+    FindBundledPipError, ReadOptionalFileError, StreamedCommandError,
 };
 use indoc::{formatdoc, indoc};
 use libherokubuildpack::log::log_error;
-use std::io;
 
 /// Handle any non-recoverable buildpack or libcnb errors that occur.
 ///
 /// The buildpack will exit non-zero after this handler has run, so all that needs to be
 /// performed here is the logging of an error message - and in the future, emitting metrics.
-///
-/// We're intentionally not using `libherokubuildpack::error::on_error` since:
-/// - It doesn't currently do anything other than logging an internal error for the libcnb
-///   error case, and by inlining that here it's easier to keep the output consistent with
-///   the messages emitted for buildpack-specific errors.
-/// - Using it causes trait mismatch errors when Dependabot PRs incrementally update crates.
-/// - When we want to add metrics to our buildpacks, it's going to need a rewrite of
-///   `Buildpack::on_error` anyway (we'll need to write out metrics not log them, so will need
-///   access to the `BuildContext`), at which point we can re-evaluate.
 pub(crate) fn on_error(error: libcnb::Error<BuildpackError>) {
     match error {
         libcnb::Error::BuildpackError(buildpack_error) => on_buildpack_error(buildpack_error),
         libcnb_error => log_error(
             "Internal buildpack error",
             formatdoc! {"
-                An unexpected internal error was reported by the framework used by this buildpack.
-                
-                Please open a support ticket and include the full log output of this build.
-                
+                An error was reported by the framework used by this buildpack.
+
                 Details: {libcnb_error}
+
+                {INTERNAL_ERROR_MESSAGE}
             "},
         ),
     }
@@ -303,10 +293,16 @@ fn on_python_layer_error(error: PythonLayerError) {
                     Details: {ureq_error}
                 "},
             ),
-            DownloadUnpackArchiveError::Unpack(io_error) => log_io_error(
+            DownloadUnpackArchiveError::Unpack(io_error) => log_error(
                 "Unable to unpack the Python archive",
-                "unpacking the downloaded Python runtime archive and writing it to disk",
-                &io_error,
+                // TODO: Investigate under what circumstances this error can occur, and so whether
+                // we should label this as an internal error or else list suggested actions.
+                formatdoc! {"
+                    An I/O error occurred while unpacking the downloaded Python
+                    runtime archive and writing it to disk.
+                    
+                    Details: I/O Error: {io_error}
+                "},
             ),
         },
         // TODO: Remove this once versions are validated against a manifest (at which point all
@@ -347,11 +343,7 @@ fn on_python_layer_error(error: PythonLayerError) {
 fn on_pip_layer_error(error: PipLayerError) {
     match error {
         PipLayerError::InstallPipCommand(error) => match error {
-            StreamedCommandError::Io(io_error) => log_io_error(
-                "Unable to install pip",
-                "running 'python' to install pip",
-                &io_error,
-            ),
+            StreamedCommandError::Io(error) => log_command_io_error(error),
             StreamedCommandError::NonZeroExitStatus(exit_status) => log_error(
                 "Unable to install pip",
                 formatdoc! {"
@@ -375,11 +367,7 @@ fn on_pip_layer_error(error: PipLayerError) {
 fn on_pip_dependencies_layer_error(error: PipDependenciesLayerError) {
     match error {
         PipDependenciesLayerError::CreateVenvCommand(error) => match error {
-            StreamedCommandError::Io(io_error) => log_io_error(
-                "Unable to create virtual environment",
-                "running 'python -m venv' to create a virtual environment",
-                &io_error,
-            ),
+            StreamedCommandError::Io(error) => log_command_io_error(error),
             StreamedCommandError::NonZeroExitStatus(exit_status) => log_error(
                 "Unable to create virtual environment",
                 formatdoc! {"
@@ -391,11 +379,7 @@ fn on_pip_dependencies_layer_error(error: PipDependenciesLayerError) {
             ),
         },
         PipDependenciesLayerError::PipInstallCommand(error) => match error {
-            StreamedCommandError::Io(io_error) => log_io_error(
-                "Unable to install dependencies using pip",
-                "running 'pip install' to install the app's dependencies",
-                &io_error,
-            ),
+            StreamedCommandError::Io(error) => log_command_io_error(error),
             // TODO: Add more suggestions here as to causes (eg network, invalid requirements.txt,
             // package broken or not compatible with version of Python, missing system dependencies etc)
             StreamedCommandError::NonZeroExitStatus(exit_status) => log_error(
@@ -414,11 +398,7 @@ fn on_pip_dependencies_layer_error(error: PipDependenciesLayerError) {
 fn on_poetry_layer_error(error: PoetryLayerError) {
     match error {
         PoetryLayerError::InstallPoetryCommand(error) => match error {
-            StreamedCommandError::Io(io_error) => log_io_error(
-                "Unable to install Poetry",
-                "running 'python' to install Poetry",
-                &io_error,
-            ),
+            StreamedCommandError::Io(error) => log_command_io_error(error),
             StreamedCommandError::NonZeroExitStatus(exit_status) => log_error(
                 "Unable to install Poetry",
                 formatdoc! {"
@@ -442,11 +422,7 @@ fn on_poetry_layer_error(error: PoetryLayerError) {
 fn on_poetry_dependencies_layer_error(error: PoetryDependenciesLayerError) {
     match error {
         PoetryDependenciesLayerError::CreateVenvCommand(error) => match error {
-            StreamedCommandError::Io(io_error) => log_io_error(
-                "Unable to create virtual environment",
-                "running 'python -m venv' to create a virtual environment",
-                &io_error,
-            ),
+            StreamedCommandError::Io(error) => log_command_io_error(error),
             StreamedCommandError::NonZeroExitStatus(exit_status) => log_error(
                 "Unable to create virtual environment",
                 formatdoc! {"
@@ -458,11 +434,7 @@ fn on_poetry_dependencies_layer_error(error: PoetryDependenciesLayerError) {
             ),
         },
         PoetryDependenciesLayerError::PoetryInstallCommand(error) => match error {
-            StreamedCommandError::Io(io_error) => log_io_error(
-                "Unable to install dependencies using Poetry",
-                "running 'poetry install' to install the app's dependencies",
-                &io_error,
-            ),
+            StreamedCommandError::Io(error) => log_command_io_error(error),
             // TODO: Add more suggestions here as to possible causes (similar to pip)
             StreamedCommandError::NonZeroExitStatus(exit_status) => log_error(
                 "Unable to install dependencies using Poetry",
@@ -480,11 +452,7 @@ fn on_poetry_dependencies_layer_error(error: PoetryDependenciesLayerError) {
 fn on_django_collectstatic_error(error: DjangoCollectstaticError) {
     match error {
         DjangoCollectstaticError::CheckCollectstaticCommandExists(error) => match error {
-            CapturedCommandError::Io(io_error) => log_io_error(
-                "Unable to inspect Django configuration",
-                "running 'python manage.py help collectstatic' to inspect the Django configuration",
-                &io_error,
-            ),
+            CapturedCommandError::Io(error) => log_command_io_error(error),
             CapturedCommandError::NonZeroExitStatus(output) => log_error(
                 "Unable to inspect Django configuration",
                 formatdoc! {"
@@ -509,11 +477,7 @@ fn on_django_collectstatic_error(error: DjangoCollectstaticError) {
             log_file_exists_error(error);
         }
         DjangoCollectstaticError::CollectstaticCommand(error) => match error {
-            StreamedCommandError::Io(io_error) => log_io_error(
-                "Unable to generate Django static files",
-                "running 'python manage.py collectstatic' to generate Django static files",
-                &io_error,
-            ),
+            StreamedCommandError::Io(error) => log_command_io_error(error),
             StreamedCommandError::NonZeroExitStatus(exit_status) => log_error(
                 "Unable to generate Django static files",
                 formatdoc! {"
@@ -537,21 +501,6 @@ fn on_django_collectstatic_error(error: DjangoCollectstaticError) {
     }
 }
 
-// This is now only used for Command I/O errors.
-// TODO: Replace this with specialised handling for Command I/O errors.
-fn log_io_error(header: &str, occurred_whilst: &str, io_error: &io::Error) {
-    // We don't suggest opening a support ticket, since a subset of I/O errors can be caused
-    // by issues in the application. In the future, perhaps we should try and split these out?
-    log_error(
-        header,
-        formatdoc! {"
-            An unexpected error occurred whilst {occurred_whilst}.
-            
-            Details: I/O Error: {io_error}
-        "},
-    );
-}
-
 fn log_file_exists_error(FileExistsError { path, io_error }: FileExistsError) {
     let filepath = path.to_string_lossy();
     let filename = path
@@ -567,7 +516,7 @@ fn log_file_exists_error(FileExistsError { path, io_error }: FileExistsError) {
 
             Details: {io_error}
 
-            Try building again to see if the error resolves itself.
+            {INTERNAL_ERROR_MESSAGE}
         "},
     );
 }
@@ -602,7 +551,6 @@ fn log_find_bundled_pip_error(
 ) {
     let bundled_wheels_dir = bundled_wheels_dir.to_string_lossy();
 
-    // TODO: Decide whether we want users to file a bug or open a support ticket.
     log_error(
         "Unable to locate the Python stdlib's bundled pip",
         formatdoc! {"
@@ -612,9 +560,32 @@ fn log_find_bundled_pip_error(
 
             Details: {io_error}
 
-            This is an internal error. Please report it as a bug, here:
-            https://github.com/heroku/buildpacks-python/issues
+            {INTERNAL_ERROR_MESSAGE}
         "
         },
     );
 }
+
+fn log_command_io_error(CommandIoError { program, io_error }: CommandIoError) {
+    log_error(
+        format!("Unable to run {program}"),
+        formatdoc! {"
+            An I/O error occurred while trying to run:
+            `{program}`
+
+            Details: {io_error}
+
+            {INTERNAL_ERROR_MESSAGE}
+        "},
+    );
+}
+
+const INTERNAL_ERROR_MESSAGE: &str = indoc! {"
+    This is an unexpected error that could be caused by a bug
+    in this buildpack, or an issue with the build environment.
+
+    Try building again to see if the error resolves itself.
+
+    If it doesn't, please file a bug report here:
+    https://github.com/heroku/buildpacks-python/issues
+"};

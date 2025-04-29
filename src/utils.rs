@@ -156,7 +156,12 @@ pub(crate) fn run_command_and_stream_output(
 ) -> Result<(), StreamedCommandError> {
     command
         .status()
-        .map_err(StreamedCommandError::Io)
+        .map_err(|io_error| {
+            StreamedCommandError::Io(CommandIoError {
+                program: command.get_program().to_string_lossy().to_string(),
+                io_error,
+            })
+        })
         .and_then(|exit_status| {
             if exit_status.success() {
                 Ok(())
@@ -173,7 +178,12 @@ pub(crate) fn run_command_and_capture_output(
 ) -> Result<Output, CapturedCommandError> {
     command
         .output()
-        .map_err(CapturedCommandError::Io)
+        .map_err(|io_error| {
+            CapturedCommandError::Io(CommandIoError {
+                program: command.get_program().to_string_lossy().to_string(),
+                io_error,
+            })
+        })
         .and_then(|output| {
             if output.status.success() {
                 Ok(output)
@@ -186,15 +196,23 @@ pub(crate) fn run_command_and_capture_output(
 /// Errors that can occur when running an external process using `run_command_and_stream_output`.
 #[derive(Debug)]
 pub(crate) enum StreamedCommandError {
-    Io(io::Error),
+    Io(CommandIoError),
     NonZeroExitStatus(ExitStatus),
 }
 
 /// Errors that can occur when running an external process using `run_command_and_capture_output`.
 #[derive(Debug)]
 pub(crate) enum CapturedCommandError {
-    Io(io::Error),
+    Io(CommandIoError),
     NonZeroExitStatus(Output),
+}
+
+/// I/O error that occurred while spawning/waiting on a command,
+/// such as when the program wasn't found.
+#[derive(Debug)]
+pub(crate) struct CommandIoError {
+    pub(crate) program: String,
+    pub(crate) io_error: io::Error,
 }
 
 /// Convert a [`libcnb::Env`] to a sorted vector of key-value string slice tuples, for easier
