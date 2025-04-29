@@ -13,7 +13,10 @@ use crate::python_version::{
     ResolvePythonVersionError,
 };
 use crate::python_version_file::ParsePythonVersionFileError;
-use crate::utils::{CapturedCommandError, DownloadUnpackArchiveError, StreamedCommandError};
+use crate::utils::{
+    CapturedCommandError, DownloadUnpackArchiveError, FileExistsError, FindBundledPipError,
+    ReadOptionalFileError, StreamedCommandError,
+};
 use indoc::{formatdoc, indoc};
 use libherokubuildpack::log::log_error;
 use std::io;
@@ -49,11 +52,12 @@ pub(crate) fn on_error(error: libcnb::Error<BuildpackError>) {
 
 fn on_buildpack_error(error: BuildpackError) {
     match error {
-        BuildpackError::BuildpackDetection(error) => on_buildpack_detection_error(&error),
+        BuildpackError::BuildpackDetection(error) | BuildpackError::DjangoDetection(error) => {
+            log_file_exists_error(error);
+        }
         BuildpackError::Checks(error) => on_buildpack_checks_error(error),
         BuildpackError::DeterminePackageManager(error) => on_determine_package_manager_error(error),
         BuildpackError::DjangoCollectstatic(error) => on_django_collectstatic_error(error),
-        BuildpackError::DjangoDetection(error) => on_django_detection_error(&error),
         BuildpackError::PipDependenciesLayer(error) => on_pip_dependencies_layer_error(error),
         BuildpackError::PipLayer(error) => on_pip_layer_error(error),
         BuildpackError::PoetryDependenciesLayer(error) => on_poetry_dependencies_layer_error(error),
@@ -62,14 +66,6 @@ fn on_buildpack_error(error: BuildpackError) {
         BuildpackError::RequestedPythonVersion(error) => on_requested_python_version_error(error),
         BuildpackError::ResolvePythonVersion(error) => on_resolve_python_version_error(error),
     }
-}
-
-fn on_buildpack_detection_error(error: &io::Error) {
-    log_io_error(
-        "Unable to complete buildpack detection",
-        "determining if the Python buildpack should be run for this application",
-        error,
-    );
 }
 
 fn on_buildpack_checks_error(error: ChecksError) {
@@ -89,11 +85,7 @@ fn on_buildpack_checks_error(error: ChecksError) {
 
 fn on_determine_package_manager_error(error: DeterminePackageManagerError) {
     match error {
-        DeterminePackageManagerError::CheckFileExists(io_error) => log_io_error(
-            "Unable to determine the package manager",
-            "determining which Python package manager to use for this project",
-            &io_error,
-        ),
+        DeterminePackageManagerError::CheckFileExists(error) => log_file_exists_error(error),
         DeterminePackageManagerError::MultipleFound(package_managers) => {
             let files_found = package_managers
                 .into_iter()
@@ -141,16 +133,8 @@ fn on_determine_package_manager_error(error: DeterminePackageManagerError) {
 
 fn on_requested_python_version_error(error: RequestedPythonVersionError) {
     match error {
-        RequestedPythonVersionError::CheckRuntimeTxtExists(io_error) => log_io_error(
-            "Unable to check for runtime.txt",
-            "checking if a runtime.txt file exists",
-            &io_error,
-        ),
-        RequestedPythonVersionError::ReadPythonVersionFile(io_error) => log_io_error(
-            "Unable to read .python-version",
-            "reading the .python-version file",
-            &io_error,
-        ),
+        RequestedPythonVersionError::CheckRuntimeTxtExists(error) => log_file_exists_error(error),
+        RequestedPythonVersionError::ReadPythonVersionFile(error) => log_read_file_error(error),
         RequestedPythonVersionError::ParsePythonVersionFile(error) => match error {
             ParsePythonVersionFileError::InvalidVersion(version) => log_error(
                 "Invalid Python version in .python-version",
@@ -384,11 +368,7 @@ fn on_pip_layer_error(error: PipLayerError) {
                 "},
             ),
         },
-        PipLayerError::LocateBundledPip(io_error) => log_io_error(
-            "Unable to locate the bundled copy of pip",
-            "locating the pip wheel file bundled inside the Python 'ensurepip' module",
-            &io_error,
-        ),
+        PipLayerError::LocateBundledPip(error) => log_find_bundled_pip_error(error),
     }
 }
 
@@ -455,11 +435,7 @@ fn on_poetry_layer_error(error: PoetryLayerError) {
                 "},
             ),
         },
-        PoetryLayerError::LocateBundledPip(io_error) => log_io_error(
-            "Unable to locate the bundled copy of pip",
-            "locating the pip wheel file bundled inside the Python 'ensurepip' module",
-            &io_error,
-        ),
+        PoetryLayerError::LocateBundledPip(error) => log_find_bundled_pip_error(error),
     }
 }
 
@@ -501,14 +477,6 @@ fn on_poetry_dependencies_layer_error(error: PoetryDependenciesLayerError) {
     }
 }
 
-fn on_django_detection_error(error: &io::Error) {
-    log_io_error(
-        "Unable to determine if this is a Django-based app",
-        "checking if the 'django-admin' command exists",
-        error,
-    );
-}
-
 fn on_django_collectstatic_error(error: DjangoCollectstaticError) {
     match error {
         DjangoCollectstaticError::CheckCollectstaticCommandExists(error) => match error {
@@ -537,11 +505,9 @@ fn on_django_collectstatic_error(error: DjangoCollectstaticError) {
                 },
             ),
         },
-        DjangoCollectstaticError::CheckManagementScriptExists(io_error) => log_io_error(
-            "Unable to inspect Django configuration",
-            "checking if the 'manage.py' script exists",
-            &io_error,
-        ),
+        DjangoCollectstaticError::CheckManagementScriptExists(error) => {
+            log_file_exists_error(error);
+        }
         DjangoCollectstaticError::CollectstaticCommand(error) => match error {
             StreamedCommandError::Io(io_error) => log_io_error(
                 "Unable to generate Django static files",
@@ -571,6 +537,8 @@ fn on_django_collectstatic_error(error: DjangoCollectstaticError) {
     }
 }
 
+// This is now only used for Command I/O errors.
+// TODO: Replace this with specialised handling for Command I/O errors.
 fn log_io_error(header: &str, occurred_whilst: &str, io_error: &io::Error) {
     // We don't suggest opening a support ticket, since a subset of I/O errors can be caused
     // by issues in the application. In the future, perhaps we should try and split these out?
@@ -581,5 +549,72 @@ fn log_io_error(header: &str, occurred_whilst: &str, io_error: &io::Error) {
             
             Details: I/O Error: {io_error}
         "},
+    );
+}
+
+fn log_file_exists_error(FileExistsError { path, io_error }: FileExistsError) {
+    let filepath = path.to_string_lossy();
+    let filename = path
+        .file_name()
+        .unwrap_or(path.as_os_str())
+        .to_string_lossy();
+
+    log_error(
+        format!("Unable to check if {filename} exists"),
+        formatdoc! {"
+            An I/O error occurred while checking if this file exists:
+            {filepath}
+
+            Details: {io_error}
+
+            Try building again to see if the error resolves itself.
+        "},
+    );
+}
+
+fn log_read_file_error(ReadOptionalFileError { path, io_error }: ReadOptionalFileError) {
+    let filepath = path.to_string_lossy();
+    let filename = path
+        .file_name()
+        .unwrap_or(path.as_os_str())
+        .to_string_lossy();
+
+    log_error(
+        format!("Unable to read {filename}"),
+        formatdoc! {"
+            An I/O error occurred while reading the file:
+            {filepath}
+
+            Details: {io_error}
+
+            Check the file's permissions and that it contains valid UTF-8.
+
+            Then try building again.
+        "},
+    );
+}
+
+fn log_find_bundled_pip_error(
+    FindBundledPipError {
+        bundled_wheels_dir,
+        io_error,
+    }: FindBundledPipError,
+) {
+    let bundled_wheels_dir = bundled_wheels_dir.to_string_lossy();
+
+    // TODO: Decide whether we want users to file a bug or open a support ticket.
+    log_error(
+        "Unable to locate the Python stdlib's bundled pip",
+        formatdoc! {"
+            Couldn't find the pip wheel file bundled inside the Python
+            stdlib's `ensurepip` module, at:
+            {bundled_wheels_dir}
+
+            Details: {io_error}
+
+            This is an internal error. Please report it as a bug, here:
+            https://github.com/heroku/buildpacks-python/issues
+        "
+        },
     );
 }

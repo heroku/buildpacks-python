@@ -1,4 +1,4 @@
-use std::io;
+use crate::utils::{self, FileExistsError};
 use std::path::Path;
 
 /// Filenames that if found in a project mean it should be treated as a Python project,
@@ -40,11 +40,10 @@ const KNOWN_PYTHON_PROJECT_FILES: [&str; 23] = [
 
 /// Returns whether the specified project directory is that of a Python project, and so
 /// should pass buildpack detection.
-pub(crate) fn is_python_project_directory(app_dir: &Path) -> io::Result<bool> {
+pub(crate) fn is_python_project_directory(app_dir: &Path) -> Result<bool, FileExistsError> {
     // Until `Iterator::try_find` is stabilised, this is cleaner as a for loop.
     for filename in KNOWN_PYTHON_PROJECT_FILES {
-        let path = app_dir.join(filename);
-        if path.try_exists()? {
+        if utils::file_exists(&app_dir.join(filename))? {
             return Ok(true);
         }
     }
@@ -71,7 +70,9 @@ mod tests {
 
     #[test]
     fn is_python_project_directory_io_error() {
-        assert!(is_python_project_directory(Path::new("tests/fixtures/empty/.gitkeep")).is_err());
+        // We pass a path containing a NUL byte as an easy way to trigger an I/O error.
+        let err = is_python_project_directory(Path::new("\0/invalid")).unwrap_err();
+        assert_eq!(err.path, Path::new("\0/invalid/.python-version"));
     }
 
     #[test]

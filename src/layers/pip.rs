@@ -1,6 +1,6 @@
 use crate::packaging_tool_versions::PIP_VERSION;
 use crate::python_version::PythonVersion;
-use crate::utils::StreamedCommandError;
+use crate::utils::{FindBundledPipError, StreamedCommandError};
 use crate::{BuildpackError, PythonBuildpack, utils};
 use libcnb::Env;
 use libcnb::build::BuildContext;
@@ -11,7 +11,6 @@ use libcnb::layer::{
 use libcnb::layer_env::{LayerEnv, ModificationBehavior, Scope};
 use libherokubuildpack::log::log_info;
 use serde::{Deserialize, Serialize};
-use std::io;
 use std::path::Path;
 use std::process::Command;
 
@@ -133,7 +132,7 @@ struct PipLayerMetadata {
 #[derive(Debug)]
 pub(crate) enum PipLayerError {
     InstallPipCommand(StreamedCommandError),
-    LocateBundledPip(io::Error),
+    LocateBundledPip(FindBundledPipError),
 }
 
 impl From<PipLayerError> for libcnb::Error<BuildpackError> {

@@ -1,8 +1,8 @@
+use crate::FileExistsError;
 use crate::python_version_file::{self, ParsePythonVersionFileError};
-use crate::utils;
+use crate::utils::{self, ReadOptionalFileError};
 use libcnb::Target;
 use std::fmt::{self, Display};
-use std::io;
 use std::path::Path;
 
 /// The Python version that will be installed if the project does not specify an explicit version.
@@ -121,9 +121,7 @@ impl Display for PythonVersion {
 pub(crate) fn read_requested_python_version(
     app_dir: &Path,
 ) -> Result<RequestedPythonVersion, RequestedPythonVersionError> {
-    if app_dir
-        .join("runtime.txt")
-        .try_exists()
+    if utils::file_exists(&app_dir.join("runtime.txt"))
         .map_err(RequestedPythonVersionError::CheckRuntimeTxtExists)?
     {
         Err(RequestedPythonVersionError::RuntimeTxtNotSupported)
@@ -141,11 +139,11 @@ pub(crate) fn read_requested_python_version(
 #[derive(Debug)]
 pub(crate) enum RequestedPythonVersionError {
     /// I/O errors when checking whether a runtime.txt file exists.
-    CheckRuntimeTxtExists(io::Error),
+    CheckRuntimeTxtExists(FileExistsError),
     /// Errors parsing a `.python-version` file.
     ParsePythonVersionFile(ParsePythonVersionFileError),
     /// Errors reading a `.python-version` file.
-    ReadPythonVersionFile(io::Error),
+    ReadPythonVersionFile(ReadOptionalFileError),
     /// The project has a `runtime.txt` file, which is no longer supported.
     RuntimeTxtNotSupported,
 }
@@ -259,9 +257,10 @@ mod tests {
                 .unwrap_err(),
             RequestedPythonVersionError::RuntimeTxtNotSupported
         ));
+        // We pass a path containing a NUL byte as an easy way to trigger an I/O error.
         assert!(matches!(
-            read_requested_python_version(Path::new("tests/fixtures/empty/.gitkeep")).unwrap_err(),
-            RequestedPythonVersionError::CheckRuntimeTxtExists(_)
+            read_requested_python_version(Path::new("\0/invalid")).unwrap_err(),
+            RequestedPythonVersionError::CheckRuntimeTxtExists(err) if err.path == Path::new("\0/invalid/runtime.txt")
         ));
     }
 

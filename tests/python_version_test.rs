@@ -152,9 +152,14 @@ fn python_version_file_io_error() {
             context.pack_stderr,
             indoc! {"
                 [Error: Unable to read .python-version]
-                An unexpected error occurred whilst reading the .python-version file.
-                
-                Details: I/O Error: stream did not contain valid UTF-8
+                An I/O error occurred while reading the file:
+                /workspace/.python-version
+
+                Details: stream did not contain valid UTF-8
+
+                Check the file's permissions and that it contains valid UTF-8.
+
+                Then try building again.
             "}
         );
     });

@@ -1,15 +1,17 @@
+use crate::FileExistsError;
 use crate::utils::{self, CapturedCommandError, StreamedCommandError};
 use indoc::indoc;
 use libcnb::Env;
 use libherokubuildpack::log::log_info;
-use std::io;
 use std::path::Path;
 use std::process::Command;
 
 const MANAGEMENT_SCRIPT_NAME: &str = "manage.py";
 
-pub(crate) fn is_django_installed(dependencies_layer_dir: &Path) -> io::Result<bool> {
-    dependencies_layer_dir.join("bin/django-admin").try_exists()
+pub(crate) fn is_django_installed(dependencies_layer_dir: &Path) -> Result<bool, FileExistsError> {
+    // The Django package includes a `django-admin` entrypoint script, which we can use
+    // as a simple/fast way to check if Django is installed.
+    utils::file_exists(&dependencies_layer_dir.join("bin/django-admin"))
 }
 
 pub(crate) fn run_django_collectstatic(
@@ -54,8 +56,8 @@ pub(crate) fn run_django_collectstatic(
     .map_err(DjangoCollectstaticError::CollectstaticCommand)
 }
 
-fn has_management_script(app_dir: &Path) -> io::Result<bool> {
-    app_dir.join(MANAGEMENT_SCRIPT_NAME).try_exists()
+fn has_management_script(app_dir: &Path) -> Result<bool, FileExistsError> {
+    utils::file_exists(&app_dir.join(MANAGEMENT_SCRIPT_NAME))
 }
 
 fn has_collectstatic_command(app_dir: &Path, env: &Env) -> Result<bool, CapturedCommandError> {
@@ -87,7 +89,7 @@ fn has_collectstatic_command(app_dir: &Path, env: &Env) -> Result<bool, Captured
 #[derive(Debug)]
 pub(crate) enum DjangoCollectstaticError {
     CheckCollectstaticCommandExists(CapturedCommandError),
-    CheckManagementScriptExists(io::Error),
+    CheckManagementScriptExists(FileExistsError),
     CollectstaticCommand(StreamedCommandError),
 }
 
@@ -110,6 +112,8 @@ mod tests {
 
     #[test]
     fn has_management_script_io_error() {
-        assert!(has_management_script(Path::new("tests/fixtures/empty/.gitkeep")).is_err());
+        // We pass a path containing a NUL byte as an easy way to trigger an I/O error.
+        let err = has_management_script(Path::new("\0/invalid")).unwrap_err();
+        assert_eq!(err.path, Path::new("\0/invalid/manage.py"));
     }
 }
