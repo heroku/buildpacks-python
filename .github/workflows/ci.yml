@@ -66,7 +66,7 @@ jobs:
       - name: Rust Cache
         uses: Swatinem/rust-cache@9d47c6ad4b02e050fd481d890b2ea34778fd09d6 # v2.7.8
       - name: Install Pack CLI
-        uses: buildpacks/github-actions/setup-pack@d82294e03fd6b8e8484cde2ee166788876e366e3 # v5.8.10
+        uses: buildpacks/github-actions/setup-pack@c502bcff683efa6f6d56a325df3fbe1722e21881 # v5.8.11
       - name: Pull builder image
         run: docker pull '${{ env.INTEGRATION_TEST_BUILDER }}'
       - name: Pull run image
