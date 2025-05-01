@@ -10,6 +10,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Removed
 
 - Removed support for the deprecated `runtime.txt` file. Python versions must now be specified using a `.python-version` file instead. ([#352](https://github.com/heroku/buildpacks-python/pull/352))
+- Removed support for Ubuntu 20.04 (and thus Heroku-20 / `heroku/builder:20`). ([#358](https://github.com/heroku/buildpacks-python/pull/358))
 
 ### Changed
 
