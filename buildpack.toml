@@ -17,10 +17,6 @@ arch = "amd64"
 
 [[targets.distros]]
 name = "ubuntu"
-version = "20.04"
-
-[[targets.distros]]
-name = "ubuntu"
 version = "22.04"
 
 [[targets.distros]]
