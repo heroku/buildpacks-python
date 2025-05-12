@@ -35,7 +35,7 @@ fn no_package_manager_detected() {
 #[ignore = "integration test"]
 fn multiple_package_managers_detected() {
     TestRunner::default().build(
-        default_build_config("tests/fixtures/pip_and_poetry")
+        default_build_config("tests/fixtures/multiple_package_managers")
             .expected_pack_result(PackResult::Failure),
         |context| {
             assert_contains!(

@@ -81,7 +81,7 @@ mod tests {
     #[test]
     fn determine_package_manager_multiple() {
         assert!(matches!(
-            determine_package_manager(Path::new("tests/fixtures/pip_and_poetry")).unwrap_err(),
+            determine_package_manager(Path::new("tests/fixtures/multiple_package_managers")).unwrap_err(),
             DeterminePackageManagerError::MultipleFound(found) if found == [PackageManager::Pip, PackageManager::Poetry]
         ));
     }

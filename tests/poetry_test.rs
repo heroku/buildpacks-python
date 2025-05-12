@@ -190,7 +190,7 @@ fn poetry_cache_previous_buildpack_version() {
 // This tests that:
 //  - Git from the stack image can be found (ie: the system PATH has been correctly propagated to Poetry).
 //  - The editable mode repository clone is saved into the dependencies layer not the app dir.
-//  - Compiling a source distribution package (as opposed to a pre-built wheel) works.
+//  - Building/compiling a source distribution package (as opposed to a pre-built wheel) works.
 //  - The Python headers can be found in the `include/pythonX.Y/` directory of the Python layer.
 #[test]
 #[ignore = "integration test"]
@@ -198,6 +198,7 @@ fn poetry_editable_git_compiled() {
     let config = default_build_config("tests/fixtures/poetry_editable_git_compiled");
 
     TestRunner::default().build(config, |context| {
+        assert_empty!(context.pack_stderr);
         assert_contains!(
             context.pack_stdout,
             indoc! {"
@@ -232,6 +233,7 @@ fn poetry_oldest_python() {
     let config = default_build_config("tests/fixtures/poetry_oldest_python");
 
     TestRunner::default().build(config, |context| {
+        // We can't `assert_empty!(context.pack_stderr)` here, due to the Python 3.9 deprecation warning.
         assert_contains!(
             context.pack_stdout,
             &formatdoc! {"

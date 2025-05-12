@@ -3,7 +3,7 @@
 # Check that:
 # - The correct env vars are set for later buildpacks.
 # - Python's sys.path is correct.
-# - The correct version of pip was installed, into its own layer.
+# - The correct version of the package manager was installed, into its own layer.
 # - Both the package manager and Python can find the typing-extensions package.
 # - The typing-extensions package was installed into a separate dependencies layer.
 
