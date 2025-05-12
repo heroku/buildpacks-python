@@ -207,7 +207,7 @@ fn pip_cache_previous_buildpack_version() {
 //  - Requirements file env var interpolation works (ie: user-provided env vars have been propagated to pip).
 //  - Git from the stack image can be found (ie: the system PATH has been correctly propagated to pip).
 //  - The editable mode repository clone is saved into the dependencies layer not the app dir.
-//  - Compiling a source distribution package (as opposed to a pre-built wheel) works.
+//  - Building/compiling a source distribution package (as opposed to a pre-built wheel) works.
 //  - The Python headers can be found in the `include/pythonX.Y/` directory of the Python layer.
 #[test]
 #[ignore = "integration test"]
@@ -216,6 +216,7 @@ fn pip_editable_git_compiled() {
     config.env("WHEEL_PACKAGE_URL", "https://github.com/pypa/wheel.git");
 
     TestRunner::default().build(config, |context| {
+        // We can't `assert_empty!(context.pack_stderr)` here, since the git clone steps print to stderr.
         assert_contains!(
             context.pack_stdout,
             "Cloning https://github.com/pypa/wheel.git (to revision 0.44.0) to /layers/heroku_python/venv/src/extension-dist"
