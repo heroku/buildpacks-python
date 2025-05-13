@@ -1,0 +1,24 @@
+[project]
+name = "uv-editable-git-compiled"
+version = "0.0.0"
+requires-python = ">=3.13"
+dependencies = [
+    "extension-dist",
+]
+
+# Since we can't install the VCS dependency in editable mode, we install the current project
+# in editable mode instead, to at least give us some editable mode coverage.
+[build-system]
+requires = ["uv_build"]
+build-backend = "uv_build"
+
+[tool.uv.sources]
+# This requirement uses a VCS URL to test that Git from the stack image can be found
+# (ie: the system PATH has been correctly propagated to uv). A C-based package is used
+# instead of a pure Python package, in order to test that the Python headers can be
+# found in the `include/pythonX.Y/` directory of the Python layer.
+#
+# We don't also test editable mode (like the Git tests for other package managers),
+# since uv doesn't support it with VCS dependencies:
+# https://github.com/astral-sh/uv/issues/5442
+extension-dist = { git = "https://github.com/pypa/wheel.git", tag = "0.44.0", subdirectory = "tests/testdata/extension.dist" }

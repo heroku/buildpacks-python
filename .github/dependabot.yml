@@ -29,7 +29,9 @@ updates:
   - package-ecosystem: "pip"
     directory: "/"
     schedule:
-      interval: "monthly"
+      # We set this to a more frequent interval than the above since uv is still under rapid
+      # iteration, and we'll generally want to be on a recent (if not the latest) version.
+      interval: "weekly"
     labels:
       - "dependencies"
       - "python"

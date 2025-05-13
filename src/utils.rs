@@ -1,9 +1,10 @@
 use crate::python_version::PythonVersion;
+use flate2::read::GzDecoder;
 use std::path::{Path, PathBuf};
 use std::process::{Command, ExitStatus, Output};
 use std::{fs, io};
 use tar::Archive;
-use zstd::Decoder;
+use zstd::Decoder as ZstdDecoder;
 
 /// Check if the specified file exists.
 ///
@@ -86,10 +87,51 @@ pub(crate) fn download_and_unpack_zstd_archive(
         .call()
         .map_err(DownloadUnpackArchiveError::Request)?;
     let zstd_decoder =
-        Decoder::new(response.into_reader()).map_err(DownloadUnpackArchiveError::Unpack)?;
+        ZstdDecoder::new(response.into_reader()).map_err(DownloadUnpackArchiveError::Unpack)?;
     Archive::new(zstd_decoder)
         .unpack(destination)
         .map_err(DownloadUnpackArchiveError::Unpack)
+}
+
+/// Download a gzip compressed tar file and unpack it to the specified directory, with optional
+/// flattening of the directory structure (similar to `tar --strip-components`).
+// The only consumer of this API is the `uv` layer, since uv's archive (a) uses gzip rather than zstd,
+// (b) the contents are also nested within a subdirectory. Having to strip components of the path
+// means we cannot use the much simpler `Archive::unpack` API and instead have to reimplement it.
+// TODO: File an upstream uv issue proposing switching to a flattened archive.
+// TODO: Add timeouts and retries at the same time as doing so for `download_and_unpack_zstd_archive`.
+pub(crate) fn download_and_unpack_nested_gzip_archive(
+    uri: &str,
+    destination: &Path,
+    strip_components: usize,
+) -> Result<(), DownloadUnpackArchiveError> {
+    let response = ureq::get(uri)
+        .call()
+        .map_err(DownloadUnpackArchiveError::Request)?;
+    let gzip_decoder = GzDecoder::new(response.into_reader());
+
+    fs::create_dir_all(destination).map_err(DownloadUnpackArchiveError::Unpack)?;
+
+    for entry in Archive::new(gzip_decoder)
+        .entries()
+        .map_err(DownloadUnpackArchiveError::Unpack)?
+    {
+        let mut entry = entry.map_err(DownloadUnpackArchiveError::Unpack)?;
+        let path = entry.path().map_err(DownloadUnpackArchiveError::Unpack)?;
+        let stripped_path = path
+            .components()
+            .skip(strip_components)
+            .collect::<PathBuf>();
+
+        // The path will be empty here if there were files shallower than the strip_components depth.
+        if stripped_path.components().count() > 0 {
+            entry
+                .unpack(destination.join(stripped_path))
+                .map_err(DownloadUnpackArchiveError::Unpack)?;
+        }
+    }
+
+    Ok(())
 }
 
 /// Errors that can occur when downloading and unpacking an archive using `download_and_unpack_zstd_archive`.

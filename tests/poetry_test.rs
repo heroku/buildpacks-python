@@ -111,7 +111,7 @@ fn poetry_basic_install_and_cache_reuse() {
 #[test]
 #[ignore = "integration test"]
 fn poetry_cache_invalidation_package_manager_changed() {
-    let config = default_build_config("tests/fixtures/pip_basic");
+    let config = default_build_config("tests/fixtures/uv_basic");
     let rebuild_config = default_build_config("tests/fixtures/poetry_basic");
 
     TestRunner::default().build(config, |context| {
@@ -130,6 +130,7 @@ fn poetry_cache_invalidation_package_manager_changed() {
                     Installing Poetry {POETRY_VERSION}
                     
                     [Installing dependencies using Poetry]
+                    Discarding cached virtual environment
                     Creating virtual environment
                     Running 'poetry sync --only main'
                     Installing dependencies from lock file

@@ -1,13 +1,17 @@
 use crate::{FileExistsError, utils};
 use std::path::Path;
 
-pub(crate) const SUPPORTED_PACKAGE_MANAGERS: [PackageManager; 2] =
-    [PackageManager::Pip, PackageManager::Poetry];
+pub(crate) const SUPPORTED_PACKAGE_MANAGERS: [PackageManager; 3] = [
+    PackageManager::Pip,
+    PackageManager::Poetry,
+    PackageManager::Uv,
+];
 
 #[derive(Clone, Copy, Debug, PartialEq)]
 pub(crate) enum PackageManager {
     Pip,
     Poetry,
+    Uv,
 }
 
 impl PackageManager {
@@ -15,6 +19,7 @@ impl PackageManager {
         match self {
             PackageManager::Pip => "pip",
             PackageManager::Poetry => "Poetry",
+            PackageManager::Uv => "uv",
         }
     }
 
@@ -22,6 +27,7 @@ impl PackageManager {
         match self {
             PackageManager::Pip => "requirements.txt",
             PackageManager::Poetry => "poetry.lock",
+            PackageManager::Uv => "uv.lock",
         }
     }
 }
@@ -79,10 +85,18 @@ mod tests {
     }
 
     #[test]
+    fn determine_package_manager_uv_lock() {
+        assert_eq!(
+            determine_package_manager(Path::new("tests/fixtures/uv_basic")).unwrap(),
+            PackageManager::Uv
+        );
+    }
+
+    #[test]
     fn determine_package_manager_multiple() {
         assert!(matches!(
             determine_package_manager(Path::new("tests/fixtures/multiple_package_managers")).unwrap_err(),
-            DeterminePackageManagerError::MultipleFound(found) if found == [PackageManager::Pip, PackageManager::Poetry]
+            DeterminePackageManagerError::MultipleFound(found) if found == [PackageManager::Pip, PackageManager::Poetry, PackageManager::Uv]
         ));
     }
 

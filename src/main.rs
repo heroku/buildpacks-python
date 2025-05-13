@@ -16,7 +16,12 @@ use crate::layers::pip_dependencies::PipDependenciesLayerError;
 use crate::layers::poetry::PoetryLayerError;
 use crate::layers::poetry_dependencies::PoetryDependenciesLayerError;
 use crate::layers::python::PythonLayerError;
-use crate::layers::{pip, pip_cache, pip_dependencies, poetry, poetry_dependencies, python};
+use crate::layers::uv::UvLayerError;
+use crate::layers::uv_dependencies::UvDependenciesLayerError;
+use crate::layers::{
+    pip, pip_cache, pip_dependencies, poetry, poetry_dependencies, python, uv, uv_cache,
+    uv_dependencies,
+};
 use crate::package_manager::{DeterminePackageManagerError, PackageManager};
 use crate::python_version::{
     PythonVersionOrigin, RequestedPythonVersion, RequestedPythonVersionError,
@@ -72,7 +77,7 @@ impl Buildpack for PythonBuildpack {
         log_header("Determining Python version");
 
         let requested_python_version =
-            python_version::read_requested_python_version(&context.app_dir)
+            python_version::read_requested_python_version(&context.app_dir, package_manager)
                 .map_err(BuildpackError::RequestedPythonVersion)?;
         let python_version = python_version::resolve_python_version(&requested_python_version)
             .map_err(BuildpackError::ResolvePythonVersion)?;
@@ -136,6 +141,13 @@ impl Buildpack for PythonBuildpack {
                 log_header("Installing dependencies using Poetry");
                 poetry_dependencies::install_dependencies(&context, &mut env, &python_version)?
             }
+            PackageManager::Uv => {
+                log_header("Installing uv");
+                uv::install_uv(&context, &mut env)?;
+                log_header("Installing dependencies using uv");
+                uv_cache::prepare_uv_cache(&context, &mut env)?;
+                uv_dependencies::install_dependencies(&context, &mut env, &python_version)?
+            }
         };
 
         if django::is_django_installed(&dependencies_layer_dir)
@@ -180,6 +192,10 @@ pub(crate) enum BuildpackError {
     RequestedPythonVersion(RequestedPythonVersionError),
     /// Errors resolving a requested Python version to a specific Python version.
     ResolvePythonVersion(ResolvePythonVersionError),
+    /// Errors installing the project's dependencies into a layer using uv.
+    UvDependenciesLayer(UvDependenciesLayerError),
+    /// Errors installing uv into a layer.
+    UvLayer(UvLayerError),
 }
 
 impl From<BuildpackError> for libcnb::Error<BuildpackError> {

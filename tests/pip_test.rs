@@ -123,7 +123,7 @@ fn pip_basic_install_and_cache_reuse() {
 #[test]
 #[ignore = "integration test"]
 fn pip_cache_invalidation_package_manager_changed() {
-    let config = default_build_config("tests/fixtures/poetry_basic");
+    let config = default_build_config("tests/fixtures/uv_basic");
     let rebuild_config = default_build_config("tests/fixtures/pip_basic");
 
     TestRunner::default().build(config, |context| {

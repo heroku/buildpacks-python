@@ -10,6 +10,7 @@ mod package_manager_test;
 mod pip_test;
 mod poetry_test;
 mod python_version_test;
+mod uv_test;
 
 use libcnb_test::BuildConfig;
 use std::env;

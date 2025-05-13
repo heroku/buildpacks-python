@@ -1,4 +1,3 @@
-use crate::BuildpackError;
 use crate::checks::ChecksError;
 use crate::django::DjangoCollectstaticError;
 use crate::layers::pip::PipLayerError;
@@ -17,6 +16,7 @@ use crate::utils::{
     CapturedCommandError, CommandIoError, DownloadUnpackArchiveError, FileExistsError,
     FindBundledPipError, ReadOptionalFileError, StreamedCommandError,
 };
+use crate::{BuildpackError, PackageManager, UvDependenciesLayerError, UvLayerError};
 use indoc::{formatdoc, indoc};
 use libherokubuildpack::log::log_error;
 
@@ -55,6 +55,8 @@ fn on_buildpack_error(error: BuildpackError) {
         BuildpackError::PythonLayer(error) => on_python_layer_error(error),
         BuildpackError::RequestedPythonVersion(error) => on_requested_python_version_error(error),
         BuildpackError::ResolvePythonVersion(error) => on_resolve_python_version_error(error),
+        BuildpackError::UvDependenciesLayer(error) => on_uv_dependencies_layer_error(error),
+        BuildpackError::UvLayer(error) => on_uv_layer_error(error),
     }
 }
 
@@ -91,40 +93,63 @@ fn on_determine_package_manager_error(error: DeterminePackageManagerError) {
             log_error(
                 "Multiple Python package manager files were found",
                 formatdoc! {"
-                    Exactly one package manager file must be present in your app's source code,
-                    however, several were found:
+                    Exactly one package manager file must be present in your app's
+                    source code, however, several were found:
                     
                     {files_found}
                     
-                    Decide which package manager you want to use with your app, and then delete
-                    the file(s) and any config from the others.
+                    Decide which package manager you want to use with your app, and
+                    then delete the file(s) and any config from the others.
+
+                    If you aren't sure which package manager to use, we recommend
+                    trying uv, since it supports lockfiles, is extremely fast, and
+                    is actively maintained by a full-time team:
+                    https://docs.astral.sh/uv/
                 "},
             );
         }
         DeterminePackageManagerError::NoneFound => log_error(
             "Couldn't find any supported Python package manager files",
             indoc! {"
-                Your app must have either a pip requirements file ('requirements.txt')
-                or Poetry lockfile ('poetry.lock') in the root directory of its source
-                code, so your app's dependencies can be installed.
+                Your app must have either a 'requirements.txt', 'poetry.lock'
+                or 'uv.lock' package manager file in the root directory of its
+                source code, so its dependencies can be installed.
                 
                 If your app already has one of those files, check that it:
                 
                 1. Is in the top level directory (not a subdirectory).
                 2. Has the correct spelling (the filenames are case-sensitive).
                 3. Isn't excluded by '.gitignore' or 'project.toml'.
+                4. Has been added to the Git repository using 'git add --all'
+                   and then committed using 'git commit'.
                 
                 Otherwise, add a package manager file to your app. If your app has
                 no dependencies, then create an empty 'requirements.txt' file.
+
+                If you aren't sure which package manager to use, we recommend
+                trying uv, since it supports lockfiles, is extremely fast, and
+                is actively maintained by a full-time team:
+                https://docs.astral.sh/uv/
+
+                For help with using Python on Heroku, see:
+                https://devcenter.heroku.com/articles/getting-started-with-python-fir
+                https://devcenter.heroku.com/articles/python-support
             "},
         ),
     }
 }
 
+#[allow(clippy::too_many_lines)]
 fn on_requested_python_version_error(error: RequestedPythonVersionError) {
+    const RECOMMEND_NOT_SPECIFYING_PATCH_MESSAGE: &str = indoc! {"
+        We strongly recommend that you don't specify the Python patch
+        version number, since it will pin your app to an exact Python
+        version and so stop your app from receiving security updates
+        each time it builds.
+    "};
+
     match error {
         RequestedPythonVersionError::CheckRuntimeTxtExists(error) => log_file_exists_error(error),
-        RequestedPythonVersionError::ReadPythonVersionFile(error) => log_read_file_error(error),
         RequestedPythonVersionError::ParsePythonVersionFile(error) => match error {
             ParsePythonVersionFileError::InvalidVersion(version) => log_error(
                 "Invalid Python version in .python-version",
@@ -146,10 +171,7 @@ fn on_requested_python_version_error(error: RequestedPythonVersionError) {
                     update your .python-version file so it contains exactly:
                     {DEFAULT_PYTHON_VERSION}
                     
-                    We strongly recommend that you don't specify the Python patch
-                    version number, since it will pin your app to an exact Python
-                    version and so stop your app from receiving security updates
-                    each time it builds.
+                    {RECOMMEND_NOT_SPECIFYING_PATCH_MESSAGE}
                 "},
             ),
             ParsePythonVersionFileError::MultipleVersions(versions) => {
@@ -189,31 +211,70 @@ fn on_requested_python_version_error(error: RequestedPythonVersionError) {
                 "},
             ),
         },
-        RequestedPythonVersionError::RuntimeTxtNotSupported => log_error(
-            "The runtime.txt file isn't supported",
+        RequestedPythonVersionError::PythonVersionFileRequiredWithUv => log_error(
+            "No Python version was specified",
             formatdoc! {"
-                The runtime.txt file can longer be used, since it has been
-                replaced by the more widely supported .python-version file.
-                
-                Please delete your runtime.txt file and create a new file named:
-                .python-version
-                
-                Make sure to include the '.' character at the start of the
-                filename. Don't add a file extension such as '.txt'.
-                
-                In the new file, specify your app's major Python version number
-                only. Don't include quotes or a 'python-' prefix.
-                
-                For example, to request the latest version of Python {DEFAULT_PYTHON_VERSION},
-                update your .python-version file so it contains exactly:
-                {DEFAULT_PYTHON_VERSION}
-                
-                We strongly recommend that you don't specify the Python patch
-                version number, since it will pin your app to an exact Python
-                version and so stop your app from receiving security updates
-                each time it builds.
+                When using the package manager uv on Heroku, you must specify
+                your app's Python version with a .python-version file.
+
+                To add a .python-version file:
+
+                1. Make sure you are in the root directory of your app
+                   and not a subdirectory.
+                2. Run 'uv python pin {DEFAULT_PYTHON_VERSION}'
+                   (adjust to match your app's major Python version).
+                3. Commit the changes to your Git repository using
+                   'git add --all' and then 'git commit'.
+
+                {RECOMMEND_NOT_SPECIFYING_PATCH_MESSAGE}
             "},
         ),
+        RequestedPythonVersionError::ReadPythonVersionFile(error) => log_read_file_error(error),
+        RequestedPythonVersionError::RuntimeTxtNotSupported(package_manager) => {
+            match package_manager {
+                PackageManager::Uv => log_error(
+                    "The runtime.txt file isn't supported",
+                    formatdoc! {"
+                        The runtime.txt file can longer be used, since it has been
+                        replaced by the more widely supported .python-version file.
+
+                        Please switch to a .python-version file instead:
+
+                        1. Make sure you are in the root directory of your app
+                           and not a subdirectory.
+                        2. Delete your runtime.txt file.
+                        3. Run 'uv python pin {DEFAULT_PYTHON_VERSION}'
+                           (adjust to match your app's major Python version).
+                        4. Commit the changes to your Git repository using
+                           'git add --all' and then 'git commit'.
+
+                        {RECOMMEND_NOT_SPECIFYING_PATCH_MESSAGE}
+                    "},
+                ),
+                _ => log_error(
+                    "The runtime.txt file isn't supported",
+                    formatdoc! {"
+                        The runtime.txt file can longer be used, since it has been
+                        replaced by the more widely supported .python-version file.
+                        
+                        Please delete your runtime.txt file and create a new file named:
+                        .python-version
+                        
+                        Make sure to include the '.' character at the start of the
+                        filename. Don't add a file extension such as '.txt'.
+                        
+                        In the new file, specify your app's major Python version number
+                        only. Don't include quotes or a 'python-' prefix.
+                        
+                        For example, to request the latest version of Python {DEFAULT_PYTHON_VERSION},
+                        update your .python-version file so it contains exactly:
+                        {DEFAULT_PYTHON_VERSION}
+                        
+                        {RECOMMEND_NOT_SPECIFYING_PATCH_MESSAGE}
+                    "},
+                ),
+            }
+        }
     }
 }
 
@@ -371,8 +432,8 @@ fn on_pip_dependencies_layer_error(error: PipDependenciesLayerError) {
             StreamedCommandError::NonZeroExitStatus(exit_status) => log_error(
                 "Unable to create virtual environment",
                 formatdoc! {"
-                    The 'python -m venv' command to create a virtual environment did
-                    not exit successfully ({exit_status}).
+                    The 'python -m venv' command to create a virtual environment
+                    didn't exit successfully ({exit_status}).
                     
                     See the log output above for more information.
                 "},
@@ -440,6 +501,70 @@ fn on_poetry_dependencies_layer_error(error: PoetryDependenciesLayerError) {
                 "Unable to install dependencies using Poetry",
                 formatdoc! {"
                     The 'poetry sync --only main' command to install the app's
+                    dependencies failed ({exit_status}).
+                    
+                    See the log output above for more information.
+                "},
+            ),
+        },
+    }
+}
+
+fn on_uv_layer_error(error: UvLayerError) {
+    match error {
+        UvLayerError::DownloadUnpackUvArchive(error) => match error {
+            DownloadUnpackArchiveError::Request(ureq_error) => log_error(
+                "Unable to download uv",
+                formatdoc! {"
+                    An error occurred while downloading uv from GitHub.
+                    
+                    In some cases, this happens due to a temporary issue with
+                    the network connection or GitHub's API/CDN.
+
+                    Try building again to see if the error resolves itself.
+
+                    If that doesn't help, check the status of GitHub here:
+                    https://www.githubstatus.com
+                    
+                    Details: {ureq_error}
+                "},
+            ),
+            DownloadUnpackArchiveError::Unpack(io_error) => log_error(
+                "Unable to unpack the uv archive",
+                // TODO: Investigate under what circumstances this error can occur, and so whether
+                // we should label this as an internal error or else list suggested actions.
+                formatdoc! {"
+                    An I/O error occurred while unpacking the downloaded uv
+                    archive and writing it to disk.
+                    
+                    Details: I/O Error: {io_error}
+                "},
+            ),
+        },
+    }
+}
+
+fn on_uv_dependencies_layer_error(error: UvDependenciesLayerError) {
+    // TODO: Clean these messages up as part of the upcoming build output changes.
+    match error {
+        UvDependenciesLayerError::CreateVenvCommand(error) => match error {
+            StreamedCommandError::Io(error) => log_command_io_error(error),
+            StreamedCommandError::NonZeroExitStatus(exit_status) => log_error(
+                "Unable to create virtual environment",
+                formatdoc! {"
+                    The 'python -m venv' command to create a virtual environment
+                    didn't exit successfully ({exit_status}).
+                    
+                    See the log output above for more information.
+                "},
+            ),
+        },
+        UvDependenciesLayerError::UvSyncCommand(error) => match error {
+            StreamedCommandError::Io(error) => log_command_io_error(error),
+            StreamedCommandError::NonZeroExitStatus(exit_status) => log_error(
+                "Unable to install dependencies using uv",
+                formatdoc! {"
+                    The 'uv sync' command to install the app's
                     dependencies failed ({exit_status}).
                     
                     See the log output above for more information.
