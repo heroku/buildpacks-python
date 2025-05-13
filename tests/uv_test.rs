@@ -339,7 +339,7 @@ fn uv_runtime_txt() {
 
 // This tests the error message when `requires-python` in pyproject.toml isn't compatible with
 // the version in .python-version. This might seem unnecessary since it's testing something uv
-// natively supports, however, the quality of the error message here depends on what uv options
+// validates itself, however, the quality of the error message here depends on what uv options
 // we use (for example, using `--python` or `UV_PYTHON` results in a worse error message).
 #[test]
 #[ignore = "integration test"]
