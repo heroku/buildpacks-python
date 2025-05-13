@@ -559,7 +559,7 @@ fn on_uv_dependencies_layer_error(error: UvDependenciesLayerError) {
                 "},
             ),
         },
-        UvDependenciesLayerError::UvInstallCommand(error) => match error {
+        UvDependenciesLayerError::UvSyncCommand(error) => match error {
             StreamedCommandError::Io(error) => log_command_io_error(error),
             StreamedCommandError::NonZeroExitStatus(exit_status) => log_error(
                 "Unable to install dependencies using uv",

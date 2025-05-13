@@ -149,7 +149,7 @@ pub(crate) fn install_dependencies(
             .stdout(io::stdout())
             .stderr(io::stdout()),
     )
-    .map_err(UvDependenciesLayerError::UvInstallCommand)?;
+    .map_err(UvDependenciesLayerError::UvSyncCommand)?;
 
     Ok(layer_path)
 }
@@ -168,7 +168,7 @@ struct UvDependenciesLayerMetadata {
 #[derive(Debug)]
 pub(crate) enum UvDependenciesLayerError {
     CreateVenvCommand(StreamedCommandError),
-    UvInstallCommand(StreamedCommandError),
+    UvSyncCommand(StreamedCommandError),
 }
 
 impl From<UvDependenciesLayerError> for libcnb::Error<BuildpackError> {
