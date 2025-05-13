@@ -144,8 +144,8 @@ impl Buildpack for PythonBuildpack {
             PackageManager::Uv => {
                 log_header("Installing uv");
                 uv::install_uv(&context, &mut env)?;
-                uv_cache::prepare_uv_cache(&context, &mut env)?;
                 log_header("Installing dependencies using uv");
+                uv_cache::prepare_uv_cache(&context, &mut env)?;
                 uv_dependencies::install_dependencies(&context, &mut env, &python_version)?
             }
         };
