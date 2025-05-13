@@ -4,3 +4,6 @@ pub(crate) mod pip_dependencies;
 pub(crate) mod poetry;
 pub(crate) mod poetry_dependencies;
 pub(crate) mod python;
+pub(crate) mod uv;
+pub(crate) mod uv_cache;
+pub(crate) mod uv_dependencies;

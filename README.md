@@ -31,13 +31,15 @@ docker run --rm -it -e "PORT=8080" -p 8080:8080 sample-app
 
 ## Application Requirements
 
-A `requirements.txt` or `poetry.lock` file must be present in the root (top-level) directory of your app's source code.
+A `requirements.txt`, `poetry.lock` or `uv.lock` file must be present in the root (top-level) directory of your app's source code.
+
+When using the package manager [uv](https://docs.astral.sh/uv/) a `.python-version` file is also required.
 
 ## Configuration
 
 ### Python Version
 
-By default, the buildpack will install the latest version of Python 3.13.
+If a `.python-version` file isn't found, the buildpack will install the latest version of Python 3.13.
 
 To install a different version, add a `.python-version` file to your app's root directory that declares the version number to use:
 

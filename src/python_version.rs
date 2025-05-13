@@ -1,6 +1,6 @@
-use crate::FileExistsError;
 use crate::python_version_file::{self, ParsePythonVersionFileError};
 use crate::utils::{self, ReadOptionalFileError};
+use crate::{FileExistsError, PackageManager};
 use libcnb::Target;
 use std::fmt::{self, Display};
 use std::path::Path;
@@ -120,16 +120,21 @@ impl Display for PythonVersion {
 /// If no known version specifier file is found a default Python version will be used.
 pub(crate) fn read_requested_python_version(
     app_dir: &Path,
+    package_manager: PackageManager,
 ) -> Result<RequestedPythonVersion, RequestedPythonVersionError> {
     if utils::file_exists(&app_dir.join("runtime.txt"))
         .map_err(RequestedPythonVersionError::CheckRuntimeTxtExists)?
     {
-        Err(RequestedPythonVersionError::RuntimeTxtNotSupported)
+        Err(RequestedPythonVersionError::RuntimeTxtNotSupported(
+            package_manager,
+        ))
     } else if let Some(contents) = utils::read_optional_file(&app_dir.join(".python-version"))
         .map_err(RequestedPythonVersionError::ReadPythonVersionFile)?
     {
         python_version_file::parse(&contents)
             .map_err(RequestedPythonVersionError::ParsePythonVersionFile)
+    } else if package_manager == PackageManager::Uv {
+        Err(RequestedPythonVersionError::PythonVersionFileRequiredWithUv)
     } else {
         Ok(DEFAULT_PYTHON_VERSION)
     }
@@ -142,10 +147,12 @@ pub(crate) enum RequestedPythonVersionError {
     CheckRuntimeTxtExists(FileExistsError),
     /// Errors parsing a `.python-version` file.
     ParsePythonVersionFile(ParsePythonVersionFileError),
+    /// No `.python-version` file was found, but one is required when using uv.
+    PythonVersionFileRequiredWithUv,
     /// Errors reading a `.python-version` file.
     ReadPythonVersionFile(ReadOptionalFileError),
     /// The project has a `runtime.txt` file, which is no longer supported.
-    RuntimeTxtNotSupported,
+    RuntimeTxtNotSupported(PackageManager),
 }
 
 pub(crate) fn resolve_python_version(
@@ -241,25 +248,32 @@ mod tests {
     #[test]
     fn read_requested_python_version_runtime_txt() {
         assert!(matches!(
-            read_requested_python_version(Path::new(
-                "tests/fixtures/runtime_txt_and_python_version_file"
-            ))
+            read_requested_python_version(
+                Path::new("tests/fixtures/runtime_txt_and_python_version_file"),
+                PackageManager::Pip
+            )
             .unwrap_err(),
-            RequestedPythonVersionError::RuntimeTxtNotSupported
+            RequestedPythonVersionError::RuntimeTxtNotSupported(PackageManager::Pip)
         ));
         assert!(matches!(
-            read_requested_python_version(Path::new("tests/fixtures/runtime_txt_invalid_unicode"))
-                .unwrap_err(),
-            RequestedPythonVersionError::RuntimeTxtNotSupported
+            read_requested_python_version(
+                Path::new("tests/fixtures/runtime_txt_invalid_unicode"),
+                PackageManager::Poetry
+            )
+            .unwrap_err(),
+            RequestedPythonVersionError::RuntimeTxtNotSupported(PackageManager::Poetry)
         ));
         assert!(matches!(
-            read_requested_python_version(Path::new("tests/fixtures/runtime_txt_invalid_version"))
-                .unwrap_err(),
-            RequestedPythonVersionError::RuntimeTxtNotSupported
+            read_requested_python_version(
+                Path::new("tests/fixtures/runtime_txt_invalid_version"),
+                PackageManager::Uv
+            )
+            .unwrap_err(),
+            RequestedPythonVersionError::RuntimeTxtNotSupported(PackageManager::Uv)
         ));
         // We pass a path containing a NUL byte as an easy way to trigger an I/O error.
         assert!(matches!(
-            read_requested_python_version(Path::new("\0/invalid")).unwrap_err(),
+            read_requested_python_version(Path::new("\0/invalid"), PackageManager::Pip).unwrap_err(),
             RequestedPythonVersionError::CheckRuntimeTxtExists(err) if err.path == Path::new("\0/invalid/runtime.txt")
         ));
     }
@@ -267,7 +281,11 @@ mod tests {
     #[test]
     fn read_requested_python_version_python_version_file() {
         assert_eq!(
-            read_requested_python_version(Path::new("tests/fixtures/python_3.9")).unwrap(),
+            read_requested_python_version(
+                Path::new("tests/fixtures/python_3.9"),
+                PackageManager::Pip
+            )
+            .unwrap(),
             RequestedPythonVersion {
                 major: 3,
                 minor: 9,
@@ -276,16 +294,18 @@ mod tests {
             }
         );
         assert!(matches!(
-            read_requested_python_version(Path::new(
-                "tests/fixtures/python_version_file_invalid_unicode"
-            ))
+            read_requested_python_version(
+                Path::new("tests/fixtures/python_version_file_invalid_unicode"),
+                PackageManager::Poetry
+            )
             .unwrap_err(),
             RequestedPythonVersionError::ReadPythonVersionFile(_)
         ));
         assert!(matches!(
-            read_requested_python_version(Path::new(
-                "tests/fixtures/python_version_file_invalid_version"
-            ))
+            read_requested_python_version(
+                Path::new("tests/fixtures/python_version_file_invalid_version"),
+                PackageManager::Uv
+            )
             .unwrap_err(),
             RequestedPythonVersionError::ParsePythonVersionFile(_)
         ));
@@ -294,8 +314,11 @@ mod tests {
     #[test]
     fn read_requested_python_version_none_specified() {
         assert_eq!(
-            read_requested_python_version(Path::new("tests/fixtures/python_version_unspecified"))
-                .unwrap(),
+            read_requested_python_version(
+                Path::new("tests/fixtures/python_version_unspecified"),
+                PackageManager::Pip
+            )
+            .unwrap(),
             RequestedPythonVersion {
                 major: 3,
                 minor: 13,
@@ -303,6 +326,27 @@ mod tests {
                 origin: PythonVersionOrigin::BuildpackDefault
             }
         );
+        assert_eq!(
+            read_requested_python_version(
+                Path::new("tests/fixtures/python_version_unspecified"),
+                PackageManager::Poetry
+            )
+            .unwrap(),
+            RequestedPythonVersion {
+                major: 3,
+                minor: 13,
+                patch: None,
+                origin: PythonVersionOrigin::BuildpackDefault
+            }
+        );
+        assert!(matches!(
+            read_requested_python_version(
+                Path::new("tests/fixtures/python_version_unspecified"),
+                PackageManager::Uv
+            )
+            .unwrap_err(),
+            RequestedPythonVersionError::PythonVersionFileRequiredWithUv
+        ));
     }
 
     #[test]

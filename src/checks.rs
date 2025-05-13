@@ -7,7 +7,8 @@ use libcnb::Env;
 // https://docs.python.org/3/using/cmdline.html#environment-variables
 // https://pip.pypa.io/en/stable/cli/pip/#general-options
 // https://pip.pypa.io/en/stable/cli/pip_install/#options
-const FORBIDDEN_ENV_VARS: [&str; 12] = [
+// https://docs.astral.sh/uv/configuration/environment/
+const FORBIDDEN_ENV_VARS: [&str; 22] = [
     "PIP_CACHE_DIR",
     "PIP_PREFIX",
     "PIP_PYTHON",
@@ -19,6 +20,16 @@ const FORBIDDEN_ENV_VARS: [&str; 12] = [
     "PYTHONNOUSERSITE",
     "PYTHONPLATLIBDIR",
     "PYTHONUSERBASE",
+    "UV_CACHE_DIR",
+    "UV_LINK_MODE",
+    "UV_MANAGED_PYTHON",
+    "UV_NO_CACHE",
+    "UV_NO_MANAGED_PYTHON",
+    "UV_PROJECT",
+    "UV_PROJECT_ENVIRONMENT",
+    "UV_PYTHON",
+    "UV_PYTHON_DOWNLOADS",
+    "UV_PYTHON_PREFERENCE",
     "VIRTUAL_ENV",
 ];
 

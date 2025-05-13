@@ -21,6 +21,10 @@ large_enum_variant = "allow"
 result_large_err = "allow"
 
 [dependencies]
+# We use the `zlib-rs` backend, since it's the fastest:
+# https://github.com/rust-lang/flate2-rs#backends
+# https://trifectatech.org/blog/zlib-rs-is-faster-than-c/
+flate2 = { version = "1", default-features = false, features = ["zlib-rs"] }
 indoc = "2"
 libcnb = { version = "0.28", features = ["trace"] }
 libherokubuildpack = { version = "0.28", default-features = false, features = ["log"] }
@@ -31,3 +35,5 @@ zstd = { version = "0.13", default-features = false }
 
 [dev-dependencies]
 libcnb-test = "0.28"
+# Required due to: https://github.com/heroku/libcnb.rs/issues/944
+regex = { version = "1", default-features = false, features = ["std"] }

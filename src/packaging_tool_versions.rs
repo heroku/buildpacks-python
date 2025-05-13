@@ -9,6 +9,9 @@ pub(crate) const PIP_VERSION: &str =
 pub(crate) const POETRY_VERSION: &str =
     extract_requirement_version(include_str!("../requirements/poetry.txt"))
         .expect("poetry.txt must contain 'poetry==VERSION'");
+pub(crate) const UV_VERSION: &str =
+    extract_requirement_version(include_str!("../requirements/uv.txt"))
+        .expect("uv.txt must contain 'uv==VERSION'");
 
 // Extract the version substring from an exact-version package specifier (such as `foo==1.2.3`).
 // This function should only be used to extract the version constants from the buildpack's own
