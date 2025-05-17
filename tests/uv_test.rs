@@ -159,13 +159,9 @@ fn uv_cache_invalidation_package_manager_changed() {
 #[test]
 #[ignore = "integration test"]
 fn uv_cache_previous_buildpack_version() {
-    #![allow(unreachable_code)]
-    // TODO: Enable this test once a previous buildpack release exists that supports uv.
-    return;
-
     let mut config = default_build_config("tests/fixtures/uv_basic");
     config.buildpacks([BuildpackReference::Other(
-        "docker://docker.io/heroku/buildpack-python:TODO".to_string(),
+        "docker://docker.io/heroku/buildpack-python:2.0.0".to_string(),
     )]);
     let rebuild_config = default_build_config("tests/fixtures/uv_basic");
 
@@ -175,7 +171,25 @@ fn uv_cache_previous_buildpack_version() {
             assert_contains_match!(
                 rebuild_context.pack_stdout,
                 &formatdoc! {"
-                    TODO
+                    \\[Determining Python version\\]
+                    Using Python version {DEFAULT_PYTHON_VERSION} specified in .python-version
+                    
+                    \\[Installing Python\\]
+                    Using cached Python 3.13.3
+                    
+                    \\[Installing uv\\]
+                    Discarding cached uv 0.7.3
+                    Installing uv {UV_VERSION}
+                    
+                    \\[Installing dependencies using uv\\]
+                    Discarding cached virtual environment
+                    Creating virtual environment
+                    Running 'uv sync --locked --no-default-groups'
+                    Resolved 7 packages in .+s
+                    Prepared 1 package in .+s
+                    Installed 1 package in .+s
+                    Bytecode compiled 1 file in .+s
+                     \\+ typing-extensions==4.13.2
                 "}
             );
         });
