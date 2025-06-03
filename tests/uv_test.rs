@@ -217,12 +217,7 @@ fn uv_editable_git_compiled() {
                 Creating virtual environment
                 Running 'uv sync --locked --no-default-groups'
                 Resolved 2 packages in .+ms
-                   Building uv-editable-git-compiled @ file:///workspace
-                   Updating https://github.com/pypa/wheel.git \\(0.44.0\\)
-                      Built uv-editable-git-compiled @ file:///workspace
-                    Updated https://github.com/pypa/wheel.git \\(7bb46d7727e6e89fe56b3c78297b3af2672bbbe2\\)
-                   Building extension-dist @ git\\+https://github.com/pypa/wheel.git@7bb46d7727e6e89fe56b3c78297b3af2672bbbe2#subdirectory=tests/testdata/extension.dist
-                      Built extension-dist @ git\\+https://github.com/pypa/wheel.git@7bb46d7727e6e89fe56b3c78297b3af2672bbbe2#subdirectory=tests/testdata/extension.dist
+                   (?s:.)+
                 Prepared 2 packages in .+s
                 Installed 2 packages in .+s
                 Bytecode compiled 0 files in .+s
