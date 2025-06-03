@@ -60,7 +60,7 @@ fn uv_basic_install_and_cache_reuse() {
                  '/layers/heroku_python/venv/lib/python3.13/site-packages'\\]
                 
                 uv {UV_VERSION}
-                Using Python 3.13.3 environment at: /layers/heroku_python/venv
+                Using Python {DEFAULT_PYTHON_FULL_VERSION} environment at: /layers/heroku_python/venv
                 Package           Version
                 ----------------- -------
                 typing-extensions 4.13.2
@@ -175,7 +175,9 @@ fn uv_cache_previous_buildpack_version() {
                     Using Python version {DEFAULT_PYTHON_VERSION} specified in .python-version
                     
                     \\[Installing Python\\]
-                    Using cached Python 3.13.3
+                    Discarding cached Python 3.13.3 since:
+                     - The Python version has changed from 3.13.3 to {DEFAULT_PYTHON_FULL_VERSION}
+                    Installing Python {DEFAULT_PYTHON_FULL_VERSION}
                     
                     \\[Installing uv\\]
                     Discarding cached uv 0.7.3
