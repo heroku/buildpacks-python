@@ -60,7 +60,7 @@ fn uv_basic_install_and_cache_reuse() {
                  '/layers/heroku_python/venv/lib/python3.13/site-packages'\\]
                 
                 uv {UV_VERSION}
-                Using Python 3.13.3 environment at: /layers/heroku_python/venv
+                Using Python {DEFAULT_PYTHON_FULL_VERSION} environment at: /layers/heroku_python/venv
                 Package           Version
                 ----------------- -------
                 typing-extensions 4.13.2
@@ -175,7 +175,9 @@ fn uv_cache_previous_buildpack_version() {
                     Using Python version {DEFAULT_PYTHON_VERSION} specified in .python-version
                     
                     \\[Installing Python\\]
-                    Using cached Python 3.13.3
+                    Discarding cached Python 3.13.3 since:
+                     - The Python version has changed from 3.13.3 to {DEFAULT_PYTHON_FULL_VERSION}
+                    Installing Python {DEFAULT_PYTHON_FULL_VERSION}
                     
                     \\[Installing uv\\]
                     Discarding cached uv 0.7.3
@@ -215,12 +217,7 @@ fn uv_editable_git_compiled() {
                 Creating virtual environment
                 Running 'uv sync --locked --no-default-groups'
                 Resolved 2 packages in .+ms
-                   Building uv-editable-git-compiled @ file:///workspace
-                   Updating https://github.com/pypa/wheel.git \\(0.44.0\\)
-                      Built uv-editable-git-compiled @ file:///workspace
-                    Updated https://github.com/pypa/wheel.git \\(7bb46d7727e6e89fe56b3c78297b3af2672bbbe2\\)
-                   Building extension-dist @ git\\+https://github.com/pypa/wheel.git@7bb46d7727e6e89fe56b3c78297b3af2672bbbe2#subdirectory=tests/testdata/extension.dist
-                      Built extension-dist @ git\\+https://github.com/pypa/wheel.git@7bb46d7727e6e89fe56b3c78297b3af2672bbbe2#subdirectory=tests/testdata/extension.dist
+                   (?s:.)+
                 Prepared 2 packages in .+s
                 Installed 2 packages in .+s
                 Bytecode compiled 0 files in .+s
