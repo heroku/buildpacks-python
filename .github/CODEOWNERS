@@ -9,4 +9,5 @@ buildpack.toml @edmorley
 CHANGELOG.md @edmorley
 Cargo.toml @edmorley
 Cargo.lock @edmorley
+/.github/workflows/ @edmorley
 /requirements/ @edmorley
