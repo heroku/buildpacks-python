@@ -366,7 +366,8 @@ fn uv_mismatched_python_version() {
                 Creating virtual environment
                 Running 'uv sync --locked --no-default-groups'
                 Using CPython {DEFAULT_PYTHON_FULL_VERSION} interpreter at: /layers/heroku_python/python/bin/python3.13
-                error: The Python request from `.python-version` resolved to Python {DEFAULT_PYTHON_FULL_VERSION}, which is incompatible with the project's Python requirement: `==3.12.*`. Use `uv python pin` to update the `.python-version` file to a compatible version.
+                error: The Python request from `.python-version` resolved to Python {DEFAULT_PYTHON_FULL_VERSION}, which is incompatible with the project's Python requirement: `==3.12.*` (from `project.requires-python`)
+                Use `uv python pin` to update the `.python-version` file to a compatible version
             "}
         );
         assert_contains!(
