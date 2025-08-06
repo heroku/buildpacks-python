@@ -11,6 +11,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - Updated pip from 25.1.1 to 25.2. ([#394](https://github.com/heroku/buildpacks-python/pull/394))
 - Updated Poetry from 2.1.3 to 2.1.4. ([#398](https://github.com/heroku/buildpacks-python/pull/398))
+- Updated uv from 0.8.4 to 0.8.5. ([#399](https://github.com/heroku/buildpacks-python/pull/399))
 
 ## [2.3.0] - 2025-08-01
 
