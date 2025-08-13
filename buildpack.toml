@@ -2,7 +2,7 @@ api = "0.10"
 
 [buildpack]
 id = "heroku/python"
-version = "2.4.1"
+version = "2.4.2"
 name = "Heroku Python"
 homepage = "https://github.com/heroku/buildpacks-python"
 description = "Heroku's buildpack for Python applications."
