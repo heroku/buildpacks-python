@@ -11,7 +11,7 @@ fn checks_reject_pythonhome_env_var() {
 
     TestRunner::default().build(config, |context| {
         assert_contains!(
-            context.pack_stderr,
+            context.pack_stdout,
             indoc! {"
                 [Error: Unsafe environment variable found]
                 The environment variable 'PYTHONHOME' is set, however, it can
@@ -19,6 +19,8 @@ fn checks_reject_pythonhome_env_var() {
 
                 You must unset that environment variable. If you didn't set it
                 yourself, check that it wasn't set by an earlier buildpack.
+
+                ERROR: failed to build: exit status 1
             "}
         );
     });

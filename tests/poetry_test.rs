@@ -234,12 +234,27 @@ fn poetry_oldest_python() {
     let config = default_build_config("tests/fixtures/poetry_oldest_python");
 
     TestRunner::default().build(config, |context| {
-        // We can't `assert_empty!(context.pack_stderr)` here, due to the Python 3.9 deprecation warning.
+        assert_empty!(context.pack_stderr);
         assert_contains!(
             context.pack_stdout,
             &formatdoc! {"
                 [Determining Python version]
                 Using Python version 3.9.0 specified in .python-version
+
+                [Warning: Support for Python 3.9 is deprecated]
+                Python 3.9 will reach its upstream end-of-life in October 2025,
+                at which point it will no longer receive security updates:
+                https://devguide.python.org/versions/#supported-versions
+                
+                As such, support for Python 3.9 will be removed from this
+                buildpack on 7th January 2026.
+                
+                Upgrade to a newer Python version as soon as possible, by
+                changing the version in your .python-version file.
+                
+                For more information, see:
+                https://devcenter.heroku.com/articles/python-support#supported-python-versions
+                
                 
                 [Installing Python]
                 Installing Python 3.9.0
@@ -269,19 +284,13 @@ fn poetry_mismatched_python_version() {
     config.expected_pack_result(PackResult::Failure);
 
     TestRunner::default().build(config, |context| {
-        // Ideally we could test a combined stdout/stderr, however libcnb-test doesn't support this:
-        // https://github.com/heroku/libcnb.rs/issues/536
         assert_contains!(
             context.pack_stdout,
-            indoc! {"
+            &formatdoc! {r#"
                 [Installing dependencies using Poetry]
                 Creating virtual environment
                 Running 'poetry sync --only main'
-            "}
-        );
-        assert_contains!(
-            context.pack_stderr,
-            &formatdoc! {r#"
+
                 Current Python version ({DEFAULT_PYTHON_FULL_VERSION}) is not allowed by the project (3.12.*).
                 Please change python executable via the "env use" command.
                 
@@ -290,6 +299,8 @@ fn poetry_mismatched_python_version() {
                 dependencies failed (exit status: 1).
                 
                 See the log output above for more information.
+
+                ERROR: failed to build: exit status 1
             "#}
         );
     });
@@ -302,8 +313,6 @@ fn poetry_lockfile_out_of_sync() {
     config.expected_pack_result(PackResult::Failure);
 
     TestRunner::default().build(config, |context| {
-        // Ideally we could test a combined stdout/stderr, however libcnb-test doesn't support this:
-        // https://github.com/heroku/libcnb.rs/issues/536
         assert_contains!(
             context.pack_stdout,
             indoc! {"
@@ -311,11 +320,7 @@ fn poetry_lockfile_out_of_sync() {
                 Creating virtual environment
                 Running 'poetry sync --only main'
                 Installing dependencies from lock file
-            "}
-        );
-        assert_contains!(
-            context.pack_stderr,
-            indoc! {"
+
                 pyproject.toml changed significantly since poetry.lock was last generated. Run `poetry lock` to fix the lock file.
                 
                 [Error: Unable to install dependencies using Poetry]
@@ -323,6 +328,8 @@ fn poetry_lockfile_out_of_sync() {
                 dependencies failed (exit status: 1).
                 
                 See the log output above for more information.
+
+                ERROR: failed to build: exit status 1
             "}
         );
     });
