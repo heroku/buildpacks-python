@@ -235,12 +235,27 @@ fn uv_oldest_python() {
     let config = default_build_config("tests/fixtures/uv_oldest_python");
 
     TestRunner::default().build(config, |context| {
-        // We can't `assert_empty!(context.pack_stderr)` here, due to the Python 3.9 deprecation warning.
+        assert_empty!(context.pack_stderr);
         assert_contains_match!(
             context.pack_stdout,
             &formatdoc! {"
                 \\[Determining Python version\\]
                 Using Python version 3.9.0 specified in .python-version
+                
+                \\[Warning: Support for Python 3.9 is deprecated\\]
+                Python 3.9 will reach its upstream end-of-life in October 2025,
+                at which point it will no longer receive security updates:
+                https://devguide.python.org/versions/#supported-versions
+                
+                As such, support for Python 3.9 will be removed from this
+                buildpack on 7th January 2026.
+                
+                Upgrade to a newer Python version as soon as possible, by
+                changing the version in your .python-version file.
+                
+                For more information, see:
+                https://devcenter.heroku.com/articles/python-support#supported-python-versions
+                
                 
                 \\[Installing Python\\]
                 Installing Python 3.9.0
@@ -272,26 +287,20 @@ fn uv_no_python_version_file() {
     config.expected_pack_result(PackResult::Failure);
 
     TestRunner::default().build(config, |context| {
-        // Ideally we could test a combined stdout/stderr, however libcnb-test doesn't support this:
-        // https://github.com/heroku/libcnb.rs/issues/536
         assert_contains!(
             context.pack_stdout,
             &formatdoc! {"
                 [Determining Python version]
-            "}
-        );
-        assert_contains!(
-            context.pack_stderr,
-            indoc! {"
+
                 [Error: No Python version was specified]
                 When using the package manager uv on Heroku, you must specify
                 your app's Python version with a .python-version file.
 
                 To add a .python-version file:
-
+                
                 1. Make sure you are in the root directory of your app
                    and not a subdirectory.
-                2. Run 'uv python pin 3.13'
+                2. Run 'uv python pin {DEFAULT_PYTHON_VERSION}'
                    (adjust to match your app's major Python version).
                 3. Commit the changes to your Git repository using
                    'git add --all' and then 'git commit'.
@@ -300,6 +309,9 @@ fn uv_no_python_version_file() {
                 version number, since it will pin your app to an exact Python
                 version and so stop your app from receiving security updates
                 each time it builds.
+
+
+                ERROR: failed to build: exit status 1
             "}
         );
     });
@@ -320,11 +332,7 @@ fn uv_runtime_txt() {
             context.pack_stdout,
             &formatdoc! {"
                 [Determining Python version]
-            "}
-        );
-        assert_contains!(
-            context.pack_stderr,
-            indoc! {"
+
                 [Error: The runtime.txt file isn't supported]
                 The runtime.txt file can longer be used, since it has been
                 replaced by the more widely supported .python-version file.
@@ -334,7 +342,7 @@ fn uv_runtime_txt() {
                 1. Make sure you are in the root directory of your app
                    and not a subdirectory.
                 2. Delete your runtime.txt file.
-                3. Run 'uv python pin 3.13'
+                3. Run 'uv python pin {DEFAULT_PYTHON_VERSION}'
                    (adjust to match your app's major Python version).
                 4. Commit the changes to your Git repository using
                    'git add --all' and then 'git commit'.
@@ -343,6 +351,9 @@ fn uv_runtime_txt() {
                 version number, since it will pin your app to an exact Python
                 version and so stop your app from receiving security updates
                 each time it builds.
+
+
+                ERROR: failed to build: exit status 1
             "}
         );
     });
@@ -368,16 +379,14 @@ fn uv_mismatched_python_version() {
                 Using CPython {DEFAULT_PYTHON_FULL_VERSION} interpreter at: /layers/heroku_python/python/bin/python3.13
                 error: The Python request from `.python-version` resolved to Python {DEFAULT_PYTHON_FULL_VERSION}, which is incompatible with the project's Python requirement: `==3.12.*` (from `project.requires-python`)
                 Use `uv python pin` to update the `.python-version` file to a compatible version
-            "}
-        );
-        assert_contains!(
-            context.pack_stderr,
-            indoc! {"
+
                 [Error: Unable to install dependencies using uv]
                 The 'uv sync' command to install the app's
                 dependencies failed (exit status: 2).
 
                 See the log output above for more information.
+
+                ERROR: failed to build: exit status 1
             "}
         );
     });
@@ -398,16 +407,14 @@ fn uv_lockfile_out_of_sync() {
                 Running 'uv sync --locked --no-default-groups'
                 Resolved 2 packages in .+s
                 The lockfile at `uv.lock` needs to be updated, but `--locked` was provided. To update the lockfile, run `uv lock`.
-            "}
-        );
-        assert_contains!(
-            context.pack_stderr,
-            indoc! {"
-                [Error: Unable to install dependencies using uv]
+
+                \\[Error: Unable to install dependencies using uv\\]
                 The 'uv sync' command to install the app's
-                dependencies failed (exit status: 1).
+                dependencies failed \\(exit status: 1\\).
 
                 See the log output above for more information.
+
+                ERROR: failed to build: exit status 1
             "}
         );
     });

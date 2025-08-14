@@ -34,7 +34,7 @@ fn django_staticfiles_legacy_django() {
     TestRunner::default().build(
         default_build_config("tests/fixtures/django_staticfiles_legacy_django"),
         |context| {
-            // We can't `assert_empty!(context.pack_stderr)` here, due to the Python 3.9 deprecation warning.
+            assert_empty!(context.pack_stderr);
             assert_contains!(
                 context.pack_stdout,
                 indoc! {"
@@ -99,11 +99,7 @@ fn django_invalid_settings_module() {
                 context.pack_stdout,
                 indoc! {"
                     [Generating Django static files]
-                "}
-            );
-            assert_contains!(
-                context.pack_stderr,
-                indoc! {"
+
                     [Error: Unable to inspect Django configuration]
                     The 'python manage.py help collectstatic' Django management command
                     (used to check whether Django's static files feature is enabled)
@@ -116,7 +112,7 @@ fn django_invalid_settings_module() {
             );
             // Full traceback omitted since it will change across Django/Python versions causing test churn.
             assert_contains!(
-                context.pack_stderr,
+                context.pack_stdout,
                 indoc! {"
                     ModuleNotFoundError: No module named 'nonexistent-module'
                     
@@ -124,6 +120,8 @@ fn django_invalid_settings_module() {
                     This indicates there is a problem with your application code or Django
                     configuration. Try running the 'manage.py' script locally to see if the
                     same error occurs.
+
+                    ERROR: failed to build: exit status 1
                 "}
             );
         },
@@ -142,11 +140,15 @@ fn django_staticfiles_misconfigured() {
                 indoc! {"
                     [Generating Django static files]
                     Running 'manage.py collectstatic'
+                    Traceback (most recent call last):
                 "}
             );
+            // Full traceback omitted since it will change across Django/Python versions causing test churn.
             assert_contains!(
-                context.pack_stderr,
+                context.pack_stdout,
                 indoc! {"
+                    django.core.exceptions.ImproperlyConfigured: You're using the staticfiles app without having set the required STATIC_URL setting.
+
                     [Error: Unable to generate Django static files]
                     The 'python manage.py collectstatic --noinput' Django management
                     command to generate static files failed (exit status: 1).
@@ -162,6 +164,8 @@ fn django_staticfiles_misconfigured() {
                     Or, if you do not need to use static files in your app, disable the
                     Django static files feature by removing 'django.contrib.staticfiles'
                     from 'INSTALLED_APPS' in your app's Django configuration.
+
+                    ERROR: failed to build: exit status 1
                 "}
             );
         },

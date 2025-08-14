@@ -10,7 +10,7 @@ fn no_package_manager_detected() {
             .expected_pack_result(PackResult::Failure),
         |context| {
             assert_contains!(
-                context.pack_stderr,
+                context.pack_stdout,
                 indoc! {"
                     [Error: Couldn't find any supported Python package manager files]
                     Your app must have either a 'requirements.txt', 'poetry.lock'
@@ -36,6 +36,8 @@ fn no_package_manager_detected() {
                     For help with using Python on Heroku, see:
                     https://devcenter.heroku.com/articles/getting-started-with-python-fir
                     https://devcenter.heroku.com/articles/python-support
+
+                    ERROR: failed to build: exit status 1
                 "}
             );
         },
@@ -50,7 +52,7 @@ fn multiple_package_managers_detected() {
             .expected_pack_result(PackResult::Failure),
         |context| {
             assert_contains!(
-                context.pack_stderr,
+                context.pack_stdout,
                 indoc! {"
                     [Error: Multiple Python package manager files were found]
                     Exactly one package manager file must be present in your app's
@@ -67,6 +69,8 @@ fn multiple_package_managers_detected() {
                     trying uv, since it supports lockfiles, is extremely fast, and
                     is actively maintained by a full-time team:
                     https://docs.astral.sh/uv/
+
+                    ERROR: failed to build: exit status 1
                 "}
             );
         },

@@ -67,10 +67,14 @@ fn builds_with_python_version(fixture_path: &str, python_version: &PythonVersion
     } = python_version;
 
     TestRunner::default().build(default_build_config(fixture_path), |context| {
+        assert_empty!(context.pack_stderr);
+
         if major == 3 && minor == 9 {
-            assert_eq!(
-                context.pack_stderr,
-                indoc! {"
+            assert_contains!(
+                context.pack_stdout,
+                &formatdoc! {"
+                    [Determining Python version]
+                    Using Python version {major}.{minor} specified in .python-version
                     
                     [Warning: Support for Python 3.9 is deprecated]
                     Python 3.9 will reach its upstream end-of-life in October 2025,
@@ -86,22 +90,23 @@ fn builds_with_python_version(fixture_path: &str, python_version: &PythonVersion
                     For more information, see:
                     https://devcenter.heroku.com/articles/python-support#supported-python-versions
                     
+                    
+                    [Installing Python]
+                    Installing Python {major}.{minor}.{patch}
                 "}
             );
         } else {
-            assert_empty!(context.pack_stderr);
+            assert_contains!(
+                context.pack_stdout,
+                &formatdoc! {"
+                    [Determining Python version]
+                    Using Python version {major}.{minor} specified in .python-version
+                    
+                    [Installing Python]
+                    Installing Python {major}.{minor}.{patch}
+                "}
+            );
         }
-
-        assert_contains!(
-            context.pack_stdout,
-            &formatdoc! {"
-                [Determining Python version]
-                Using Python version {major}.{minor} specified in .python-version
-                
-                [Installing Python]
-                Installing Python {major}.{minor}.{patch}
-            "}
-        );
 
         // There's no sensible default process type we can set for Python apps.
         assert_contains!(context.pack_stdout, "no default process type");
@@ -149,8 +154,10 @@ fn python_version_file_io_error() {
 
     TestRunner::default().build(config, |context| {
         assert_contains!(
-            context.pack_stderr,
+            context.pack_stdout,
             indoc! {"
+                [Determining Python version]
+
                 [Error: Unable to read .python-version]
                 An I/O error occurred while reading the file:
                 /workspace/.python-version
@@ -160,6 +167,8 @@ fn python_version_file_io_error() {
                 Check the file's permissions and that it contains valid UTF-8.
 
                 Then try building again.
+
+                ERROR: failed to build: exit status 1
             "}
         );
     });
@@ -173,8 +182,10 @@ fn python_version_file_invalid_version() {
 
     TestRunner::default().build(config, |context| {
         assert_contains!(
-            context.pack_stderr,
+            context.pack_stdout,
             &formatdoc! {"
+                [Determining Python version]
+
                 [Error: Invalid Python version in .python-version]
                 The Python version specified in your .python-version file
                 isn't in the correct format.
@@ -197,6 +208,9 @@ fn python_version_file_invalid_version() {
                 version number, since it will pin your app to an exact Python
                 version and so stop your app from receiving security updates
                 each time it builds.
+
+
+                ERROR: failed to build: exit status 1
             "}
         );
     });
@@ -210,8 +224,10 @@ fn python_version_file_multiple_versions() {
 
     TestRunner::default().build(config, |context| {
         assert_contains!(
-            context.pack_stderr,
+            context.pack_stdout,
             indoc! {"
+                [Determining Python version]
+
                 [Error: Invalid Python version in .python-version]
                 Multiple versions were found in your .python-version file:
                 
@@ -227,6 +243,8 @@ fn python_version_file_multiple_versions() {
                 
                 If you have added comments to the file, make sure that those
                 lines begin with a '#', so that they are ignored.
+
+                ERROR: failed to build: exit status 1
             "}
         );
     });
@@ -240,8 +258,10 @@ fn python_version_file_no_version() {
 
     TestRunner::default().build(config, |context| {
         assert_contains!(
-            context.pack_stderr,
+            context.pack_stdout,
             &formatdoc! {"
+                [Determining Python version]
+
                 [Error: Invalid Python version in .python-version]
                 No Python version was found in your .python-version file.
                 
@@ -251,6 +271,11 @@ fn python_version_file_no_version() {
                 For example, to request the latest version of Python {DEFAULT_PYTHON_VERSION},
                 update your .python-version file so it contains exactly:
                 {DEFAULT_PYTHON_VERSION}
+
+                If the file already contains a version, check the line doesn't
+                begin with a '#', otherwise it will be treated as a comment.
+
+                ERROR: failed to build: exit status 1
             "}
         );
     });
@@ -264,8 +289,10 @@ fn python_version_eol() {
 
     TestRunner::default().build(config, |context| {
         assert_contains!(
-            context.pack_stderr,
+            context.pack_stdout,
             &formatdoc! {"
+                [Determining Python version]
+
                 [Error: The requested Python version has reached end-of-life]
                 Python 3.8 has reached its upstream end-of-life, and is
                 therefore no longer receiving security updates:
@@ -279,6 +306,8 @@ fn python_version_eol() {
 
                 If possible, we recommend upgrading all the way to Python {DEFAULT_PYTHON_VERSION},
                 since it contains many performance and usability improvements.
+
+                ERROR: failed to build: exit status 1
             "}
         );
     });
@@ -292,8 +321,10 @@ fn python_version_non_existent_major() {
 
     TestRunner::default().build(config, |context| {
         assert_contains!(
-            context.pack_stderr,
+            context.pack_stdout,
             &formatdoc! {"
+                [Determining Python version]
+
                 [Error: The requested Python version isn't recognised]
                 The requested Python version 3.99 isn't recognised.
 
@@ -308,6 +339,8 @@ fn python_version_non_existent_major() {
 
                 Otherwise, switch to a supported version (such as Python 3.{NEWEST_SUPPORTED_PYTHON_3_MINOR_VERSION})
                 by changing the version in your .python-version file.
+
+                ERROR: failed to build: exit status 1
             "}
         );
     });
@@ -321,8 +354,14 @@ fn python_version_non_existent_minor() {
 
     TestRunner::default().build(config, |context| {
         assert_contains!(
-            context.pack_stderr,
+            context.pack_stdout,
             &formatdoc! {"
+                [Determining Python version]
+                Using Python version 3.12.999 specified in .python-version
+
+                [Installing Python]
+                Installing Python 3.12.999
+
                 [Error: The requested Python version isn't available]
                 Your app's .python-version file specifies a Python version
                 of 3.12.999, however, we couldn't find that version on S3.
@@ -341,6 +380,8 @@ fn python_version_non_existent_minor() {
                 the major Python version of 3.12 in your .python-version file.
                 This will allow your app to receive the latest available Python
                 patch version automatically, and prevent this type of error.
+
+                ERROR: failed to build: exit status 1
             "}
         );
     });
@@ -354,8 +395,10 @@ fn runtime_txt() {
 
     TestRunner::default().build(config, |context| {
         assert_contains!(
-            context.pack_stderr,
+            context.pack_stdout,
             &formatdoc! {"
+                [Determining Python version]
+
                 [Error: The runtime.txt file isn't supported]
                 The runtime.txt file can longer be used, since it has been
                 replaced by the more widely supported .python-version file.
@@ -377,6 +420,9 @@ fn runtime_txt() {
                 version number, since it will pin your app to an exact Python
                 version and so stop your app from receiving security updates
                 each time it builds.
+
+
+                ERROR: failed to build: exit status 1
             "}
         );
     });
@@ -390,8 +436,10 @@ fn runtime_txt_invalid_version() {
 
     TestRunner::default().build(config, |context| {
         assert_contains!(
-            context.pack_stderr,
+            context.pack_stdout,
             &formatdoc! {"
+                [Determining Python version]
+
                 [Error: The runtime.txt file isn't supported]
                 The runtime.txt file can longer be used, since it has been
                 replaced by the more widely supported .python-version file.
@@ -413,6 +461,9 @@ fn runtime_txt_invalid_version() {
                 version number, since it will pin your app to an exact Python
                 version and so stop your app from receiving security updates
                 each time it builds.
+
+
+                ERROR: failed to build: exit status 1
             "}
         );
     });

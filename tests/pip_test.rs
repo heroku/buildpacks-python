@@ -216,7 +216,7 @@ fn pip_editable_git_compiled() {
     config.env("WHEEL_PACKAGE_URL", "https://github.com/pypa/wheel.git");
 
     TestRunner::default().build(config, |context| {
-        // We can't `assert_empty!(context.pack_stderr)` here, since the git clone steps print to stderr.
+        assert_empty!(context.pack_stderr);
         assert_contains!(
             context.pack_stdout,
             "Cloning https://github.com/pypa/wheel.git (to revision 0.44.0) to /layers/heroku_python/venv/src/extension-dist"
@@ -232,9 +232,12 @@ fn pip_oldest_python() {
     let config = default_build_config("tests/fixtures/pip_oldest_python");
 
     TestRunner::default().build(config, |context| {
-        assert_eq!(
-            context.pack_stderr,
+        assert_empty!(context.pack_stderr);
+        assert_contains!(
+            context.pack_stdout,
             indoc! {"
+                [Determining Python version]
+                Using Python version 3.9.0 specified in .python-version
                 
                 [Warning: Support for Python 3.9 is deprecated]
                 Python 3.9 will reach its upstream end-of-life in October 2025,
@@ -250,14 +253,7 @@ fn pip_oldest_python() {
                 For more information, see:
                 https://devcenter.heroku.com/articles/python-support#supported-python-versions
                 
-            "}
-        );
-        assert_contains!(
-            context.pack_stdout,
-            indoc! {"
-                [Determining Python version]
-                Using Python version 3.9.0 specified in .python-version
-                
+
                 [Installing Python]
                 Installing Python 3.9.0
             "}
@@ -272,19 +268,12 @@ fn pip_install_error() {
     config.expected_pack_result(PackResult::Failure);
 
     TestRunner::default().build(config, |context| {
-        // Ideally we could test a combined stdout/stderr, however libcnb-test doesn't support this:
-        // https://github.com/heroku/libcnb.rs/issues/536
         assert_contains!(
             context.pack_stdout,
             indoc! {"
                 [Installing dependencies using pip]
                 Creating virtual environment
                 Running 'pip install -r requirements.txt'
-            "}
-        );
-        assert_contains!(
-            context.pack_stderr,
-            indoc! {"
                 ERROR: Invalid requirement: 'an-invalid-requirement!': Expected end or semicolon (after name and no valid version specifier)
                     an-invalid-requirement!
                                           ^ (from line 1 of requirements.txt)
@@ -294,6 +283,8 @@ fn pip_install_error() {
                 dependencies failed (exit status: 1).
                 
                 See the log output above for more information.
+
+                ERROR: failed to build: exit status 1
             "}
         );
     });
