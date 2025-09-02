@@ -18,7 +18,7 @@ jobs:
     runs-on: ubuntu-24.04
     steps:
       - name: Checkout
-        uses: actions/checkout@v4
+        uses: actions/checkout@v5
       - name: Update Rust toolchain
         run: rustup update
       - name: Rust Cache
@@ -32,7 +32,7 @@ jobs:
     runs-on: ubuntu-24.04
     steps:
       - name: Checkout
-        uses: actions/checkout@v4
+        uses: actions/checkout@v5
       - name: Update Rust toolchain
         run: rustup update
       - name: Rust Cache
@@ -54,7 +54,7 @@ jobs:
       INTEGRATION_TEST_BUILDER: heroku/${{ matrix.builder }}
     steps:
       - name: Checkout
-        uses: actions/checkout@v4
+        uses: actions/checkout@v5
       - name: Install musl-tools
         run: sudo apt-get install -y --no-install-recommends musl-tools
       - name: Update Rust toolchain
