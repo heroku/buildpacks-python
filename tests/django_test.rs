@@ -9,7 +9,7 @@ use libcnb_test::{PackResult, TestRunner, assert_contains, assert_empty};
 fn django_staticfiles_latest_django() {
     TestRunner::default().build(
         default_build_config("tests/fixtures/django_staticfiles_latest_django")
-            // Tests that env vars are passed to the 'manage.py' script invocations.
+            // Tests that app env vars are passed to the 'manage.py' script invocations.
             .env("EXPECTED_ENV_VAR", "1"),
         |context| {
             assert_empty!(context.pack_stderr);
@@ -18,6 +18,29 @@ fn django_staticfiles_latest_django() {
                 indoc! {"
                     [Generating Django static files]
                     Running 'manage.py collectstatic'
+                    {'CPATH': '/layers/heroku_python/venv/include:/layers/heroku_python/python/include/python3.13:/layers/heroku_python/python/include:/invalid',
+                     'DJANGO_SETTINGS_MODULE': 'testproject.settings',
+                     'EXPECTED_ENV_VAR': '1',
+                     'LC_CTYPE': 'C.UTF-8',
+                     'LD_LIBRARY_PATH': '/layers/heroku_python/venv/lib:/layers/heroku_python/pip/lib:/layers/heroku_python/python/lib:/invalid',
+                     'LIBRARY_PATH': '/layers/heroku_python/venv/lib:/layers/heroku_python/pip/lib:/layers/heroku_python/python/lib:/invalid',
+                     'PATH': '/layers/heroku_python/venv/bin:/layers/heroku_python/pip/bin:/layers/heroku_python/python/bin:/invalid:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin',
+                     'PIP_CACHE_DIR': '/layers/heroku_python/pip-cache',
+                     'PIP_DISABLE_PIP_VERSION_CHECK': '1',
+                     'PIP_PYTHON': '/layers/heroku_python/venv',
+                     'PKG_CONFIG_PATH': '/layers/heroku_python/python/lib/pkgconfig:/invalid',
+                     'PYTHONPATH': '/invalid',
+                     'PYTHONUNBUFFERED': '1',
+                     'PYTHONUSERBASE': '/layers/heroku_python/pip',
+                     'SOURCE_DATE_EPOCH': '315532801',
+                     'VIRTUAL_ENV': '/layers/heroku_python/venv'}
+                    
+                    ['/workspace/backend',
+                     '/invalid',
+                     '/layers/heroku_python/python/lib/python313.zip',
+                     '/layers/heroku_python/python/lib/python3.13',
+                     '/layers/heroku_python/python/lib/python3.13/lib-dynload',
+                     '/layers/heroku_python/venv/lib/python3.13/site-packages']
                     
                     1 static file copied to '/workspace/backend/staticfiles'.
                 "}
@@ -40,6 +63,28 @@ fn django_staticfiles_legacy_django() {
                 indoc! {"
                     [Generating Django static files]
                     Running 'manage.py collectstatic'
+                    {'CPATH': '/layers/heroku_python/venv/include:/layers/heroku_python/python/include/python3.9:/layers/heroku_python/python/include:/invalid',
+                     'DJANGO_SETTINGS_MODULE': 'testproject.settings',
+                     'LC_CTYPE': 'C.UTF-8',
+                     'LD_LIBRARY_PATH': '/layers/heroku_python/venv/lib:/layers/heroku_python/pip/lib:/layers/heroku_python/python/lib:/invalid',
+                     'LIBRARY_PATH': '/layers/heroku_python/venv/lib:/layers/heroku_python/pip/lib:/layers/heroku_python/python/lib:/invalid',
+                     'PATH': '/layers/heroku_python/venv/bin:/layers/heroku_python/pip/bin:/layers/heroku_python/python/bin:/invalid:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin',
+                     'PIP_CACHE_DIR': '/layers/heroku_python/pip-cache',
+                     'PIP_DISABLE_PIP_VERSION_CHECK': '1',
+                     'PIP_PYTHON': '/layers/heroku_python/venv',
+                     'PKG_CONFIG_PATH': '/layers/heroku_python/python/lib/pkgconfig:/invalid',
+                     'PYTHONPATH': '/invalid',
+                     'PYTHONUNBUFFERED': '1',
+                     'PYTHONUSERBASE': '/layers/heroku_python/pip',
+                     'SOURCE_DATE_EPOCH': '315532801',
+                     'VIRTUAL_ENV': '/layers/heroku_python/venv'}
+                    
+                    ['/workspace',
+                     '/invalid',
+                     '/layers/heroku_python/python/lib/python39.zip',
+                     '/layers/heroku_python/python/lib/python3.9',
+                     '/layers/heroku_python/python/lib/python3.9/lib-dynload',
+                     '/layers/heroku_python/venv/lib/python3.9/site-packages']
                     Copying '/workspace/testapp/static/robots.txt'
                     
                     1 static file copied to '/workspace/staticfiles'.

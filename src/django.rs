@@ -74,6 +74,9 @@ fn has_collectstatic_command(app_dir: &Path, env: &Env) -> Result<bool, Captured
             // not being installed) and the Django config or mange.py script being broken. Ideally
             // we'd inspect the output of `manage.py help --commands` but that command unhelpfully
             // exits zero even if the app's `DJANGO_SETTINGS_MODULE` wasn't a valid module.
+            // Note: Django incorrectly outputs "Unknown command" if the Django config is invalid
+            // when using Django 1.10 and older, meaning any invalid config is silently ignored,
+            // however, those Django versions are EOL and there isn't anything we can do about it.
             CapturedCommandError::NonZeroExitStatus(output)
                 if String::from_utf8_lossy(&output.stderr).contains("Unknown command") =>
             {
