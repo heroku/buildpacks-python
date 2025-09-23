@@ -7,6 +7,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [2.5.1] - 2025-09-23
+
 ### Changed
 
 - Updated Poetry from 2.2.0 to 2.2.1. ([#427](https://github.com/heroku/buildpacks-python/pull/427))
@@ -445,7 +447,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - Initial implementation. ([#3](https://github.com/heroku/buildpacks-python/pull/3))
 
-[unreleased]: https://github.com/heroku/buildpacks-python/compare/v2.5.0...HEAD
+[unreleased]: https://github.com/heroku/buildpacks-python/compare/v2.5.1...HEAD
+[2.5.1]: https://github.com/heroku/buildpacks-python/compare/v2.5.0...v2.5.1
 [2.5.0]: https://github.com/heroku/buildpacks-python/compare/v2.4.5...v2.5.0
 [2.4.5]: https://github.com/heroku/buildpacks-python/compare/v2.4.4...v2.4.5
 [2.4.4]: https://github.com/heroku/buildpacks-python/compare/v2.4.3...v2.4.4
