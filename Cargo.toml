@@ -1,7 +1,7 @@
 [package]
 name = "python-buildpack"
 edition = "2024"
-rust-version = "1.88"
+rust-version = "1.89"
 # Disable automatic integration test discovery, since we import them in main.rs (see comment there).
 autotests = false
 
@@ -26,14 +26,14 @@ result_large_err = "allow"
 # https://trifectatech.org/blog/zlib-rs-is-faster-than-c/
 flate2 = { version = "1", default-features = false, features = ["zlib-rs"] }
 indoc = "2"
-libcnb = { version = "0.29", features = ["trace"] }
-libherokubuildpack = { version = "0.29", default-features = false, features = ["log"] }
+libcnb = { version = "0.30", features = ["trace"] }
+libherokubuildpack = { version = "0.30", default-features = false, features = ["log"] }
 serde = "1"
 tar = { version = "0.4", default-features = false }
 ureq = { version = "2", default-features = false, features = ["tls"] }
 zstd = { version = "0.13", default-features = false }
 
 [dev-dependencies]
-libcnb-test = "0.29"
+libcnb-test = "0.30"
 # Required due to: https://github.com/heroku/libcnb.rs/issues/944
 regex = { version = "1", default-features = false, features = ["std"] }
