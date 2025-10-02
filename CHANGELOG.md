@@ -7,6 +7,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Changed
+
+- Changed the `pip install` commands used to install the pip and Poetry package managers to now use `--isolated` mode. ([#434](https://github.com/heroku/buildpacks-python/pull/434))
+
 ## [2.5.1] - 2025-09-23
 
 ### Changed
