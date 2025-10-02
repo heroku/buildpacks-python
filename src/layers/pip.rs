@@ -94,6 +94,10 @@ pub(crate) fn install_pip(
                     .args([
                         &bundled_pip_module_path.to_string_lossy(),
                         "install",
+                        // Don't load any user-supplied pip configuration (pip.conf and `PIP_` env vars) given
+                        // that this is an internal step for installing pip (rather than app dependencies), and
+                        // so (a) doesn't need custom config, (b) we don't want the user to be able to break it.
+                        "--isolated",
                         // There is no point using pip's cache here, since the layer itself will be cached.
                         "--no-cache-dir",
                         "--no-input",
