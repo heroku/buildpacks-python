@@ -7,7 +7,7 @@ use std::path::Path;
 /// This list is deliberately larger than just the list of supported package manager files,
 /// so that Python projects that are missing some of the required files still pass detection,
 /// allowing us to show a helpful error message during the build phase.
-const KNOWN_PYTHON_PROJECT_FILES: [&str; 23] = [
+const KNOWN_PYTHON_PROJECT_FILES: [&str; 26] = [
     ".python-version",
     "__init__.py",
     "app.py",
@@ -26,14 +26,17 @@ const KNOWN_PYTHON_PROJECT_FILES: [&str; 23] = [
     "uv.lock",
     // Commonly seen misspellings of requirements.txt. (Which occur since pip doesn't
     // create/manage requirements files itself, so the filenames are manually typed.)
+    "requeriments.txt",
     "requirement.txt",
-    "Requirements.txt",
+    "requirements",
     "requirements.text",
+    "Requirements.txt",
     "requirements.txt.txt",
     "requirments.txt",
-    // Whilst virtual environments shouldn't be committed to Git (and so shouldn't
-    // normally be present during the build), they are often present for beginner
+    // Whilst cached pycs and virtual environments shouldn't be committed to Git (and so
+    // shouldn't normally be present during the build), they are often present for beginner
     // Python apps that are missing all of the other Python related files above.
+    "__pycache__/",
     ".venv/",
     "venv/",
 ];
