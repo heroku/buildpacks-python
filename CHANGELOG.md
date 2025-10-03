@@ -11,6 +11,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - Changed the `pip install` commands used to install the pip and Poetry package managers to now use `--isolated` mode. ([#434](https://github.com/heroku/buildpacks-python/pull/434))
 - Added more Python project related file and directory names to the list recognised by buildpack detection. ([#435](https://github.com/heroku/buildpacks-python/pull/435))
+- Updated uv from 0.8.20 to 0.8.22. ([#431](https://github.com/heroku/buildpacks-python/pull/431))
 
 ## [2.5.1] - 2025-09-23
 
