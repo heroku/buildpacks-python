@@ -7,6 +7,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [2.6.0] - 2025-10-05
+
 ### Changed
 
 - Changed the `pip install` commands used to install the pip and Poetry package managers to now use `--isolated` mode. ([#434](https://github.com/heroku/buildpacks-python/pull/434))
@@ -453,7 +455,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - Initial implementation. ([#3](https://github.com/heroku/buildpacks-python/pull/3))
 
-[unreleased]: https://github.com/heroku/buildpacks-python/compare/v2.5.1...HEAD
+[unreleased]: https://github.com/heroku/buildpacks-python/compare/v2.6.0...HEAD
+[2.6.0]: https://github.com/heroku/buildpacks-python/compare/v2.5.1...v2.6.0
 [2.5.1]: https://github.com/heroku/buildpacks-python/compare/v2.5.0...v2.5.1
 [2.5.0]: https://github.com/heroku/buildpacks-python/compare/v2.4.5...v2.5.0
 [2.4.5]: https://github.com/heroku/buildpacks-python/compare/v2.4.4...v2.4.5
