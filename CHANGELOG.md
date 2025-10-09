@@ -11,6 +11,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - Added support for Python 3.14. ([#439](https://github.com/heroku/buildpacks-python/pull/439))
 
+### Changed
+
+- The Python 3.13 version alias now resolves to Python 3.13.8. ([#440](https://github.com/heroku/buildpacks-python/pull/440))
+
 ## [2.6.0] - 2025-10-05
 
 ### Changed
