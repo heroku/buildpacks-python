@@ -1,6 +1,6 @@
 use crate::python_version::{
     DEFAULT_PYTHON_FULL_VERSION, DEFAULT_PYTHON_VERSION, LATEST_PYTHON_3_9, LATEST_PYTHON_3_10,
-    LATEST_PYTHON_3_11, LATEST_PYTHON_3_12, LATEST_PYTHON_3_13,
+    LATEST_PYTHON_3_11, LATEST_PYTHON_3_12, LATEST_PYTHON_3_13, LATEST_PYTHON_3_14,
     NEWEST_SUPPORTED_PYTHON_3_MINOR_VERSION, PythonVersion,
 };
 use crate::tests::default_build_config;
@@ -57,6 +57,12 @@ fn python_3_12() {
 #[ignore = "integration test"]
 fn python_3_13() {
     builds_with_python_version("tests/fixtures/python_3.13", &LATEST_PYTHON_3_13);
+}
+
+#[test]
+#[ignore = "integration test"]
+fn python_3_14() {
+    builds_with_python_version("tests/fixtures/python_3.14", &LATEST_PYTHON_3_14);
 }
 
 fn builds_with_python_version(fixture_path: &str, python_version: &PythonVersion) {
