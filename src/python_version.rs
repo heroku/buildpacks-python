@@ -25,7 +25,7 @@ pub(crate) const LATEST_PYTHON_3_9: PythonVersion = PythonVersion::new(3, 9, 24)
 pub(crate) const LATEST_PYTHON_3_10: PythonVersion = PythonVersion::new(3, 10, 19);
 pub(crate) const LATEST_PYTHON_3_11: PythonVersion = PythonVersion::new(3, 11, 14);
 pub(crate) const LATEST_PYTHON_3_12: PythonVersion = PythonVersion::new(3, 12, 12);
-pub(crate) const LATEST_PYTHON_3_13: PythonVersion = PythonVersion::new(3, 13, 8);
+pub(crate) const LATEST_PYTHON_3_13: PythonVersion = PythonVersion::new(3, 13, 9);
 pub(crate) const LATEST_PYTHON_3_14: PythonVersion = PythonVersion::new(3, 14, 0);
 
 /// The Python version that was requested for a project.
