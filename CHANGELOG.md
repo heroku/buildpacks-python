@@ -7,6 +7,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Fixed
+
+- Pinned `dulwich` version when using Poetry to work around an incompatibility with Python <3.9.2. ([#447](https://github.com/heroku/heroku-buildpack-python/pull/447))
+
 ## [2.7.1] - 2025-10-15
 
 ### Changed
