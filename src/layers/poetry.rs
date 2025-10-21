@@ -103,6 +103,9 @@ pub(crate) fn install_poetry(
                         "--quiet",
                         "--user",
                         format!("poetry=={POETRY_VERSION}").as_str(),
+                        // We pin to an older dulwich version to work around https://github.com/jelmer/dulwich/issues/1948
+                        // on Python 3.9.0/3.9.1. TODO: Remove this pin when we drop support for Python 3.9 in Jan 2026.
+                        "dulwich==0.24.5",
                     ])
                     .env_clear()
                     .envs(&layer_env.apply(Scope::Build, env)),
