@@ -9,6 +9,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Changed
 
+- The Python 3.9 version alias now resolves to Python 3.9.25. ([#458](https://github.com/heroku/buildpacks-python/pull/458))
 - Updated uv from 0.9.5 to 0.9.7. ([#455](https://github.com/heroku/buildpacks-python/pull/455))
 
 ## [2.7.2] - 2025-10-22
