@@ -21,7 +21,7 @@ pub(crate) const NEWEST_SUPPORTED_PYTHON_3_MINOR_VERSION: u16 = 14;
 pub(crate) const NEXT_UNRELEASED_PYTHON_3_MINOR_VERSION: u16 =
     NEWEST_SUPPORTED_PYTHON_3_MINOR_VERSION + 1;
 
-pub(crate) const LATEST_PYTHON_3_9: PythonVersion = PythonVersion::new(3, 9, 24);
+pub(crate) const LATEST_PYTHON_3_9: PythonVersion = PythonVersion::new(3, 9, 25);
 pub(crate) const LATEST_PYTHON_3_10: PythonVersion = PythonVersion::new(3, 10, 19);
 pub(crate) const LATEST_PYTHON_3_11: PythonVersion = PythonVersion::new(3, 11, 14);
 pub(crate) const LATEST_PYTHON_3_12: PythonVersion = PythonVersion::new(3, 12, 12);
