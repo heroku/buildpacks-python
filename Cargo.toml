@@ -1,7 +1,7 @@
 [package]
 name = "python-buildpack"
 edition = "2024"
-rust-version = "1.89"
+rust-version = "1.91"
 # Disable automatic integration test discovery, since we import them in main.rs (see comment there).
 autotests = false
 
