@@ -7,6 +7,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Changed
+
+- Unpinned Poetry's `dulwich` version, since the upstream incompatibility with older Python has been fixed. ([#464](https://github.com/heroku/buildpacks-python/pull/464))
+
 ## [2.7.4] - 2025-11-14
 
 ### Changed
