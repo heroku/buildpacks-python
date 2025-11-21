@@ -82,13 +82,39 @@ fn builds_with_python_version(fixture_path: &str, python_version: &PythonVersion
                     [Determining Python version]
                     Using Python version {major}.{minor} specified in .python-version
                     
-                    [Warning: Support for Python 3.9 is deprecated]
-                    Python 3.9 will reach its upstream end-of-life in October 2025,
-                    at which point it will no longer receive security updates:
+                    [Warning: Support for Python 3.9 is ending soon]
+                    Python 3.9 reached its upstream end-of-life on 31st October 2025,
+                    and so no longer receives security updates:
                     https://devguide.python.org/versions/#supported-versions
                     
                     As such, support for Python 3.9 will be removed from this
                     buildpack on 7th January 2026.
+                    
+                    Upgrade to a newer Python version as soon as possible, by
+                    changing the version in your .python-version file.
+                    
+                    For more information, see:
+                    https://devcenter.heroku.com/articles/python-support#supported-python-versions
+                    
+                    
+                    [Installing Python]
+                    Installing Python {major}.{minor}.{patch}
+                "}
+            );
+        } else if major == 3 && minor == 10 {
+            assert_contains!(
+                context.pack_stdout,
+                &formatdoc! {"
+                    [Determining Python version]
+                    Using Python version {major}.{minor} specified in .python-version
+                    
+                    [Warning: Support for Python 3.10 is deprecated]
+                    Python 3.10 will reach its upstream end-of-life in October 2026,
+                    at which point it will no longer receive security updates:
+                    https://devguide.python.org/versions/#supported-versions
+                    
+                    As such, support for Python 3.10 will be removed from this
+                    buildpack on 6th January 2027.
                     
                     Upgrade to a newer Python version as soon as possible, by
                     changing the version in your .python-version file.

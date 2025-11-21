@@ -239,9 +239,9 @@ fn pip_oldest_python() {
                 [Determining Python version]
                 Using Python version 3.9.0 specified in .python-version
                 
-                [Warning: Support for Python 3.9 is deprecated]
-                Python 3.9 will reach its upstream end-of-life in October 2025,
-                at which point it will no longer receive security updates:
+                [Warning: Support for Python 3.9 is ending soon]
+                Python 3.9 reached its upstream end-of-life on 31st October 2025,
+                and so no longer receives security updates:
                 https://devguide.python.org/versions/#supported-versions
                 
                 As such, support for Python 3.9 will be removed from this
