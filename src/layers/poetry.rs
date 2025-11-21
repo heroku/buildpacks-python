@@ -90,7 +90,6 @@ pub(crate) fn install_poetry(
                     .args([
                         &bundled_pip_module_path.to_string_lossy(),
                         "install",
-                        // Setting this via CLI args since for Poetry we aren't setting `PIP_DISABLE_PIP_VERSION_CHECK`.
                         "--disable-pip-version-check",
                         // Don't load any user-supplied pip configuration (pip.conf and `PIP_` env vars) given
                         // that this is an internal step for installing Poetry (rather than app dependencies), and

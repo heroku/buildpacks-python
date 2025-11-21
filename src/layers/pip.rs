@@ -94,6 +94,9 @@ pub(crate) fn install_pip(
                     .args([
                         &bundled_pip_module_path.to_string_lossy(),
                         "install",
+                        // We have to use CLI args to disable pip's version check here, since `--isolated` mode
+                        // means the `PIP_DISABLE_PIP_VERSION_CHECK` env var set previously will be ignored.
+                        "--disable-pip-version-check",
                         // Don't load any user-supplied pip configuration (pip.conf and `PIP_` env vars) given
                         // that this is an internal step for installing pip (rather than app dependencies), and
                         // so (a) doesn't need custom config, (b) we don't want the user to be able to break it.
