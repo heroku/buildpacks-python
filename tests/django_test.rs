@@ -126,7 +126,7 @@ fn django_staticfiles_app_not_enabled() {
                 indoc! {"
                     [Generating Django static files]
                     Skipping automatic static file generation since the 'django.contrib.staticfiles'
-                    feature is not enabled in your app's Django configuration.
+                    feature isn't enabled in your app's Django configuration.
                 "}
             );
         },
@@ -206,7 +206,7 @@ fn django_staticfiles_misconfigured() {
                     config options shown here:
                     https://whitenoise.readthedocs.io/en/stable/django.html
 
-                    Or, if you do not need to use static files in your app, disable the
+                    Or, if you don't need to use static files in your app, disable the
                     Django static files feature by removing 'django.contrib.staticfiles'
                     from 'INSTALLED_APPS' in your app's Django configuration.
 

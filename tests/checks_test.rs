@@ -14,8 +14,8 @@ fn checks_reject_pythonhome_env_var() {
             context.pack_stdout,
             indoc! {"
                 [Error: Unsafe environment variable found]
-                The environment variable 'PYTHONHOME' is set, however, it can
-                cause problems with the build so we do not allow using it.
+                The environment variable `PYTHONHOME` is set, however, it can
+                cause problems with the build so we don't allow using it.
 
                 You must unset that environment variable. If you didn't set it
                 yourself, check that it wasn't set by an earlier buildpack.

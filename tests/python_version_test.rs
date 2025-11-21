@@ -407,7 +407,7 @@ fn python_version_non_existent_minor() {
                 of this buildpack, and haven't pinned to an older release
                 via a custom buildpack configuration in project.toml.
                 
-                We also strongly recommend that you do not pin your app to an
+                We also strongly recommend that you don't pin your app to an
                 exact Python version such as 3.12.999, and instead only specify
                 the major Python version of 3.12 in your .python-version file.
                 This will allow your app to receive the latest available Python

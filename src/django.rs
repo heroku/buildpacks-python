@@ -34,7 +34,7 @@ pub(crate) fn run_django_collectstatic(
     {
         log_info(indoc! {"
             Skipping automatic static file generation since the 'django.contrib.staticfiles'
-            feature is not enabled in your app's Django configuration."
+            feature isn't enabled in your app's Django configuration."
         });
         return Ok(());
     }
