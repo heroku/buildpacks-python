@@ -11,6 +11,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - Deprecated support for Python 3.10. ([#467](https://github.com/heroku/buildpacks-python/pull/467))
 - Updated uv from 0.9.9 to 0.9.11. ([#468](https://github.com/heroku/buildpacks-python/pull/468))
+- Explicitly disabled pip version checks when bootstrapping pip. ([#470](https://github.com/heroku/buildpacks-python/pull/470))
 - Unpinned Poetry's `dulwich` version, since the upstream incompatibility with older Python has been fixed. ([#464](https://github.com/heroku/buildpacks-python/pull/464))
 
 ## [2.7.4] - 2025-11-14
