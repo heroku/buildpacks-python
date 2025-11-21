@@ -65,8 +65,8 @@ fn on_buildpack_checks_error(error: ChecksError) {
         ChecksError::ForbiddenEnvVar(name) => log_error(
             "Unsafe environment variable found",
             formatdoc! {"
-                The environment variable '{name}' is set, however, it can
-                cause problems with the build so we do not allow using it.
+                The environment variable `{name}` is set, however, it can
+                cause problems with the build so we don't allow using it.
 
                 You must unset that environment variable. If you didn't set it
                 yourself, check that it wasn't set by an earlier buildpack.
@@ -390,7 +390,7 @@ fn on_python_layer_error(error: PythonLayerError) {
                     of this buildpack, and haven't pinned to an older release
                     via a custom buildpack configuration in project.toml.
                     
-                    We also strongly recommend that you do not pin your app to an
+                    We also strongly recommend that you don't pin your app to an
                     exact Python version such as {requested_python_version}, and instead only specify
                     the major Python version of {major}.{minor} in your {origin} file.
                     This will allow your app to receive the latest available Python
@@ -408,14 +408,14 @@ fn on_pip_layer_error(error: PipLayerError) {
             StreamedCommandError::NonZeroExitStatus(exit_status) => log_error(
                 "Unable to install pip",
                 formatdoc! {"
-                    The command to install pip did not exit successfully ({exit_status}).
+                    The command to install pip didn't exit successfully ({exit_status}).
                     
                     See the log output above for more information.
                     
                     In some cases, this happens due to an unstable network connection.
                     Please try again to see if the error resolves itself.
                     
-                    If that does not help, check the status of PyPI (the upstream Python
+                    If that doesn't help, check the status of PyPI (the upstream Python
                     package repository service), here:
                     https://status.python.org
                 "},
@@ -463,14 +463,14 @@ fn on_poetry_layer_error(error: PoetryLayerError) {
             StreamedCommandError::NonZeroExitStatus(exit_status) => log_error(
                 "Unable to install Poetry",
                 formatdoc! {"
-                    The command to install Poetry did not exit successfully ({exit_status}).
+                    The command to install Poetry didn't exit successfully ({exit_status}).
                     
                     See the log output above for more information.
                     
                     In some cases, this happens due to an unstable network connection.
                     Please try again to see if the error resolves itself.
                     
-                    If that does not help, check the status of PyPI (the upstream Python
+                    If that doesn't help, check the status of PyPI (the upstream Python
                     package repository service), here:
                     https://status.python.org
                 "},
@@ -487,8 +487,8 @@ fn on_poetry_dependencies_layer_error(error: PoetryDependenciesLayerError) {
             StreamedCommandError::NonZeroExitStatus(exit_status) => log_error(
                 "Unable to create virtual environment",
                 formatdoc! {"
-                    The 'python -m venv' command to create a virtual environment did
-                    not exit successfully ({exit_status}).
+                    The 'python -m venv' command to create a virtual environment
+                    didn't exit successfully ({exit_status}).
                     
                     See the log output above for more information.
                 "},
@@ -617,7 +617,7 @@ fn on_django_collectstatic_error(error: DjangoCollectstaticError) {
                     config options shown here:
                     https://whitenoise.readthedocs.io/en/stable/django.html
                     
-                    Or, if you do not need to use static files in your app, disable the
+                    Or, if you don't need to use static files in your app, disable the
                     Django static files feature by removing 'django.contrib.staticfiles'
                     from 'INSTALLED_APPS' in your app's Django configuration.
                 "},
