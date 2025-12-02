@@ -56,7 +56,7 @@ Issues and pull requests are welcome. See our [contributing guidelines](./CONTRI
 [ci-badge]: https://github.com/heroku/buildpacks-python/actions/workflows/ci.yml/badge.svg
 [ci-url]: https://github.com/heroku/buildpacks-python/actions/workflows/ci.yml
 [cnb]: https://buildpacks.io
-[cnb-banner]: https://cloud.githubusercontent.com/assets/51578/13712821/b68a42ce-e793-11e5-96b0-d8eb978137ba.png
+[cnb-banner]: https://raw.githubusercontent.com/heroku/buildpacks/refs/heads/main/assets/images/buildpack-banner-python.png
 [classic-buildpack]: https://github.com/heroku/heroku-buildpack-python
 [heroku-buildpacks]: https://github.com/heroku/buildpacks
 [pack-install]: https://buildpacks.io/docs/for-platform-operators/how-to/integrate-ci/pack/
