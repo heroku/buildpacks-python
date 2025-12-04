@@ -8,13 +8,13 @@ use std::path::Path;
 /// The Python version that will be installed if the project does not specify an explicit version.
 pub(crate) const DEFAULT_PYTHON_VERSION: RequestedPythonVersion = RequestedPythonVersion {
     major: 3,
-    minor: 13,
+    minor: 14,
     patch: None,
     origin: PythonVersionOrigin::BuildpackDefault,
 };
 
 #[cfg(test)]
-pub(crate) const DEFAULT_PYTHON_FULL_VERSION: PythonVersion = LATEST_PYTHON_3_13;
+pub(crate) const DEFAULT_PYTHON_FULL_VERSION: PythonVersion = LATEST_PYTHON_3_14;
 
 pub(crate) const OLDEST_SUPPORTED_PYTHON_3_MINOR_VERSION: u16 = 9;
 pub(crate) const NEWEST_SUPPORTED_PYTHON_3_MINOR_VERSION: u16 = 14;
@@ -323,7 +323,7 @@ mod tests {
             .unwrap(),
             RequestedPythonVersion {
                 major: 3,
-                minor: 13,
+                minor: 14,
                 patch: None,
                 origin: PythonVersionOrigin::BuildpackDefault
             }
@@ -336,7 +336,7 @@ mod tests {
             .unwrap(),
             RequestedPythonVersion {
                 major: 3,
-                minor: 13,
+                minor: 14,
                 patch: None,
                 origin: PythonVersionOrigin::BuildpackDefault
             }

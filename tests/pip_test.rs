@@ -32,14 +32,14 @@ fn pip_basic_install_and_cache_reuse() {
                 [Installing dependencies using pip]
                 Creating virtual environment
                 Running 'pip install -r requirements.txt'
-                Collecting typing-extensions==4.12.2 (from -r requirements.txt (line 2))
-                  Downloading typing_extensions-4.12.2-py3-none-any.whl.metadata (3.0 kB)
-                Downloading typing_extensions-4.12.2-py3-none-any.whl (37 kB)
+                Collecting typing-extensions==4.15.0 (from -r requirements.txt (line 2))
+                  Downloading typing_extensions-4.15.0-py3-none-any.whl.metadata (3.3 kB)
+                Downloading typing_extensions-4.15.0-py3-none-any.whl (44 kB)
                 Installing collected packages: typing-extensions
-                Successfully installed typing-extensions-4.12.2
+                Successfully installed typing-extensions-4.15.0
                 
                 ## Testing buildpack ##
-                CPATH=/layers/heroku_python/venv/include:/layers/heroku_python/python/include/python3.13:/layers/heroku_python/python/include
+                CPATH=/layers/heroku_python/venv/include:/layers/heroku_python/python/include/python3.14:/layers/heroku_python/python/include
                 LD_LIBRARY_PATH=/layers/heroku_python/venv/lib:/layers/heroku_python/python/lib:/layers/heroku_python/pip/lib
                 LIBRARY_PATH=/layers/heroku_python/venv/lib:/layers/heroku_python/python/lib:/layers/heroku_python/pip/lib
                 PATH=/layers/heroku_python/venv/bin:/layers/heroku_python/python/bin:/layers/heroku_python/pip/bin:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin
@@ -53,16 +53,16 @@ fn pip_basic_install_and_cache_reuse() {
                 VIRTUAL_ENV=/layers/heroku_python/venv
                 
                 ['',
-                 '/layers/heroku_python/python/lib/python313.zip',
-                 '/layers/heroku_python/python/lib/python3.13',
-                 '/layers/heroku_python/python/lib/python3.13/lib-dynload',
-                 '/layers/heroku_python/venv/lib/python3.13/site-packages']
+                 '/layers/heroku_python/python/lib/python314.zip',
+                 '/layers/heroku_python/python/lib/python3.14',
+                 '/layers/heroku_python/python/lib/python3.14/lib-dynload',
+                 '/layers/heroku_python/venv/lib/python3.14/site-packages']
                 
-                pip {PIP_VERSION} from /layers/heroku_python/pip/lib/python3.13/site-packages/pip (python 3.13)
+                pip {PIP_VERSION} from /layers/heroku_python/pip/lib/python3.14/site-packages/pip (python 3.14)
                 Package           Version
                 ----------------- -------
-                typing_extensions 4.12.2
-                <module 'typing_extensions' from '/layers/heroku_python/venv/lib/python3.13/site-packages/typing_extensions.py'>
+                typing_extensions 4.15.0
+                <module 'typing_extensions' from '/layers/heroku_python/venv/lib/python3.14/site-packages/typing_extensions.py'>
             "}
         );
 
@@ -109,11 +109,11 @@ fn pip_basic_install_and_cache_reuse() {
                     Using cached pip download/wheel cache
                     Creating virtual environment
                     Running 'pip install -r requirements.txt'
-                    Collecting typing-extensions==4.12.2 (from -r requirements.txt (line 2))
-                      Using cached typing_extensions-4.12.2-py3-none-any.whl.metadata (3.0 kB)
-                    Using cached typing_extensions-4.12.2-py3-none-any.whl (37 kB)
+                    Collecting typing-extensions==4.15.0 (from -r requirements.txt (line 2))
+                      Using cached typing_extensions-4.15.0-py3-none-any.whl.metadata (3.3 kB)
+                    Using cached typing_extensions-4.15.0-py3-none-any.whl (44 kB)
                     Installing collected packages: typing-extensions
-                    Successfully installed typing-extensions-4.12.2
+                    Successfully installed typing-extensions-4.15.0
                 "}
             );
         });
@@ -146,11 +146,11 @@ fn pip_cache_invalidation_package_manager_changed() {
                     [Installing dependencies using pip]
                     Creating virtual environment
                     Running 'pip install -r requirements.txt'
-                    Collecting typing-extensions==4.12.2 (from -r requirements.txt (line 2))
-                      Downloading typing_extensions-4.12.2-py3-none-any.whl.metadata (3.0 kB)
-                    Downloading typing_extensions-4.12.2-py3-none-any.whl (37 kB)
+                    Collecting typing-extensions==4.15.0 (from -r requirements.txt (line 2))
+                      Downloading typing_extensions-4.15.0-py3-none-any.whl.metadata (3.3 kB)
+                    Downloading typing_extensions-4.15.0-py3-none-any.whl (44 kB)
                     Installing collected packages: typing-extensions
-                    Successfully installed typing-extensions-4.12.2
+                    Successfully installed typing-extensions-4.15.0
                 "}
             );
         });
@@ -192,11 +192,11 @@ fn pip_cache_previous_buildpack_version() {
                     Discarding cached pip download/wheel cache
                     Creating virtual environment
                     Running 'pip install -r requirements.txt'
-                    Collecting typing-extensions==4.12.2 (from -r requirements.txt (line 2))
-                      Downloading typing_extensions-4.12.2-py3-none-any.whl.metadata (3.0 kB)
-                    Downloading typing_extensions-4.12.2-py3-none-any.whl (37 kB)
+                    Collecting typing-extensions==4.15.0 (from -r requirements.txt (line 2))
+                      Downloading typing_extensions-4.15.0-py3-none-any.whl.metadata (3.3 kB)
+                    Downloading typing_extensions-4.15.0-py3-none-any.whl (44 kB)
                     Installing collected packages: typing-extensions
-                    Successfully installed typing-extensions-4.12.2
+                    Successfully installed typing-extensions-4.15.0
                 "}
             );
         });

@@ -257,7 +257,7 @@ fn python_version_file_multiple_versions() {
     TestRunner::default().build(config, |context| {
         assert_contains!(
             context.pack_stdout,
-            indoc! {"
+            &formatdoc! {"
                 [Determining Python version]
 
                 [Error: Invalid Python version in .python-version]
@@ -269,9 +269,9 @@ fn python_version_file_multiple_versions() {
                 
                 Update the file so it contains only one Python version.
                 
-                For example, to request the latest version of Python 3.13,
+                For example, to request the latest version of Python {DEFAULT_PYTHON_VERSION},
                 update your .python-version file so it contains exactly:
-                3.13
+                {DEFAULT_PYTHON_VERSION}
                 
                 If you have added comments to the file, make sure that those
                 lines begin with a '#', so that they are ignored.
