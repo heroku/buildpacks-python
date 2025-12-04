@@ -2,7 +2,7 @@
 package-mode = false
 
 [tool.poetry.dependencies]
-python = "^3.13"
+python = "^3.14"
 
 # This requirement uses a VCS URL and `develop = true` in order to test that:
 #  - Git from the stack image can be found (ie: the system PATH has been correctly propagated to Poetry).

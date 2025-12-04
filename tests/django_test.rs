@@ -18,7 +18,7 @@ fn django_staticfiles_latest_django() {
                 indoc! {"
                     [Generating Django static files]
                     Running 'manage.py collectstatic'
-                    {'CPATH': '/layers/heroku_python/venv/include:/layers/heroku_python/python/include/python3.13:/layers/heroku_python/python/include:/invalid',
+                    {'CPATH': '/layers/heroku_python/venv/include:/layers/heroku_python/python/include/python3.14:/layers/heroku_python/python/include:/invalid',
                      'DJANGO_SETTINGS_MODULE': 'testproject.settings',
                      'EXPECTED_ENV_VAR': '1',
                      'LC_CTYPE': 'C.UTF-8',
@@ -37,10 +37,10 @@ fn django_staticfiles_latest_django() {
                     
                     ['/workspace/backend',
                      '/invalid',
-                     '/layers/heroku_python/python/lib/python313.zip',
-                     '/layers/heroku_python/python/lib/python3.13',
-                     '/layers/heroku_python/python/lib/python3.13/lib-dynload',
-                     '/layers/heroku_python/venv/lib/python3.13/site-packages']
+                     '/layers/heroku_python/python/lib/python314.zip',
+                     '/layers/heroku_python/python/lib/python3.14',
+                     '/layers/heroku_python/python/lib/python3.14/lib-dynload',
+                     '/layers/heroku_python/venv/lib/python3.14/site-packages']
                     
                     1 static file copied to '/workspace/backend/staticfiles'.
                 "}

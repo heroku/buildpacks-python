@@ -1,5 +1,7 @@
 use crate::packaging_tool_versions::POETRY_VERSION;
-use crate::python_version::{DEFAULT_PYTHON_FULL_VERSION, DEFAULT_PYTHON_VERSION};
+use crate::python_version::{
+    DEFAULT_PYTHON_FULL_VERSION, DEFAULT_PYTHON_VERSION, LATEST_PYTHON_3_13,
+};
 use crate::tests::default_build_config;
 use indoc::{formatdoc, indoc};
 use libcnb_test::{BuildpackReference, PackResult, TestRunner, assert_contains, assert_empty};
@@ -34,10 +36,10 @@ fn poetry_basic_install_and_cache_reuse() {
                 
                 Package operations: 1 install, 0 updates, 0 removals
                 
-                  - Installing typing-extensions (4.12.2)
+                  - Installing typing-extensions (4.15.0)
                 
                 ## Testing buildpack ##
-                CPATH=/layers/heroku_python/venv/include:/layers/heroku_python/python/include/python3.13:/layers/heroku_python/python/include
+                CPATH=/layers/heroku_python/venv/include:/layers/heroku_python/python/include/python3.14:/layers/heroku_python/python/include
                 LD_LIBRARY_PATH=/layers/heroku_python/venv/lib:/layers/heroku_python/python/lib:/layers/heroku_python/poetry/lib
                 LIBRARY_PATH=/layers/heroku_python/venv/lib:/layers/heroku_python/python/lib:/layers/heroku_python/poetry/lib
                 PATH=/layers/heroku_python/venv/bin:/layers/heroku_python/python/bin:/layers/heroku_python/poetry/bin:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin
@@ -48,14 +50,14 @@ fn poetry_basic_install_and_cache_reuse() {
                 VIRTUAL_ENV=/layers/heroku_python/venv
                 
                 ['',
-                 '/layers/heroku_python/python/lib/python313.zip',
-                 '/layers/heroku_python/python/lib/python3.13',
-                 '/layers/heroku_python/python/lib/python3.13/lib-dynload',
-                 '/layers/heroku_python/venv/lib/python3.13/site-packages']
+                 '/layers/heroku_python/python/lib/python314.zip',
+                 '/layers/heroku_python/python/lib/python3.14',
+                 '/layers/heroku_python/python/lib/python3.14/lib-dynload',
+                 '/layers/heroku_python/venv/lib/python3.14/site-packages']
                 
                 Poetry (version {POETRY_VERSION})
-                typing-extensions 4.12.2 Backported and Experimental Type Hints for Python ...
-                <module 'typing_extensions' from '/layers/heroku_python/venv/lib/python3.13/site-packages/typing_extensions.py'>
+                typing-extensions 4.15.0 Backported and Experimental Type Hints for Python ...
+                <module 'typing_extensions' from '/layers/heroku_python/venv/lib/python3.14/site-packages/typing_extensions.py'>
             "}
         );
 
@@ -137,7 +139,7 @@ fn poetry_cache_invalidation_package_manager_changed() {
                     
                     Package operations: 1 install, 0 updates, 0 removals
                     
-                      - Installing typing-extensions (4.12.2)
+                      - Installing typing-extensions (4.15.0)
                 "}
             );
         });
@@ -151,7 +153,7 @@ fn poetry_cache_invalidation_package_manager_changed() {
 fn poetry_cache_previous_buildpack_version() {
     let mut config = default_build_config("tests/fixtures/poetry_basic");
     config.buildpacks([BuildpackReference::Other(
-        "docker://docker.io/heroku/buildpack-python:0.23.0".to_string(),
+        "docker://docker.io/heroku/buildpack-python:2.7.0".to_string(),
     )]);
     let rebuild_config = default_build_config("tests/fixtures/poetry_basic");
 
@@ -165,12 +167,12 @@ fn poetry_cache_previous_buildpack_version() {
                     Using Python version {DEFAULT_PYTHON_VERSION} specified in .python-version
                     
                     [Installing Python]
-                    Discarding cached Python 3.13.1 since:
-                     - The Python version has changed from 3.13.1 to {DEFAULT_PYTHON_FULL_VERSION}
+                    Discarding cached Python 3.14.0 since:
+                     - The Python version has changed from 3.14.0 to {DEFAULT_PYTHON_FULL_VERSION}
                     Installing Python {DEFAULT_PYTHON_FULL_VERSION}
                     
                     [Installing Poetry]
-                    Discarding cached Poetry 2.0.1
+                    Discarding cached Poetry 2.2.1
                     Installing Poetry {POETRY_VERSION}
                     
                     [Installing dependencies using Poetry]
@@ -181,7 +183,7 @@ fn poetry_cache_previous_buildpack_version() {
                     
                     Package operations: 1 install, 0 updates, 0 removals
                     
-                      - Installing typing-extensions (4.12.2)
+                      - Installing typing-extensions (4.15.0)
                 "}
             );
         });
@@ -269,7 +271,7 @@ fn poetry_oldest_python() {
                 
                 Package operations: 1 install, 0 updates, 0 removals
                 
-                  - Installing typing-extensions (4.12.2)
+                  - Installing typing-extensions (4.15.0)
             "}
         );
     });
@@ -291,7 +293,7 @@ fn poetry_mismatched_python_version() {
                 Creating virtual environment
                 Running 'poetry sync --only main'
 
-                Current Python version ({DEFAULT_PYTHON_FULL_VERSION}) is not allowed by the project (3.12.*).
+                Current Python version ({LATEST_PYTHON_3_13}) is not allowed by the project (3.12.*).
                 Please change python executable via the "env use" command.
                 
                 [Error: Unable to install dependencies using Poetry]

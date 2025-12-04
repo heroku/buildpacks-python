@@ -39,13 +39,13 @@ When using the package manager [uv](https://docs.astral.sh/uv/) a `.python-versi
 
 ### Python Version
 
-If a `.python-version` file isn't found, the buildpack will install the latest version of Python 3.13.
+If a `.python-version` file isn't found, the buildpack will install the latest version of Python 3.14.
 
 To install a different version, add a `.python-version` file to your app's root directory that declares the version number to use:
 
 ```term
 $ cat .python-version
-3.13
+3.14
 ```
 
 ## Contributing

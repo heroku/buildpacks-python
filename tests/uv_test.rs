@@ -1,5 +1,7 @@
 use crate::packaging_tool_versions::UV_VERSION;
-use crate::python_version::{DEFAULT_PYTHON_FULL_VERSION, DEFAULT_PYTHON_VERSION};
+use crate::python_version::{
+    DEFAULT_PYTHON_FULL_VERSION, DEFAULT_PYTHON_VERSION, LATEST_PYTHON_3_13,
+};
 use crate::tests::default_build_config;
 use indoc::{formatdoc, indoc};
 use libcnb_test::{
@@ -33,14 +35,14 @@ fn uv_basic_install_and_cache_reuse() {
                 \\[Installing dependencies using uv\\]
                 Creating virtual environment
                 Running 'uv sync --locked --no-default-groups'
-                Resolved 7 packages in .+s
+                Resolved .+ packages in .+s
                 Prepared 1 package in .+s
                 Installed 1 package in .+s
                 Bytecode compiled 1 file in .+s
-                 \\+ typing-extensions==4.13.2
+                 \\+ typing-extensions==4.15.0
                 
                 ## Testing buildpack ##
-                CPATH=/layers/heroku_python/venv/include:/layers/heroku_python/python/include/python3.13:/layers/heroku_python/python/include
+                CPATH=/layers/heroku_python/venv/include:/layers/heroku_python/python/include/python3.14:/layers/heroku_python/python/include
                 LD_LIBRARY_PATH=/layers/heroku_python/venv/lib:/layers/heroku_python/python/lib
                 LIBRARY_PATH=/layers/heroku_python/venv/lib:/layers/heroku_python/python/lib
                 PATH=/layers/heroku_python/venv/bin:/layers/heroku_python/uv/bin:/layers/heroku_python/python/bin:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin
@@ -54,17 +56,17 @@ fn uv_basic_install_and_cache_reuse() {
                 VIRTUAL_ENV=/layers/heroku_python/venv
                 
                 \\['',
-                 '/layers/heroku_python/python/lib/python313.zip',
-                 '/layers/heroku_python/python/lib/python3.13',
-                 '/layers/heroku_python/python/lib/python3.13/lib-dynload',
-                 '/layers/heroku_python/venv/lib/python3.13/site-packages'\\]
+                 '/layers/heroku_python/python/lib/python314.zip',
+                 '/layers/heroku_python/python/lib/python3.14',
+                 '/layers/heroku_python/python/lib/python3.14/lib-dynload',
+                 '/layers/heroku_python/venv/lib/python3.14/site-packages'\\]
                 
                 uv {UV_VERSION}
                 Using Python {DEFAULT_PYTHON_FULL_VERSION} environment at: /layers/heroku_python/venv
                 Package           Version
                 ----------------- -------
-                typing-extensions 4.13.2
-                <module 'typing_extensions' from '/layers/heroku_python/venv/lib/python3.13/site-packages/typing_extensions.py'>
+                typing-extensions 4.15.0
+                <module 'typing_extensions' from '/layers/heroku_python/venv/lib/python3.14/site-packages/typing_extensions.py'>
             "}
         );
 
@@ -108,7 +110,7 @@ fn uv_basic_install_and_cache_reuse() {
                     \\[Installing dependencies using uv\\]
                     Using cached virtual environment
                     Running 'uv sync --locked --no-default-groups'
-                    Resolved 7 packages in .+s
+                    Resolved .+ packages in .+s
                     Bytecode compiled 1 file in .+s
                     
                     ## Testing buildpack ##
@@ -143,11 +145,11 @@ fn uv_cache_invalidation_package_manager_changed() {
                     Discarding cached virtual environment
                     Creating virtual environment
                     Running 'uv sync --locked --no-default-groups'
-                    Resolved 7 packages in .+s
+                    Resolved .+ packages in .+s
                     Prepared 1 package in .+s
                     Installed 1 package in .+s
                     Bytecode compiled 1 file in .+s
-                     \\+ typing-extensions==4.13.2
+                     \\+ typing-extensions==4.15.0
                 "}
             );
         });
@@ -161,7 +163,7 @@ fn uv_cache_invalidation_package_manager_changed() {
 fn uv_cache_previous_buildpack_version() {
     let mut config = default_build_config("tests/fixtures/uv_basic");
     config.buildpacks([BuildpackReference::Other(
-        "docker://docker.io/heroku/buildpack-python:2.0.0".to_string(),
+        "docker://docker.io/heroku/buildpack-python:2.7.0".to_string(),
     )]);
     let rebuild_config = default_build_config("tests/fixtures/uv_basic");
 
@@ -175,23 +177,23 @@ fn uv_cache_previous_buildpack_version() {
                     Using Python version {DEFAULT_PYTHON_VERSION} specified in .python-version
                     
                     \\[Installing Python\\]
-                    Discarding cached Python 3.13.3 since:
-                     - The Python version has changed from 3.13.3 to {DEFAULT_PYTHON_FULL_VERSION}
+                    Discarding cached Python 3.14.0 since:
+                     - The Python version has changed from 3.14.0 to {DEFAULT_PYTHON_FULL_VERSION}
                     Installing Python {DEFAULT_PYTHON_FULL_VERSION}
                     
                     \\[Installing uv\\]
-                    Discarding cached uv 0.7.3
+                    Discarding cached uv 0.8.23
                     Installing uv {UV_VERSION}
                     
                     \\[Installing dependencies using uv\\]
                     Discarding cached virtual environment
                     Creating virtual environment
                     Running 'uv sync --locked --no-default-groups'
-                    Resolved 7 packages in .+s
+                    Resolved .+ packages in .+s
                     Prepared 1 package in .+s
                     Installed 1 package in .+s
                     Bytecode compiled 1 file in .+s
-                     \\+ typing-extensions==4.13.2
+                     \\+ typing-extensions==4.15.0
                 "}
             );
         });
@@ -270,7 +272,7 @@ fn uv_oldest_python() {
                 Prepared 1 package in .+s
                 Installed 1 package in .+s
                 Bytecode compiled 1 file in .+s
-                 \\+ typing-extensions==4.13.2
+                 \\+ typing-extensions==4.15.0
             "}
         );
     });
@@ -376,8 +378,8 @@ fn uv_mismatched_python_version() {
                 [Installing dependencies using uv]
                 Creating virtual environment
                 Running 'uv sync --locked --no-default-groups'
-                Using CPython {DEFAULT_PYTHON_FULL_VERSION} interpreter at: /layers/heroku_python/python/bin/python3.13
-                error: The Python request from `.python-version` resolved to Python {DEFAULT_PYTHON_FULL_VERSION}, which is incompatible with the project's Python requirement: `==3.12.*` (from `project.requires-python`)
+                Using CPython {LATEST_PYTHON_3_13} interpreter at: /layers/heroku_python/python/bin/python3.13
+                error: The Python request from `.python-version` resolved to Python {LATEST_PYTHON_3_13}, which is incompatible with the project's Python requirement: `==3.12.*` (from `project.requires-python`)
                 Use `uv python pin` to update the `.python-version` file to a compatible version
 
                 [Error: Unable to install dependencies using uv]
