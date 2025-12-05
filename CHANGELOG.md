@@ -10,6 +10,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Changed
 
 - Updated the default Python version from 3.13 to 3.14. ([#478](https://github.com/heroku/buildpacks-python/pull/478))
+- The Python 3.14 version alias now resolves to Python 3.14.2. ([#479](https://github.com/heroku/buildpacks-python/pull/479))
+- The Python 3.13 version alias now resolves to Python 3.13.11. ([#479](https://github.com/heroku/buildpacks-python/pull/479))
 
 ## [2.8.1] - 2025-12-02
 
