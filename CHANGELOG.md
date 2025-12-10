@@ -7,6 +7,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [3.0.1] - 2025-12-10
+
 ### Changed
 
 - Updated uv from 0.9.14 to 0.9.17. ([#482](https://github.com/heroku/buildpacks-python/pull/482))
@@ -527,7 +529,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - Initial implementation. ([#3](https://github.com/heroku/buildpacks-python/pull/3))
 
-[unreleased]: https://github.com/heroku/buildpacks-python/compare/v3.0.0...HEAD
+[unreleased]: https://github.com/heroku/buildpacks-python/compare/v3.0.1...HEAD
+[3.0.1]: https://github.com/heroku/buildpacks-python/compare/v3.0.0...v3.0.1
 [3.0.0]: https://github.com/heroku/buildpacks-python/compare/v2.8.1...v3.0.0
 [2.8.1]: https://github.com/heroku/buildpacks-python/compare/v2.8.0...v2.8.1
 [2.8.0]: https://github.com/heroku/buildpacks-python/compare/v2.7.4...v2.8.0
