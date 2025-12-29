@@ -237,15 +237,15 @@ fn pip_oldest_python() {
             context.pack_stdout,
             indoc! {"
                 [Determining Python version]
-                Using Python version 3.9.0 specified in .python-version
+                Using Python version 3.10.0 specified in .python-version
                 
-                [Warning: Support for Python 3.9 is ending soon]
-                Python 3.9 reached its upstream end-of-life on 31st October 2025,
-                and so no longer receives security updates:
+                [Warning: Support for Python 3.10 is deprecated]
+                Python 3.10 will reach its upstream end-of-life in October 2026,
+                at which point it will no longer receive security updates:
                 https://devguide.python.org/versions/#supported-versions
                 
-                As such, support for Python 3.9 will be removed from this
-                buildpack on 7th January 2026.
+                As such, support for Python 3.10 will be removed from this
+                buildpack on 6th January 2027.
                 
                 Upgrade to a newer Python version as soon as possible, by
                 changing the version in your .python-version file.
@@ -255,7 +255,7 @@ fn pip_oldest_python() {
                 
 
                 [Installing Python]
-                Installing Python 3.9.0
+                Installing Python 3.10.0
             "}
         );
     });

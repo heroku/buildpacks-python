@@ -16,12 +16,11 @@ pub(crate) const DEFAULT_PYTHON_VERSION: RequestedPythonVersion = RequestedPytho
 #[cfg(test)]
 pub(crate) const DEFAULT_PYTHON_FULL_VERSION: PythonVersion = LATEST_PYTHON_3_14;
 
-pub(crate) const OLDEST_SUPPORTED_PYTHON_3_MINOR_VERSION: u16 = 9;
+pub(crate) const OLDEST_SUPPORTED_PYTHON_3_MINOR_VERSION: u16 = 10;
 pub(crate) const NEWEST_SUPPORTED_PYTHON_3_MINOR_VERSION: u16 = 14;
 pub(crate) const NEXT_UNRELEASED_PYTHON_3_MINOR_VERSION: u16 =
     NEWEST_SUPPORTED_PYTHON_3_MINOR_VERSION + 1;
 
-pub(crate) const LATEST_PYTHON_3_9: PythonVersion = PythonVersion::new(3, 9, 25);
 pub(crate) const LATEST_PYTHON_3_10: PythonVersion = PythonVersion::new(3, 10, 19);
 pub(crate) const LATEST_PYTHON_3_11: PythonVersion = PythonVersion::new(3, 11, 14);
 pub(crate) const LATEST_PYTHON_3_12: PythonVersion = PythonVersion::new(3, 12, 12);
@@ -173,7 +172,6 @@ pub(crate) fn resolve_python_version(
         (3, NEXT_UNRELEASED_PYTHON_3_MINOR_VERSION.., _) | (4.., _, _) => Err(
             ResolvePythonVersionError::UnknownVersion(requested_python_version.clone()),
         ),
-        (3, 9, None) => Ok(LATEST_PYTHON_3_9),
         (3, 10, None) => Ok(LATEST_PYTHON_3_10),
         (3, 11, None) => Ok(LATEST_PYTHON_3_11),
         (3, 12, None) => Ok(LATEST_PYTHON_3_12),
@@ -284,13 +282,13 @@ mod tests {
     fn read_requested_python_version_python_version_file() {
         assert_eq!(
             read_requested_python_version(
-                Path::new("tests/fixtures/python_3.9"),
+                Path::new("tests/fixtures/python_3.13"),
                 PackageManager::Pip
             )
             .unwrap(),
             RequestedPythonVersion {
                 major: 3,
-                minor: 9,
+                minor: 13,
                 patch: None,
                 origin: PythonVersionOrigin::PythonVersionFile,
             }

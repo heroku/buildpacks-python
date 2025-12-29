@@ -95,30 +95,6 @@ impl Buildpack for PythonBuildpack {
 
         if let RequestedPythonVersion {
             major: 3,
-            minor: 9,
-            origin,
-            ..
-        } = &requested_python_version
-        {
-            log_warning(
-                "Support for Python 3.9 is ending soon",
-                formatdoc! {"
-                    Python 3.9 reached its upstream end-of-life on 31st October 2025,
-                    and so no longer receives security updates:
-                    https://devguide.python.org/versions/#supported-versions
-
-                    As such, support for Python 3.9 will be removed from this
-                    buildpack on 7th January 2026.
-
-                    Upgrade to a newer Python version as soon as possible, by
-                    changing the version in your {origin} file.
-
-                    For more information, see:
-                    https://devcenter.heroku.com/articles/python-support#supported-python-versions
-                "},
-            );
-        } else if let RequestedPythonVersion {
-            major: 3,
             minor: 10,
             origin,
             ..

@@ -1,6 +1,6 @@
 use crate::python_version::{
-    DEFAULT_PYTHON_FULL_VERSION, DEFAULT_PYTHON_VERSION, LATEST_PYTHON_3_9, LATEST_PYTHON_3_10,
-    LATEST_PYTHON_3_11, LATEST_PYTHON_3_12, LATEST_PYTHON_3_13, LATEST_PYTHON_3_14,
+    DEFAULT_PYTHON_FULL_VERSION, DEFAULT_PYTHON_VERSION, LATEST_PYTHON_3_10, LATEST_PYTHON_3_11,
+    LATEST_PYTHON_3_12, LATEST_PYTHON_3_13, LATEST_PYTHON_3_14,
     NEWEST_SUPPORTED_PYTHON_3_MINOR_VERSION, PythonVersion,
 };
 use crate::tests::default_build_config;
@@ -27,12 +27,6 @@ fn python_version_unspecified() {
             "}
         );
     });
-}
-
-#[test]
-#[ignore = "integration test"]
-fn python_3_9() {
-    builds_with_python_version("tests/fixtures/python_3.9", &LATEST_PYTHON_3_9);
 }
 
 #[test]
@@ -75,33 +69,7 @@ fn builds_with_python_version(fixture_path: &str, python_version: &PythonVersion
     TestRunner::default().build(default_build_config(fixture_path), |context| {
         assert_empty!(context.pack_stderr);
 
-        if major == 3 && minor == 9 {
-            assert_contains!(
-                context.pack_stdout,
-                &formatdoc! {"
-                    [Determining Python version]
-                    Using Python version {major}.{minor} specified in .python-version
-                    
-                    [Warning: Support for Python 3.9 is ending soon]
-                    Python 3.9 reached its upstream end-of-life on 31st October 2025,
-                    and so no longer receives security updates:
-                    https://devguide.python.org/versions/#supported-versions
-                    
-                    As such, support for Python 3.9 will be removed from this
-                    buildpack on 7th January 2026.
-                    
-                    Upgrade to a newer Python version as soon as possible, by
-                    changing the version in your .python-version file.
-                    
-                    For more information, see:
-                    https://devcenter.heroku.com/articles/python-support#supported-python-versions
-                    
-                    
-                    [Installing Python]
-                    Installing Python {major}.{minor}.{patch}
-                "}
-            );
-        } else if major == 3 && minor == 10 {
+        if major == 3 && minor == 10 {
             assert_contains!(
                 context.pack_stdout,
                 &formatdoc! {"
@@ -154,9 +122,8 @@ fn builds_with_python_version(fixture_path: &str, python_version: &PythonVersion
                 
                 # Check that the Python binary is using its own 'libpython' and not the system one:
                 # https://github.com/docker-library/python/issues/784
-                # Note: This has to handle Python 3.9 and older not being built in shared library mode.
-                libpython_path=$(ldd /layers/heroku_python/python/bin/python | grep libpython || true)
-                if [[ -n "${libpython_path}" && "${libpython_path}" != *"=> /layers/"* ]]; then
+                libpython_path=$(ldd /layers/heroku_python/python/bin/python | grep libpython)
+                if [[ "${libpython_path}" != *"=> /layers/"* ]]; then
                   echo "The Python binary is not using the correct libpython!"
                   echo "${libpython_path}"
                   exit 1
@@ -326,14 +293,14 @@ fn python_version_eol() {
                 [Determining Python version]
 
                 [Error: The requested Python version has reached end-of-life]
-                Python 3.8 has reached its upstream end-of-life, and is
+                Python 3.9 has reached its upstream end-of-life, and is
                 therefore no longer receiving security updates:
                 https://devguide.python.org/versions/#supported-versions
 
                 As such, it's no longer supported by this buildpack:
                 https://devcenter.heroku.com/articles/python-support#supported-python-versions
 
-                Please upgrade to at least Python 3.9 by changing the
+                Please upgrade to at least Python 3.10 by changing the
                 version in your .python-version file.
 
                 If possible, we recommend upgrading all the way to Python {DEFAULT_PYTHON_VERSION},
