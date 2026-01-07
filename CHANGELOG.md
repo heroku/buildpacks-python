@@ -11,6 +11,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - Removed support for Python 3.9. ([#488](https://github.com/heroku/buildpacks-python/pull/488))
 
+### Changed
+
+- Updated pip from 25.2 to 25.3. ([#453](https://github.com/heroku/buildpacks-python/pull/453))
+
 ## [3.0.2] - 2026-01-05
 
 ### Changed
