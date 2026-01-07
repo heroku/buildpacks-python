@@ -7,6 +7,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Removed
+
+- Removed support for Python 3.9. ([#488](https://github.com/heroku/buildpacks-python/pull/488))
+
 ## [3.0.2] - 2026-01-05
 
 ### Changed

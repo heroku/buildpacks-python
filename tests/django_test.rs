@@ -49,8 +49,7 @@ fn django_staticfiles_latest_django() {
     );
 }
 
-// This tests the oldest Django version that works on Python 3.9 (which is the
-// oldest Python that is available on all of our supported builders).
+// This tests the oldest Django version that works on Python 3.10 (our oldest supported Python version).
 #[test]
 #[ignore = "integration test"]
 fn django_staticfiles_legacy_django() {
@@ -63,7 +62,7 @@ fn django_staticfiles_legacy_django() {
                 indoc! {"
                     [Generating Django static files]
                     Running 'manage.py collectstatic'
-                    {'CPATH': '/layers/heroku_python/venv/include:/layers/heroku_python/python/include/python3.9:/layers/heroku_python/python/include:/invalid',
+                    {'CPATH': '/layers/heroku_python/venv/include:/layers/heroku_python/python/include/python3.10:/layers/heroku_python/python/include:/invalid',
                      'DJANGO_SETTINGS_MODULE': 'testproject.settings',
                      'LC_CTYPE': 'C.UTF-8',
                      'LD_LIBRARY_PATH': '/layers/heroku_python/venv/lib:/layers/heroku_python/pip/lib:/layers/heroku_python/python/lib:/invalid',
@@ -81,11 +80,10 @@ fn django_staticfiles_legacy_django() {
                     
                     ['/workspace',
                      '/invalid',
-                     '/layers/heroku_python/python/lib/python39.zip',
-                     '/layers/heroku_python/python/lib/python3.9',
-                     '/layers/heroku_python/python/lib/python3.9/lib-dynload',
-                     '/layers/heroku_python/venv/lib/python3.9/site-packages']
-                    Copying '/workspace/testapp/static/robots.txt'
+                     '/layers/heroku_python/python/lib/python310.zip',
+                     '/layers/heroku_python/python/lib/python3.10',
+                     '/layers/heroku_python/python/lib/python3.10/lib-dynload',
+                     '/layers/heroku_python/venv/lib/python3.10/site-packages']
                     
                     1 static file copied to '/workspace/staticfiles'.
                 "}
