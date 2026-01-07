@@ -7,6 +7,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [4.0.0] - 2026-01-07
+
 ### Removed
 
 - Removed support for Python 3.9. ([#488](https://github.com/heroku/buildpacks-python/pull/488))
@@ -543,7 +545,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - Initial implementation. ([#3](https://github.com/heroku/buildpacks-python/pull/3))
 
-[unreleased]: https://github.com/heroku/buildpacks-python/compare/v3.0.2...HEAD
+[unreleased]: https://github.com/heroku/buildpacks-python/compare/v4.0.0...HEAD
+[4.0.0]: https://github.com/heroku/buildpacks-python/compare/v3.0.2...v4.0.0
 [3.0.2]: https://github.com/heroku/buildpacks-python/compare/v3.0.1...v3.0.2
 [3.0.1]: https://github.com/heroku/buildpacks-python/compare/v3.0.0...v3.0.1
 [3.0.0]: https://github.com/heroku/buildpacks-python/compare/v2.8.1...v3.0.0
