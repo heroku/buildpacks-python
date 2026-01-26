@@ -10,6 +10,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Changed
 
 - Updated Poetry from 2.2.1 to 2.3.1. ([#495](https://github.com/heroku/buildpacks-python/pull/495))
+- Updated uv from 0.9.24 to 0.9.26. ([#492](https://github.com/heroku/buildpacks-python/pull/492))
 
 ## [4.0.1] - 2026-01-11
 
