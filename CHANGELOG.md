@@ -7,6 +7,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Changed
+
+- Changed the S3 URL used to download Python to use AWS' dual-stack (IPv6 compatible) endpoint. ([#513](https://github.com/heroku/buildpacks-python/pull/513))
+
 ## [5.0.0] - 2026-02-10
 
 ### Changed
