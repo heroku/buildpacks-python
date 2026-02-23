@@ -99,7 +99,7 @@ impl PythonVersion {
             ..
         } = target;
         format!(
-            "https://heroku-buildpack-python.s3.us-east-1.amazonaws.com/python-{major}.{minor}.{patch}-{distro_name}-{distro_version}-{arch}.tar.zst"
+            "https://heroku-buildpack-python.s3.dualstack.us-east-1.amazonaws.com/python-{major}.{minor}.{patch}-{distro_name}-{distro_version}-{arch}.tar.zst"
         )
     }
 }
@@ -231,7 +231,7 @@ mod tests {
                 distro_name: "ubuntu".to_string(),
                 distro_version: "22.04".to_string()
             }),
-            "https://heroku-buildpack-python.s3.us-east-1.amazonaws.com/python-3.11.0-ubuntu-22.04-amd64.tar.zst"
+            "https://heroku-buildpack-python.s3.dualstack.us-east-1.amazonaws.com/python-3.11.0-ubuntu-22.04-amd64.tar.zst"
         );
         assert_eq!(
             PythonVersion::new(3, 12, 2).url(&Target {
@@ -241,7 +241,7 @@ mod tests {
                 distro_name: "ubuntu".to_string(),
                 distro_version: "24.04".to_string()
             }),
-            "https://heroku-buildpack-python.s3.us-east-1.amazonaws.com/python-3.12.2-ubuntu-24.04-arm64.tar.zst"
+            "https://heroku-buildpack-python.s3.dualstack.us-east-1.amazonaws.com/python-3.12.2-ubuntu-24.04-arm64.tar.zst"
         );
     }
 
