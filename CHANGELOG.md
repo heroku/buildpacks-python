@@ -7,6 +7,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [5.1.0] - 2026-02-26
+
 ### Changed
 
 - Changed the S3 URL used to download Python to use AWS' dual-stack (IPv6 compatible) endpoint. ([#513](https://github.com/heroku/buildpacks-python/pull/513))
@@ -582,7 +584,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - Initial implementation. ([#3](https://github.com/heroku/buildpacks-python/pull/3))
 
-[unreleased]: https://github.com/heroku/buildpacks-python/compare/v5.0.0...HEAD
+[unreleased]: https://github.com/heroku/buildpacks-python/compare/v5.1.0...HEAD
+[5.1.0]: https://github.com/heroku/buildpacks-python/compare/v5.0.0...v5.1.0
 [5.0.0]: https://github.com/heroku/buildpacks-python/compare/v4.1.2...v5.0.0
 [4.1.2]: https://github.com/heroku/buildpacks-python/compare/v4.1.1...v4.1.2
 [4.1.1]: https://github.com/heroku/buildpacks-python/compare/v4.1.0...v4.1.1
