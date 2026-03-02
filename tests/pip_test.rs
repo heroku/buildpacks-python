@@ -274,7 +274,7 @@ fn pip_install_error() {
                 [Installing dependencies using pip]
                 Creating virtual environment
                 Running 'pip install -r requirements.txt'
-                ERROR: Invalid requirement: 'an-invalid-requirement!': Expected end or semicolon (after name and no valid version specifier)
+                ERROR: Invalid requirement: 'an-invalid-requirement!': Expected semicolon (after name with no version specifier) or end
                     an-invalid-requirement!
                                           ^ (from line 1 of requirements.txt)
                 
