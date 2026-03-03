@@ -10,6 +10,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Changed
 
 - Updated pip from 25.3 to 26.0.1. ([#508](https://github.com/heroku/buildpacks-python/pull/508))
+- Explicitly configured uv to use hard links to maintain the behaviour of previous versions. ([#519](https://github.com/heroku/buildpacks-python/pull/519))
 
 ## [5.1.0] - 2026-02-26
 

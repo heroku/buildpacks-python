@@ -39,9 +39,9 @@ pub(crate) fn install_uv(
         },
     )?;
 
-    // Prevent uv from downloading/using its own Python installation:
-    // https://docs.astral.sh/uv/concepts/python-versions/#disabling-automatic-python-downloads
     let mut layer_env = LayerEnv::new()
+        // Prevent uv from downloading/using its own Python installation:
+        // https://docs.astral.sh/uv/concepts/python-versions/#disabling-automatic-python-downloads
         .chainable_insert(
             Scope::Build,
             ModificationBehavior::Override,
@@ -53,6 +53,14 @@ pub(crate) fn install_uv(
             ModificationBehavior::Override,
             "UV_PYTHON_DOWNLOADS",
             "never",
+        )
+        // Force uv to use hardlinks rather than the new default of reflinks, since the latter are
+        // significantly slower in some environments: https://github.com/astral-sh/uv/issues/18259
+        .chainable_insert(
+            Scope::Build,
+            ModificationBehavior::Override,
+            "UV_LINK_MODE",
+            "hardlink",
         );
 
     match layer.state {
