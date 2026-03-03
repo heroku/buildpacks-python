@@ -7,6 +7,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Changed
+
+- The Python 3.12 version alias now resolves to Python 3.12.13. ([#521](https://github.com/heroku/buildpacks-python/pull/521))
+- The Python 3.11 version alias now resolves to Python 3.11.15. ([#521](https://github.com/heroku/buildpacks-python/pull/521))
+- The Python 3.10 version alias now resolves to Python 3.10.20. ([#521](https://github.com/heroku/buildpacks-python/pull/521))
+
 ## [6.0.0] - 2026-03-03
 
 ### Changed
