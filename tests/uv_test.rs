@@ -50,6 +50,7 @@ fn uv_basic_install_and_cache_reuse() {
                 PYTHONUNBUFFERED=1
                 SOURCE_DATE_EPOCH=315532801
                 UV_CACHE_DIR=/layers/heroku_python/uv-cache
+                UV_LINK_MODE=hardlink
                 UV_NO_MANAGED_PYTHON=1
                 UV_PROJECT_ENVIRONMENT=/layers/heroku_python/venv
                 UV_PYTHON_DOWNLOADS=never
