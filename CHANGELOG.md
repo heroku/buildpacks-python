@@ -10,6 +10,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Changed
 
 - Updated uv from 0.10.7 to 0.10.9. ([#523](https://github.com/heroku/buildpacks-python/pull/523))
+- Switched to downloading uv from `releases.astral.sh` instead of GitHub releases. ([#524](https://github.com/heroku/buildpacks-python/pull/524))
 
 ## [6.0.1] - 2026-03-03
 

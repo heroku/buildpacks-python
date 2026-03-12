@@ -87,7 +87,7 @@ pub(crate) fn install_uv(
             // 1. It's currently slower than the glibc variant: https://github.com/astral-sh/uv/issues/10610
             // 2. At the moment this buildpack only supports Ubuntu anyway (we only compile Python runtimes for Ubuntu).
             let archive_url = format!(
-                "https://github.com/astral-sh/uv/releases/download/{UV_VERSION}/uv-{ARCH}-unknown-linux-gnu.tar.gz"
+                "https://releases.astral.sh/github/uv/releases/download/{UV_VERSION}/uv-{ARCH}-unknown-linux-gnu.tar.gz"
             );
             let layer_bin_dir = layer.path().join("bin");
             utils::download_and_unpack_nested_gzip_archive(&archive_url, &layer_bin_dir, 1)
