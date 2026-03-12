@@ -516,15 +516,15 @@ fn on_uv_layer_error(error: UvLayerError) {
             DownloadUnpackArchiveError::Request(ureq_error) => log_error(
                 "Unable to download uv",
                 formatdoc! {"
-                    An error occurred while downloading uv from GitHub.
+                    An error occurred while downloading uv from Astral's website.
                     
                     In some cases, this happens due to a temporary issue with
-                    the network connection or GitHub's API/CDN.
+                    the network connection or Astral's CDN, Cloudflare.
 
                     Try building again to see if the error resolves itself.
 
-                    If that doesn't help, check the status of GitHub here:
-                    https://www.githubstatus.com
+                    If that doesn't help, check the status of Cloudflare here:
+                    https://www.cloudflarestatus.com
                     
                     Details: {ureq_error}
                 "},
