@@ -8,6 +8,7 @@ use libcnb_test::{
     BuildpackReference, PackResult, TestRunner, assert_contains, assert_contains_match,
     assert_empty,
 };
+use std::env::consts::ARCH;
 
 #[test]
 #[ignore = "integration test"]
@@ -62,7 +63,7 @@ fn uv_basic_install_and_cache_reuse() {
                  '/layers/heroku_python/python/lib/python3.14/lib-dynload',
                  '/layers/heroku_python/venv/lib/python3.14/site-packages'\\]
                 
-                uv {UV_VERSION}
+                uv {UV_VERSION} \\({ARCH}-unknown-linux-gnu\\)
                 Using Python {DEFAULT_PYTHON_FULL_VERSION} environment at: /layers/heroku_python/venv
                 Package           Version
                 ----------------- -------
