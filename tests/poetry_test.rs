@@ -228,8 +228,8 @@ fn poetry_editable_git_compiled() {
 
 // This checks that the Poetry bootstrap works even with older bundled pip, and that our chosen
 // Poetry version also supports our oldest supported Python version. The fixture also includes
-// a `brotli` directory to the buildpack isn't affected by an `ensurepip` bug in older Python
-// versions: https://github.com/heroku/heroku-buildpack-python/issues/1697
+// a `brotli` directory to confirm the buildpack isn't affected by an `ensurepip` bug in older
+// Python versions: https://github.com/heroku/heroku-buildpack-python/issues/1697
 #[test]
 #[ignore = "integration test"]
 fn poetry_oldest_python() {

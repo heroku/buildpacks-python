@@ -399,7 +399,7 @@ fn runtime_txt() {
                 [Determining Python version]
 
                 [Error: The runtime.txt file isn't supported]
-                The runtime.txt file can longer be used, since it has been
+                The runtime.txt file can no longer be used, since it has been
                 replaced by the more widely supported .python-version file.
                 
                 Please delete your runtime.txt file and create a new file named:
@@ -440,7 +440,7 @@ fn runtime_txt_invalid_version() {
                 [Determining Python version]
 
                 [Error: The runtime.txt file isn't supported]
-                The runtime.txt file can longer be used, since it has been
+                The runtime.txt file can no longer be used, since it has been
                 replaced by the more widely supported .python-version file.
                 
                 Please delete your runtime.txt file and create a new file named:

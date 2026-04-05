@@ -63,7 +63,7 @@ impl Buildpack for PythonBuildpack {
         // We inherit the current process's env vars, since we want `PATH` and `HOME` from the OS
         // to be set (so that later commands can find tools like Git in the base image), along
         // with previous-buildpack or user-provided env vars (so that features like env vars in
-        // in requirements files work). We protect against broken user-provided env vars via the
+        // requirements files work). We protect against broken user-provided env vars via the
         // checks feature and making sure that buildpack env vars take precedence in layers envs.
         let mut env = Env::from_current();
 

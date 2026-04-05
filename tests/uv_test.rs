@@ -338,7 +338,7 @@ fn uv_runtime_txt() {
                 [Determining Python version]
 
                 [Error: The runtime.txt file isn't supported]
-                The runtime.txt file can longer be used, since it has been
+                The runtime.txt file can no longer be used, since it has been
                 replaced by the more widely supported .python-version file.
 
                 Please switch to a .python-version file instead:
