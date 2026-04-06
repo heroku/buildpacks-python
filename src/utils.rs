@@ -124,7 +124,7 @@ pub(crate) fn download_and_unpack_nested_gzip_archive(
             .collect::<PathBuf>();
 
         // The path will be empty here if there were files shallower than the strip_components depth.
-        if stripped_path.components().count() > 0 {
+        if !stripped_path.as_os_str().is_empty() {
             entry
                 .unpack(destination.join(stripped_path))
                 .map_err(DownloadUnpackArchiveError::Unpack)?;
