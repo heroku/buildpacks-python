@@ -71,7 +71,7 @@ fn has_collectstatic_command(app_dir: &Path, env: &Env) -> Result<bool, Captured
     .map_or_else(
         |error| match error {
             // We need to differentiate between the command not existing (due to the staticfiles app
-            // not being installed) and the Django config or mange.py script being broken. Ideally
+            // not being installed) and the Django config or manage.py script being broken. Ideally
             // we'd inspect the output of `manage.py help --commands` but that command unhelpfully
             // exits zero even if the app's `DJANGO_SETTINGS_MODULE` wasn't a valid module.
             // Note: Django incorrectly outputs "Unknown command" if the Django config is invalid

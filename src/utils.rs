@@ -192,7 +192,7 @@ pub(crate) struct FindBundledPipError {
 }
 
 /// A helper for running an external process using [`Command`], that streams stdout/stderr
-/// to the user and checks that the exit status of the process was non-zero.
+/// to the user and checks that the exit status of the process was zero.
 pub(crate) fn run_command_and_stream_output(
     command: &mut Command,
 ) -> Result<(), StreamedCommandError> {
@@ -214,7 +214,7 @@ pub(crate) fn run_command_and_stream_output(
 }
 
 /// A helper for running an external process using [`Command`], that captures stdout/stderr
-/// and checks that the exit status of the process was non-zero.
+/// and checks that the exit status of the process was zero.
 pub(crate) fn run_command_and_capture_output(
     command: &mut Command,
 ) -> Result<Output, CapturedCommandError> {

@@ -235,7 +235,7 @@ fn on_requested_python_version_error(error: RequestedPythonVersionError) {
                 PackageManager::Uv => log_error(
                     "The runtime.txt file isn't supported",
                     formatdoc! {"
-                        The runtime.txt file can longer be used, since it has been
+                        The runtime.txt file can no longer be used, since it has been
                         replaced by the more widely supported .python-version file.
 
                         Please switch to a .python-version file instead:
@@ -254,7 +254,7 @@ fn on_requested_python_version_error(error: RequestedPythonVersionError) {
                 _ => log_error(
                     "The runtime.txt file isn't supported",
                     formatdoc! {"
-                        The runtime.txt file can longer be used, since it has been
+                        The runtime.txt file can no longer be used, since it has been
                         replaced by the more widely supported .python-version file.
                         
                         Please delete your runtime.txt file and create a new file named:
@@ -609,7 +609,7 @@ fn on_django_collectstatic_error(error: DjangoCollectstaticError) {
                     The 'python manage.py collectstatic --noinput' Django management
                     command to generate static files failed ({exit_status}).
                     
-                    This is most likely due an issue in your application code or Django
+                    This is most likely due to an issue in your application code or Django
                     configuration. See the log output above for more information.
                     
                     If you are using the WhiteNoise package to optimize the serving of static

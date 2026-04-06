@@ -196,7 +196,7 @@ fn django_staticfiles_misconfigured() {
                     The 'python manage.py collectstatic --noinput' Django management
                     command to generate static files failed (exit status: 1).
                     
-                    This is most likely due an issue in your application code or Django
+                    This is most likely due to an issue in your application code or Django
                     configuration. See the log output above for more information.
                     
                     If you are using the WhiteNoise package to optimize the serving of static
