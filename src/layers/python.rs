@@ -36,15 +36,15 @@ pub(crate) fn install_python(
                 let cached_python_version = cached_metadata.python_version.clone();
                 let reasons = cache_invalidation_reasons(cached_metadata, &new_metadata);
                 if reasons.is_empty() {
-                    Ok((
+                    (
                         RestoredLayerAction::KeepLayer,
                         (cached_python_version, Vec::new()),
-                    ))
+                    )
                 } else {
-                    Ok((
+                    (
                         RestoredLayerAction::DeleteLayer,
                         (cached_python_version, reasons),
-                    ))
+                    )
                 }
             },
         },
