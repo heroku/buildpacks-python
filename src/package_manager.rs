@@ -1,7 +1,7 @@
 use crate::{FileExistsError, utils};
 use std::path::Path;
 
-pub(crate) const SUPPORTED_PACKAGE_MANAGERS: [PackageManager; 3] = [
+pub(crate) const SUPPORTED_PACKAGE_MANAGERS: &[PackageManager] = &[
     PackageManager::Pip,
     PackageManager::Poetry,
     PackageManager::Uv,
@@ -38,8 +38,8 @@ pub(crate) fn determine_package_manager(
     app_dir: &Path,
 ) -> Result<PackageManager, DeterminePackageManagerError> {
     let package_managers_found = SUPPORTED_PACKAGE_MANAGERS
-        .into_iter()
-        .filter_map(|package_manager| {
+        .iter()
+        .filter_map(|&package_manager| {
             utils::file_exists(&app_dir.join(package_manager.packages_file()))
                 .map_err(DeterminePackageManagerError::CheckFileExists)
                 .map(|exists| exists.then_some(package_manager))
