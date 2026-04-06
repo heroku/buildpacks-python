@@ -7,14 +7,20 @@ use libcnb::Env;
 // https://docs.python.org/3/using/cmdline.html#environment-variables
 // https://pip.pypa.io/en/stable/cli/pip/#general-options
 // https://pip.pypa.io/en/stable/cli/pip_install/#options
-// https://docs.astral.sh/uv/configuration/environment/
-const FORBIDDEN_ENV_VARS: [&str; 22] = [
+// https://python-poetry.org/docs/configuration/
+// https://docs.astral.sh/uv/reference/environment/
+const FORBIDDEN_ENV_VARS: &[&str] = &[
     "PIP_CACHE_DIR",
     "PIP_PREFIX",
     "PIP_PYTHON",
     "PIP_ROOT",
     "PIP_TARGET",
     "PIP_USER",
+    "POETRY_CACHE_DIR",
+    "POETRY_DATA_DIR",
+    "POETRY_HOME",
+    "POETRY_VIRTUALENVS_CREATE",
+    "POETRY_VIRTUALENVS_USE_POETRY_PYTHON",
     "PYTHONHOME",
     "PYTHONINSPECT",
     "PYTHONNOUSERSITE",
@@ -34,11 +40,14 @@ const FORBIDDEN_ENV_VARS: [&str; 22] = [
 ];
 
 pub(crate) fn check_environment(env: &Env) -> Result<(), ChecksError> {
-    if let Some(&name) = FORBIDDEN_ENV_VARS
+    let forbidden_vars_found: Vec<&'static str> = FORBIDDEN_ENV_VARS
         .iter()
-        .find(|&name| env.contains_key(name))
-    {
-        return Err(ChecksError::ForbiddenEnvVar(name.to_string()));
+        .copied()
+        .filter(|&name| env.contains_key(name))
+        .collect();
+
+    if !forbidden_vars_found.is_empty() {
+        return Err(ChecksError::ForbiddenEnvVars(forbidden_vars_found));
     }
 
     Ok(())
@@ -47,7 +56,7 @@ pub(crate) fn check_environment(env: &Env) -> Result<(), ChecksError> {
 /// Errors due to one of the environment checks failing.
 #[derive(Debug, PartialEq)]
 pub(crate) enum ChecksError {
-    ForbiddenEnvVar(String),
+    ForbiddenEnvVars(Vec<&'static str>),
 }
 
 #[cfg(test)]
@@ -56,9 +65,12 @@ mod tests {
 
     #[test]
     fn check_environment_valid() {
+        assert_eq!(check_environment(&Env::new()), Ok(()));
         let mut env = Env::new();
-        env.insert("PYTHONPATH", "/example");
         env.insert("PIP_EXTRA_INDEX_URL", "https://example.tld/simple");
+        env.insert("POETRY_FOO", "example");
+        env.insert("PYTHONPATH", "/example");
+        env.insert("UV_FOO", "example");
         assert_eq!(check_environment(&env), Ok(()));
     }
 
@@ -68,7 +80,21 @@ mod tests {
         env.insert("PYTHONHOME", "/example");
         assert_eq!(
             check_environment(&env),
-            Err(ChecksError::ForbiddenEnvVar("PYTHONHOME".to_string()))
+            Err(ChecksError::ForbiddenEnvVars(vec!["PYTHONHOME"]))
+        );
+        env.insert("PIP_PYTHON", "/example");
+        env.insert("POETRY_HOME", "/example");
+        env.insert("VIRTUAL_ENV", "/example");
+        env.insert("UV_PYTHON", "/example");
+        assert_eq!(
+            check_environment(&env),
+            Err(ChecksError::ForbiddenEnvVars(vec![
+                "PIP_PYTHON",
+                "POETRY_HOME",
+                "PYTHONHOME",
+                "UV_PYTHON",
+                "VIRTUAL_ENV",
+            ]))
         );
     }
 }

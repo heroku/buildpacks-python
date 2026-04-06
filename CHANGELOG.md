@@ -7,6 +7,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Changed
+
+- The forbidden env vars check now reports all forbidden env vars found rather than only the first. ([#542](https://github.com/heroku/buildpacks-python/pull/542))
+- The forbidden env vars check now checks for known problematic Poetry env vars too. ([#542](https://github.com/heroku/buildpacks-python/pull/542))
+
 ## [6.2.0] - 2026-04-02
 
 ### Changed
