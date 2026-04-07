@@ -62,16 +62,21 @@ fn on_buildpack_error(error: BuildpackError) {
 
 fn on_buildpack_checks_error(error: ChecksError) {
     match error {
-        ChecksError::ForbiddenEnvVar(name) => log_error(
-            "Unsafe environment variable found",
-            formatdoc! {"
-                The environment variable `{name}` is set, however, it can
-                cause problems with the build so we don't allow using it.
+        ChecksError::ForbiddenEnvVars(env_vars) => {
+            let env_vars_list = env_vars.join("\n");
+            log_error(
+                "Unsafe environment variable(s) found",
+                formatdoc! {"
+                    The following environment variable(s) can cause problems
+                    with the build so we don't allow using them:
 
-                You must unset that environment variable. If you didn't set it
-                yourself, check that it wasn't set by an earlier buildpack.
-            "},
-        ),
+                    {env_vars_list}
+
+                    You must unset the above env var(s). If you didn't set them
+                    yourself, check if they were set by an earlier buildpack.
+                "},
+            );
+        }
     }
 }
 
