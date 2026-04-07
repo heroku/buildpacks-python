@@ -24,8 +24,8 @@ pub(crate) const NEXT_UNRELEASED_PYTHON_3_MINOR_VERSION: u16 =
 pub(crate) const LATEST_PYTHON_3_10: PythonVersion = PythonVersion::new(3, 10, 20);
 pub(crate) const LATEST_PYTHON_3_11: PythonVersion = PythonVersion::new(3, 11, 15);
 pub(crate) const LATEST_PYTHON_3_12: PythonVersion = PythonVersion::new(3, 12, 13);
-pub(crate) const LATEST_PYTHON_3_13: PythonVersion = PythonVersion::new(3, 13, 12);
-pub(crate) const LATEST_PYTHON_3_14: PythonVersion = PythonVersion::new(3, 14, 3);
+pub(crate) const LATEST_PYTHON_3_13: PythonVersion = PythonVersion::new(3, 13, 13);
+pub(crate) const LATEST_PYTHON_3_14: PythonVersion = PythonVersion::new(3, 14, 4);
 
 /// The Python version that was requested for a project.
 #[derive(Clone, Debug, PartialEq)]
