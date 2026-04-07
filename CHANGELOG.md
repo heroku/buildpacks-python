@@ -9,6 +9,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Changed
 
+- The Python 3.14 version alias now resolves to Python 3.14.4. ([#548](https://github.com/heroku/buildpacks-python/pull/548))
+- The Python 3.13 version alias now resolves to Python 3.13.13. ([#548](https://github.com/heroku/buildpacks-python/pull/548))
 - The forbidden env vars check now reports all forbidden env vars found rather than only the first. ([#542](https://github.com/heroku/buildpacks-python/pull/542))
 - The forbidden env vars check now checks for known problematic Poetry env vars too. ([#542](https://github.com/heroku/buildpacks-python/pull/542))
 
