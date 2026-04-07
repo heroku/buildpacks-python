@@ -6,7 +6,7 @@ use libcnb::Env;
 use libcnb::build::BuildContext;
 use libcnb::data::layer_name;
 use libcnb::layer::{
-    CachedLayerDefinition, EmptyLayerCause, InvalidMetadataAction, RestoredLayerAction,
+    CachedLayerDefinition, EmptyLayerCause, InvalidMetadataAction, LayerState, RestoredLayerAction,
 };
 use libcnb::layer_env::{LayerEnv, ModificationBehavior, Scope};
 use libherokubuildpack::log::log_info;
@@ -68,10 +68,10 @@ pub(crate) fn install_dependencies(
     let layer_path = layer.path();
 
     match layer.state {
-        libcnb::layer::LayerState::Restored { .. } => {
+        LayerState::Restored { .. } => {
             log_info("Using cached virtual environment");
         }
-        libcnb::layer::LayerState::Empty { cause } => {
+        LayerState::Empty { cause } => {
             match cause {
                 EmptyLayerCause::InvalidMetadataAction { .. }
                 | EmptyLayerCause::RestoredLayerAction { .. } => {
