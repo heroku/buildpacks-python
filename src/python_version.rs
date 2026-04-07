@@ -191,6 +191,7 @@ pub(crate) enum ResolvePythonVersionError {
 #[cfg(test)]
 mod tests {
     use super::*;
+    use crate::package_manager::SUPPORTED_PACKAGE_MANAGERS;
 
     #[test]
     fn requested_python_version_display() {
@@ -217,8 +218,21 @@ mod tests {
     }
 
     #[test]
+    fn python_version_origin_display() {
+        assert_eq!(
+            PythonVersionOrigin::BuildpackDefault.to_string(),
+            "buildpack default"
+        );
+        assert_eq!(
+            PythonVersionOrigin::PythonVersionFile.to_string(),
+            ".python-version"
+        );
+    }
+
+    #[test]
     fn python_version_display() {
-        assert_eq!(PythonVersion::new(3, 12, 0).to_string(), "3.12.0");
+        assert_eq!(PythonVersion::new(2, 7, 18).to_string(), "2.7.18");
+        assert_eq!(PythonVersion::new(3, 14, 0).to_string(), "3.14.0");
     }
 
     #[test]
@@ -247,30 +261,16 @@ mod tests {
 
     #[test]
     fn read_requested_python_version_runtime_txt() {
-        assert!(matches!(
-            read_requested_python_version(
-                Path::new("tests/fixtures/runtime_txt_and_python_version_file"),
-                PackageManager::Pip
-            )
-            .unwrap_err(),
-            RequestedPythonVersionError::RuntimeTxtNotSupported(PackageManager::Pip)
-        ));
-        assert!(matches!(
-            read_requested_python_version(
-                Path::new("tests/fixtures/runtime_txt_invalid_unicode"),
-                PackageManager::Poetry
-            )
-            .unwrap_err(),
-            RequestedPythonVersionError::RuntimeTxtNotSupported(PackageManager::Poetry)
-        ));
-        assert!(matches!(
-            read_requested_python_version(
-                Path::new("tests/fixtures/runtime_txt_invalid_version"),
-                PackageManager::Uv
-            )
-            .unwrap_err(),
-            RequestedPythonVersionError::RuntimeTxtNotSupported(PackageManager::Uv)
-        ));
+        for &package_manager in SUPPORTED_PACKAGE_MANAGERS {
+            assert!(matches!(
+                read_requested_python_version(
+                    Path::new("tests/fixtures/runtime_txt_and_python_version_file"),
+                    package_manager
+                )
+                .unwrap_err(),
+                RequestedPythonVersionError::RuntimeTxtNotSupported(pm) if pm == package_manager
+            ));
+        }
         // We pass a path containing a NUL byte as an easy way to trigger an I/O error.
         assert!(matches!(
             read_requested_python_version(Path::new("\0/invalid"), PackageManager::Pip).unwrap_err(),
@@ -385,85 +385,52 @@ mod tests {
 
     #[test]
     fn resolve_python_version_eol() {
-        let requested_python_version = RequestedPythonVersion {
-            major: 3,
-            minor: OLDEST_SUPPORTED_PYTHON_3_MINOR_VERSION - 1,
-            patch: None,
-            origin: PythonVersionOrigin::PythonVersionFile,
-        };
-        assert_eq!(
-            resolve_python_version(&requested_python_version),
-            Err(ResolvePythonVersionError::EolVersion(
-                requested_python_version
-            ))
-        );
-
-        let requested_python_version = RequestedPythonVersion {
-            major: 3,
-            minor: OLDEST_SUPPORTED_PYTHON_3_MINOR_VERSION - 1,
-            patch: Some(0),
-            origin: PythonVersionOrigin::PythonVersionFile,
-        };
-        assert_eq!(
-            resolve_python_version(&requested_python_version),
-            Err(ResolvePythonVersionError::EolVersion(
-                requested_python_version
-            ))
-        );
-
-        let requested_python_version = RequestedPythonVersion {
-            major: 2,
-            minor: 7,
-            patch: Some(18),
-            origin: PythonVersionOrigin::PythonVersionFile,
-        };
-        assert_eq!(
-            resolve_python_version(&requested_python_version),
-            Err(ResolvePythonVersionError::EolVersion(
-                requested_python_version
-            ))
-        );
+        for (major, minor) in [
+            (0, 1),
+            (1, 0),
+            (2, 7),
+            (3, 0),
+            (3, OLDEST_SUPPORTED_PYTHON_3_MINOR_VERSION - 1),
+        ] {
+            for patch in [None, Some(0)] {
+                let requested_python_version = RequestedPythonVersion {
+                    major,
+                    minor,
+                    patch,
+                    origin: PythonVersionOrigin::PythonVersionFile,
+                };
+                assert_eq!(
+                    resolve_python_version(&requested_python_version),
+                    Err(ResolvePythonVersionError::EolVersion(
+                        requested_python_version
+                    ))
+                );
+            }
+        }
     }
 
     #[test]
     fn resolve_python_version_unsupported() {
-        let requested_python_version = RequestedPythonVersion {
-            major: 3,
-            minor: NEXT_UNRELEASED_PYTHON_3_MINOR_VERSION,
-            patch: None,
-            origin: PythonVersionOrigin::PythonVersionFile,
-        };
-        assert_eq!(
-            resolve_python_version(&requested_python_version),
-            Err(ResolvePythonVersionError::UnknownVersion(
-                requested_python_version
-            ))
-        );
-
-        let requested_python_version = RequestedPythonVersion {
-            major: 3,
-            minor: NEXT_UNRELEASED_PYTHON_3_MINOR_VERSION,
-            patch: Some(0),
-            origin: PythonVersionOrigin::PythonVersionFile,
-        };
-        assert_eq!(
-            resolve_python_version(&requested_python_version),
-            Err(ResolvePythonVersionError::UnknownVersion(
-                requested_python_version
-            ))
-        );
-
-        let requested_python_version = RequestedPythonVersion {
-            major: 4,
-            minor: 0,
-            patch: Some(0),
-            origin: PythonVersionOrigin::PythonVersionFile,
-        };
-        assert_eq!(
-            resolve_python_version(&requested_python_version),
-            Err(ResolvePythonVersionError::UnknownVersion(
-                requested_python_version
-            ))
-        );
+        for (major, minor) in [
+            (3, NEXT_UNRELEASED_PYTHON_3_MINOR_VERSION),
+            (3, 999),
+            (4, 0),
+            (5, 0),
+        ] {
+            for patch in [None, Some(0)] {
+                let requested_python_version = RequestedPythonVersion {
+                    major,
+                    minor,
+                    patch,
+                    origin: PythonVersionOrigin::PythonVersionFile,
+                };
+                assert_eq!(
+                    resolve_python_version(&requested_python_version),
+                    Err(ResolvePythonVersionError::UnknownVersion(
+                        requested_python_version
+                    ))
+                );
+            }
+        }
     }
 }
