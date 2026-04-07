@@ -19,14 +19,14 @@ pub(crate) const UV_VERSION: &str =
 // Note: Since this is a `const fn` we cannot use iterators and most methods on `str` / `Result`.
 const fn extract_requirement_version(requirement: &'static str) -> Option<&'static str> {
     let mut bytes = requirement.as_bytes();
-    while let [_, rest @ ..] = bytes {
-        if let [b'=', b'=', version @ ..] = rest {
-            if let Ok(version) = str::from_utf8(version.trim_ascii()) {
-                return Some(version);
-            }
-            break;
+    while let [_, tail @ ..] = bytes {
+        if let [b'=', b'=', version @ ..] = tail {
+            return match str::from_utf8(version.trim_ascii()) {
+                Ok(version) if !version.is_empty() => Some(version),
+                _ => None,
+            };
         }
-        bytes = rest;
+        bytes = tail;
     }
     None
 }
@@ -47,6 +47,7 @@ mod tests {
     #[test]
     fn extract_requirement_version_invalid() {
         assert_eq!(extract_requirement_version(""), None);
+        assert_eq!(extract_requirement_version(" == "), None);
         assert_eq!(extract_requirement_version("package"), None);
         assert_eq!(extract_requirement_version("package=<1.2.3"), None);
     }
