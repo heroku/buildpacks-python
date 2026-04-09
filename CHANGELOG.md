@@ -9,7 +9,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
-- Added support for Ubuntu 26.04 (and thus Heroku-26 / `heroku/builder:26`).
+- Added support for Ubuntu 26.04 (and thus Heroku-26 / `heroku/builder:26`). ([#550](https://github.com/heroku/buildpacks-python/pull/550))
 
 ## [6.3.0] - 2026-04-07
 
