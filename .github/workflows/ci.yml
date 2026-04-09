@@ -44,7 +44,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        builder: ["builder:24", "builder:22"]
+        builder: ["builder:26", "builder:24", "builder:22"]
         arch: ["amd64", "arm64"]
         exclude:
           - builder: "builder:22"
@@ -86,6 +86,9 @@ jobs:
       # only those and not the unit tests, via the `--ignored` option. On the latest stack
       # we run all integration tests, but on older stacks we only run stack-specific tests.
       - name: Run integration tests (all tests)
+        # TODO: Switch to builder:26 once Ubuntu 26.04 is GA and also Python and package manager
+        # versions have changed, so that we have a suitable historic buildpack version that both
+        # supports the new stack, and has enough version changes for the cache invalidation tests.
         if: matrix.builder == 'builder:24'
         run: cargo test --locked -- --ignored --test-threads $(($(nproc)+1))
       - name: Run integration tests (stack-specific tests only)

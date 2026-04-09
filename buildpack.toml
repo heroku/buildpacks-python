@@ -23,6 +23,10 @@ version = "22.04"
 name = "ubuntu"
 version = "24.04"
 
+[[targets.distros]]
+name = "ubuntu"
+version = "26.04"
+
 [[targets]]
 os = "linux"
 arch = "arm64"
@@ -30,6 +34,10 @@ arch = "arm64"
 [[targets.distros]]
 name = "ubuntu"
 version = "24.04"
+
+[[targets.distros]]
+name = "ubuntu"
+version = "26.04"
 
 [metadata.release]
 image = { repository = "docker.io/heroku/buildpack-python" }
