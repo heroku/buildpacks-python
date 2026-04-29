@@ -10,7 +10,7 @@ use libcnb::layer_env::{LayerEnv, ModificationBehavior, Scope};
 // We don't need to persist uv's cache between builds, since we cache site-packages instead.
 // However, we must make uv write its cache into the same filesystem mount as the venv layer,
 // otherwise uv can't use hardlinks when installing and will fall back to slower file copies.
-// The easiest way to do this is via a temporary `cache=false`, `launch=false` layer.
+// The easiest way to do this is via a temporary uncached, build-only layer.
 // See comments in `uv_dependencies.rs` for more details.
 pub(crate) fn prepare_uv_cache(
     context: &BuildContext<PythonBuildpack>,
@@ -24,7 +24,7 @@ pub(crate) fn prepare_uv_cache(
         },
     )?;
 
-    // https://docs.astral.sh/uv/configuration/environment/#uv_cache_dir
+    // https://docs.astral.sh/uv/reference/environment/#uv_cache_dir
     let layer_env = LayerEnv::new().chainable_insert(
         Scope::Build,
         ModificationBehavior::Override,
