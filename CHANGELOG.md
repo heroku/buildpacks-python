@@ -12,6 +12,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Updated pip from 26.0.1 to 26.1.1. ([#563](https://github.com/heroku/buildpacks-python/pull/563))
 - Updated Poetry from 2.3.4 to 2.4.0. ([#564](https://github.com/heroku/buildpacks-python/pull/564))
 - Updated uv from 0.11.6 to 0.11.11. ([#562](https://github.com/heroku/buildpacks-python/pull/562))
+- The forbidden env vars check now also rejects `POETRY_VIRTUALENVS_IN_PROJECT`. ([#566](https://github.com/heroku/buildpacks-python/pull/566))
 
 ## [6.4.1] - 2026-04-13
 
