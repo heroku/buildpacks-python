@@ -87,7 +87,7 @@ pub(crate) fn install_dependencies(
             log_info("Creating virtual environment");
             // We use Python's `venv` module to create the virtual environment since `uv venv` creates
             // import patching hooks that we don't want: https://github.com/astral-sh/uv/issues/6426
-            // TODO: Open a PR upstream to remove those hooks or at least makes them optional.
+            // TODO: Open a PR upstream to remove those hooks or at least make them optional.
             utils::run_command_and_stream_output(
                 Command::new("python")
                     .args(["-m", "venv", "--without-pip", &layer_path.to_string_lossy()])

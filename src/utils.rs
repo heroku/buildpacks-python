@@ -134,7 +134,7 @@ pub(crate) fn download_and_unpack_nested_gzip_archive(
     Ok(())
 }
 
-/// Errors that can occur when downloading and unpacking an archive using `download_and_unpack_zstd_archive`.
+/// Errors that can occur when downloading and unpacking an archive.
 #[derive(Debug)]
 pub(crate) enum DownloadUnpackArchiveError {
     Request(ureq::Error),

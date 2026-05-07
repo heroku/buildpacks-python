@@ -85,7 +85,7 @@ pub(crate) fn install_python(
                     // S3 bucket (eg files removed, or bucket made private). To try and tell the two
                     // cases apart, we check whether the requested version included a patch component.
                     // If it did, then it's most likely user error, but if it didn't, then the patch
-                    // version is the one we resolved, and so know it should be valid.
+                    // version is the one we resolved, and so we know it should be valid.
                     //
                     // We have to check for 403s too, since S3 will return a 403 instead of a 404 for
                     // missing files, if the S3 bucket does not have public list permissions enabled.
@@ -107,7 +107,7 @@ pub(crate) fn install_python(
     }
 
     let mut layer_env = generate_layer_env(&layer_path, python_version);
-    layer.write_env(layer_env)?;
+    layer.write_env(&layer_env)?;
     // Required to pick up the automatic env vars such as PATH. See: https://github.com/heroku/libcnb.rs/issues/842
     layer_env = layer.read_env()?;
     env.clone_from(&layer_env.apply(Scope::Build, env));

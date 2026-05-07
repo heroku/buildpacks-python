@@ -50,8 +50,8 @@ pub(crate) fn prepare_pip_cache(
             match cause {
                 EmptyLayerCause::InvalidMetadataAction { .. }
                 | EmptyLayerCause::RestoredLayerAction { .. } => {
-                    // We don't go into more details as to why the cache has been discarded, since
-                    // the reasons will be the same as those logged during the earlier Python layer.
+                    // We don't go into more details as to why the cache has been discarded, since the reasons
+                    // will overlap with those already logged during the earlier Python and pip layers.
                     log_info("Discarding cached pip download/wheel cache");
                 }
                 EmptyLayerCause::NewlyCreated => {}

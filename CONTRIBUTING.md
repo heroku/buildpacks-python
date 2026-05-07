@@ -9,14 +9,14 @@ always, thanks for contributing.
 
 The intent and goal of open sourcing this project is to increase the contributor
 and user base. However, only Salesforce employees will be given `admin` rights
-and will be the final arbitrars of what contributions are accepted or not.
+and will be the final arbiters of what contributions are accepted or not.
 
 ## Getting started
 
 Please feel free to join the
 [Heroku Cloud Native Buildpacks discussions][discussions].
 You may also wish to take a look at
-[Heroku's product roadmap][roadmap] to see where are headed.
+[Heroku's product roadmap][roadmap] to see where we are headed.
 
 ## Ideas and Feedback
 
@@ -37,7 +37,7 @@ Fixes, improvements, and patches all happen via [GitHub Pull Requests on this
 repository][pulls]. If you'd like to
 improve the tests, you want to make the documentation clearer, you have an
 alternative implementation of something that may have advantages over the way
-its currently done, or you have any other change, we would be happy to hear
+it's currently done, or you have any other change, we would be happy to hear
 about it. For trivial changes, send a pull request. For non-trivial changes,
 consider [opening an issue](#issues-feature-requests-and-bug-reports) to
 discuss it first instead.
