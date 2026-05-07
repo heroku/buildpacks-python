@@ -11,7 +11,7 @@ fn detect_rejects_non_python_projects() {
             assert_contains!(
                 context.pack_stdout,
                 indoc! {"========
-                    No Python project files found (such as pyproject.toml, requirements.txt or poetry.lock).
+                    No supported Python package manager files found (such as requirements.txt, poetry.lock or uv.lock).
                     ======== Results ========
                 "}
             );
