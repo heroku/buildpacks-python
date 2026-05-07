@@ -53,7 +53,7 @@ impl Buildpack for PythonBuildpack {
             DetectResultBuilder::pass().build()
         } else {
             log_info(
-                "No Python project files found (such as pyproject.toml, requirements.txt or poetry.lock).",
+                "No supported Python package manager files found (such as requirements.txt, poetry.lock or uv.lock).",
             );
             DetectResultBuilder::fail().build()
         }
