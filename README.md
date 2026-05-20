@@ -21,7 +21,7 @@ To build a Python application codebase into a production image:
 
 ```bash
 $ cd ~/workdir/sample-python-app
-$ pack build sample-app --builder heroku/builder:24
+$ pack build sample-app --builder heroku/builder:26
 ```
 
 Then run the image:

@@ -165,7 +165,7 @@ fn uv_cache_invalidation_package_manager_changed() {
 fn uv_cache_previous_buildpack_version() {
     let mut config = default_build_config("tests/fixtures/uv_basic");
     config.buildpacks([BuildpackReference::Other(
-        "docker://docker.io/heroku/buildpack-python:2.7.0".to_string(),
+        "docker://docker.io/heroku/buildpack-python:6.4.0".to_string(),
     )]);
     let rebuild_config = default_build_config("tests/fixtures/uv_basic");
 
@@ -179,12 +179,12 @@ fn uv_cache_previous_buildpack_version() {
                     Using Python version {DEFAULT_PYTHON_VERSION} specified in .python-version
                     
                     \\[Installing Python\\]
-                    Discarding cached Python 3.14.0 since:
-                     - The Python version has changed from 3.14.0 to {DEFAULT_PYTHON_FULL_VERSION}
+                    Discarding cached Python 3.14.4 since:
+                     - The Python version has changed from 3.14.4 to {DEFAULT_PYTHON_FULL_VERSION}
                     Installing Python {DEFAULT_PYTHON_FULL_VERSION}
                     
                     \\[Installing uv\\]
-                    Discarding cached uv 0.8.23
+                    Discarding cached uv 0.11.3
                     Installing uv {UV_VERSION}
                     
                     \\[Installing dependencies using uv\\]

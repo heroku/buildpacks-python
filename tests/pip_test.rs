@@ -164,7 +164,7 @@ fn pip_cache_invalidation_package_manager_changed() {
 fn pip_cache_previous_buildpack_version() {
     let mut config = default_build_config("tests/fixtures/pip_basic");
     config.buildpacks([BuildpackReference::Other(
-        "docker://docker.io/heroku/buildpack-python:0.16.0".to_string(),
+        "docker://docker.io/heroku/buildpack-python:6.4.0".to_string(),
     )]);
     let rebuild_config = default_build_config("tests/fixtures/pip_basic");
 
@@ -180,12 +180,12 @@ fn pip_cache_previous_buildpack_version() {
                     a '.python-version' file, containing a Python version like '{DEFAULT_PYTHON_VERSION}'.
                     
                     [Installing Python]
-                    Discarding cached Python 3.12.5 since:
-                     - The Python version has changed from 3.12.5 to {DEFAULT_PYTHON_FULL_VERSION}
+                    Discarding cached Python 3.14.4 since:
+                     - The Python version has changed from 3.14.4 to {DEFAULT_PYTHON_FULL_VERSION}
                     Installing Python {DEFAULT_PYTHON_FULL_VERSION}
                     
                     [Installing pip]
-                    Discarding cached pip 24.2
+                    Discarding cached pip 26.0.1
                     Installing pip {PIP_VERSION}
                     
                     [Installing dependencies using pip]
