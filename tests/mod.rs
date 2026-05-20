@@ -16,10 +16,7 @@ use libcnb_test::BuildConfig;
 use std::env;
 use std::path::Path;
 
-// TODO: Switch to builder:26 once Ubuntu 26.04 is GA and also Python and package manager
-// versions have changed, so that we have a suitable historic buildpack version that both
-// supports the new stack, and has enough version changes for the cache invalidation tests.
-const DEFAULT_BUILDER: &str = "heroku/builder:24";
+const DEFAULT_BUILDER: &str = "heroku/builder:26";
 
 fn default_build_config(fixture_path: impl AsRef<Path>) -> BuildConfig {
     let builder = builder();
