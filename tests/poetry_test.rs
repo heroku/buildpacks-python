@@ -153,7 +153,7 @@ fn poetry_cache_invalidation_package_manager_changed() {
 fn poetry_cache_previous_buildpack_version() {
     let mut config = default_build_config("tests/fixtures/poetry_basic");
     config.buildpacks([BuildpackReference::Other(
-        "docker://docker.io/heroku/buildpack-python:2.7.0".to_string(),
+        "docker://docker.io/heroku/buildpack-python:6.4.0".to_string(),
     )]);
     let rebuild_config = default_build_config("tests/fixtures/poetry_basic");
 
@@ -167,12 +167,12 @@ fn poetry_cache_previous_buildpack_version() {
                     Using Python version {DEFAULT_PYTHON_VERSION} specified in .python-version
                     
                     [Installing Python]
-                    Discarding cached Python 3.14.0 since:
-                     - The Python version has changed from 3.14.0 to {DEFAULT_PYTHON_FULL_VERSION}
+                    Discarding cached Python 3.14.4 since:
+                     - The Python version has changed from 3.14.4 to {DEFAULT_PYTHON_FULL_VERSION}
                     Installing Python {DEFAULT_PYTHON_FULL_VERSION}
                     
                     [Installing Poetry]
-                    Discarding cached Poetry 2.2.1
+                    Discarding cached Poetry 2.3.3
                     Installing Poetry {POETRY_VERSION}
                     
                     [Installing dependencies using Poetry]
