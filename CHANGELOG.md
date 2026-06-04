@@ -7,6 +7,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [6.5.2] - 2026-06-04
+
 ### Changed
 
 - Updated pip from 26.1.1 to 26.1.2. ([#576](https://github.com/heroku/buildpacks-python/pull/576))
@@ -658,7 +660,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - Initial implementation. ([#3](https://github.com/heroku/buildpacks-python/pull/3))
 
-[unreleased]: https://github.com/heroku/buildpacks-python/compare/v6.5.1...HEAD
+[unreleased]: https://github.com/heroku/buildpacks-python/compare/v6.5.2...HEAD
+[6.5.2]: https://github.com/heroku/buildpacks-python/compare/v6.5.1...v6.5.2
 [6.5.1]: https://github.com/heroku/buildpacks-python/compare/v6.5.0...v6.5.1
 [6.5.0]: https://github.com/heroku/buildpacks-python/compare/v6.4.1...v6.5.0
 [6.4.1]: https://github.com/heroku/buildpacks-python/compare/v6.4.0...v6.4.1
