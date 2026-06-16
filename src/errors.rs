@@ -146,7 +146,7 @@ fn on_determine_package_manager_error(error: DeterminePackageManagerError) {
     }
 }
 
-#[allow(clippy::too_many_lines)]
+#[expect(clippy::too_many_lines)]
 fn on_requested_python_version_error(error: RequestedPythonVersionError) {
     const RECOMMEND_NOT_SPECIFYING_PATCH_MESSAGE: &str = indoc! {"
         We strongly recommend that you don't specify the Python patch
