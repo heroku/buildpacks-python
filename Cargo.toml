@@ -28,7 +28,7 @@ flate2 = { version = "1", default-features = false, features = ["zlib-rs"] }
 indoc = "2"
 libcnb = { version = "0.30", features = ["trace"] }
 libherokubuildpack = { version = "0.30", default-features = false, features = ["log"] }
-serde = "1"
+serde = { version = "1", features = ["derive"] }
 tar = { version = "0.4", default-features = false }
 ureq = { version = "2", default-features = false, features = ["tls"] }
 zstd = { version = "0.13", default-features = false }
