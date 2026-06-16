@@ -369,7 +369,7 @@ fn on_python_layer_error(error: PythonLayerError) {
                     An I/O error occurred while unpacking the downloaded Python
                     runtime archive and writing it to disk.
                     
-                    Details: I/O Error: {io_error}
+                    Details: {io_error}
                 "},
             ),
         },
@@ -448,7 +448,7 @@ fn on_pip_dependencies_layer_error(error: PipDependenciesLayerError) {
         },
         PipDependenciesLayerError::PipInstallCommand(error) => match error {
             StreamedCommandError::Io(error) => log_command_io_error(error),
-            // TODO: Add more suggestions here as to causes (eg network, invalid requirements.txt,
+            // TODO: Add more suggestions here as to causes (e.g. network, invalid requirements.txt,
             // package broken or not compatible with version of Python, missing system dependencies etc)
             StreamedCommandError::NonZeroExitStatus(exit_status) => log_error(
                 "Unable to install dependencies using pip",
@@ -544,7 +544,7 @@ fn on_uv_layer_error(error: UvLayerError) {
                     An I/O error occurred while unpacking the downloaded uv
                     archive and writing it to disk.
                     
-                    Details: I/O Error: {io_error}
+                    Details: {io_error}
                 "},
             ),
         },
@@ -619,7 +619,7 @@ fn on_django_collectstatic_error(error: DjangoCollectstaticError) {
                     This is most likely due to an issue in your application code or Django
                     configuration. See the log output above for more information.
                     
-                    If you are using the WhiteNoise package to optimize the serving of static
+                    If you are using the WhiteNoise package to optimise the serving of static
                     files with Django (recommended), check that your app is using the Django
                     config options shown here:
                     https://whitenoise.readthedocs.io/en/stable/django.html

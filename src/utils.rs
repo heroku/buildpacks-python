@@ -82,7 +82,7 @@ pub(crate) fn download_and_unpack_zstd_archive(
     destination: &Path,
 ) -> Result<(), DownloadUnpackArchiveError> {
     // TODO: (W-12613141) Add a timeout: https://docs.rs/ureq/latest/ureq/struct.AgentBuilder.html?search=timeout
-    // TODO: (W-12613168) Add retries for certain failure modes, eg: https://github.com/algesten/ureq/blob/05b9a82a380af013338c4f42045811fc15689a6b/src/error.rs#L39-L63
+    // TODO: (W-12613168) Add retries for certain failure modes, e.g.: https://github.com/algesten/ureq/blob/05b9a82a380af013338c4f42045811fc15689a6b/src/error.rs#L39-L63
     let response = ureq::get(uri)
         .call()
         .map_err(DownloadUnpackArchiveError::Request)?;
