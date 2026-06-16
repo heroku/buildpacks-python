@@ -86,6 +86,9 @@ pub(crate) fn install_uv(
             // There's also a statically compiled musl uv binary archive, but:
             // 1. It's currently slower than the glibc variant: https://github.com/astral-sh/uv/issues/10610
             // 2. At the moment this buildpack only supports Ubuntu anyway (we only compile Python runtimes for Ubuntu).
+            //
+            // Note: We use `ARCH` instead of `context.target.arch` since we need the uname-style arch (e.g. `x86_64`)
+            // rather than the Go-style arch (e.g. `amd64`) used by the OCI/CNB specification and APIs.
             let archive_url = format!(
                 "https://releases.astral.sh/github/uv/releases/download/{UV_VERSION}/uv-{ARCH}-unknown-linux-gnu.tar.gz"
             );
@@ -105,6 +108,8 @@ pub(crate) fn install_uv(
     Ok(())
 }
 
+// uv is a standalone prebuilt binary (rather than a Python package like pip or Poetry), so unlike the
+// other tool layers the uv layer doesn't need invalidating on distro or Python version changes.
 #[derive(Deserialize, PartialEq, Serialize)]
 #[serde(deny_unknown_fields)]
 struct UvLayerMetadata {
