@@ -42,7 +42,7 @@ pub(crate) fn run_django_collectstatic(
     log_info("Running 'manage.py collectstatic'");
     utils::run_command_and_stream_output(
         Command::new("python")
-            // Note: We can't use `--link` since it doesn't work with remote storage backends (eg S3).
+            // Note: We can't use `--link` since it doesn't work with remote storage backends (e.g. S3).
             .args([
                 MANAGEMENT_SCRIPT_NAME,
                 "collectstatic",

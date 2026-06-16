@@ -82,7 +82,7 @@ pub(crate) fn install_python(
                 |error| match error {
                     // If the request 404s then the most likely cause is that the user specified an
                     // invalid Python version. However, there is a chance there is an issue with the
-                    // S3 bucket (eg files removed, or bucket made private). To try and tell the two
+                    // S3 bucket (e.g. files removed, or bucket made private). To try and tell the two
                     // cases apart, we check whether the requested version included a patch component.
                     // If it did, then it's most likely user error, but if it didn't, then the patch
                     // version is the one we resolved, and so we know it should be valid.

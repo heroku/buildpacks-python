@@ -199,7 +199,7 @@ fn django_staticfiles_misconfigured() {
                     This is most likely due to an issue in your application code or Django
                     configuration. See the log output above for more information.
                     
-                    If you are using the WhiteNoise package to optimize the serving of static
+                    If you are using the WhiteNoise package to optimise the serving of static
                     files with Django (recommended), check that your app is using the Django
                     config options shown here:
                     https://whitenoise.readthedocs.io/en/stable/django.html

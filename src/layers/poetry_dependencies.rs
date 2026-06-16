@@ -20,7 +20,7 @@ use std::process::Command;
 // - We can't install into the system site-packages inside the main Python directory since
 //   we need the app dependencies to be in their own layer.
 // - Some packages are broken with `--user` installs when using relocated Python, and
-//   otherwise require other workarounds. eg: https://github.com/unbit/uwsgi/issues/2525
+//   otherwise require other workarounds. e.g.: https://github.com/unbit/uwsgi/issues/2525
 // - Poetry doesn't support `--user`: https://github.com/python-poetry/poetry/issues/1214
 // - PEP-405 style venvs are very lightweight and are also much more frequently
 //   used in the wild compared to `--user`, and therefore the better tested path.
