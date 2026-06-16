@@ -1,3 +1,4 @@
+use crate::BuildpackError;
 use crate::checks::ChecksError;
 use crate::django::DjangoCollectstaticError;
 use crate::layers::pip::PipLayerError;
@@ -5,7 +6,9 @@ use crate::layers::pip_dependencies::PipDependenciesLayerError;
 use crate::layers::poetry::PoetryLayerError;
 use crate::layers::poetry_dependencies::PoetryDependenciesLayerError;
 use crate::layers::python::PythonLayerError;
-use crate::package_manager::DeterminePackageManagerError;
+use crate::layers::uv::UvLayerError;
+use crate::layers::uv_dependencies::UvDependenciesLayerError;
+use crate::package_manager::{DeterminePackageManagerError, PackageManager};
 use crate::python_version::{
     DEFAULT_PYTHON_VERSION, NEWEST_SUPPORTED_PYTHON_3_MINOR_VERSION,
     OLDEST_SUPPORTED_PYTHON_3_MINOR_VERSION, RequestedPythonVersion, RequestedPythonVersionError,
@@ -16,7 +19,6 @@ use crate::utils::{
     CapturedCommandError, CommandIoError, DownloadUnpackArchiveError, FileExistsError,
     FindBundledPipError, ReadOptionalFileError, StreamedCommandError,
 };
-use crate::{BuildpackError, PackageManager, UvDependenciesLayerError, UvLayerError};
 use indoc::{formatdoc, indoc};
 use libherokubuildpack::log::log_error;
 
