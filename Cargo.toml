@@ -26,7 +26,7 @@ result_large_err = "allow"
 # https://trifectatech.org/blog/zlib-rs-is-faster-than-c/
 flate2 = { version = "1", default-features = false, features = ["zlib-rs"] }
 indoc = "2"
-libcnb = { version = "0.30", features = ["trace"] }
+libcnb = { version = "0.31", features = ["trace"] }
 libherokubuildpack = { version = "0.30", default-features = false, features = ["log"] }
 serde = { version = "1", features = ["derive"] }
 tar = { version = "0.4", default-features = false }
