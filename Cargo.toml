@@ -34,6 +34,6 @@ ureq = { version = "2", default-features = false, features = ["tls"] }
 zstd = { version = "0.13", default-features = false }
 
 [dev-dependencies]
-libcnb-test = "0.30"
+libcnb-test = "0.31"
 # Required due to: https://github.com/heroku/libcnb.rs/issues/944
 regex = { version = "1", default-features = false, features = ["std"] }
