@@ -410,7 +410,9 @@ fn uv_lockfile_out_of_sync() {
                 Creating virtual environment
                 Running 'uv sync --locked --no-default-groups'
                 Resolved 2 packages in .+s
-                The lockfile at `uv.lock` needs to be updated, but `--locked` was provided. To update the lockfile, run `uv lock`.
+                error: The lockfile at `uv.lock` needs to be updated, but `--locked` was provided.
+
+                hint: To update the lockfile, run `uv lock`.
 
                 \\[Error: Unable to install dependencies using uv\\]
                 The 'uv sync' command to install the app's
