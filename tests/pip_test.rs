@@ -235,7 +235,7 @@ fn pip_oldest_python() {
         assert_empty!(context.pack_stderr);
         assert_contains!(
             context.pack_stdout,
-            indoc! {"
+            &formatdoc! {"
                 [Determining Python version]
                 Using Python version 3.10.0 specified in .python-version
                 
@@ -256,6 +256,18 @@ fn pip_oldest_python() {
 
                 [Installing Python]
                 Installing Python 3.10.0
+                
+                [Installing pip]
+                Installing pip {PIP_VERSION}
+                
+                [Installing dependencies using pip]
+                Creating virtual environment
+                Running 'pip install -r requirements.txt'
+                Collecting typing-extensions==4.15.0 (from -r requirements.txt (line 1))
+                  Downloading typing_extensions-4.15.0-py3-none-any.whl.metadata (3.3 kB)
+                Downloading typing_extensions-4.15.0-py3-none-any.whl (44 kB)
+                Installing collected packages: typing-extensions
+                Successfully installed typing-extensions-4.15.0
             "}
         );
     });
