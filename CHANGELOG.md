@@ -7,6 +7,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Changed
+
+- Updated uv from 0.11.28 to 0.11.33. ([#598](https://github.com/heroku/buildpacks-python/pull/598))
+
 ## [6.5.4] - 2026-07-10
 
 ### Changed
