@@ -11,6 +11,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - Updated libcnb to 0.32.0, which includes OpenTelemetry crate upgrades. ([#629](https://github.com/heroku/buildpacks-python/pull/629))
 
+### Fixed
+
+- Restored SIMD-accelerated decompression of the uv download. ([#628](https://github.com/heroku/buildpacks-python/pull/628))
+
 ## [6.7.0] - 2026-10-02
 
 ### Changed
