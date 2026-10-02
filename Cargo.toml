@@ -24,7 +24,7 @@ result_large_err = "allow"
 # We use the `zlib-rs` backend, since it's the fastest:
 # https://github.com/rust-lang/flate2-rs#backends
 # https://trifectatech.org/blog/zlib-rs-is-faster-than-c/
-flate2 = { version = "1", default-features = false, features = ["zlib-rs"] }
+flate2 = { version = "1", default-features = false, features = ["zlib-rs", "runtime_detection"] }
 indoc = "2"
 libcnb = { version = "=0.32.0", features = ["trace"] }
 libherokubuildpack = { version = "=0.32.0", default-features = false, features = ["log"] }
