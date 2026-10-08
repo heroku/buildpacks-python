@@ -14,7 +14,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Fixed
 
 - Restored SIMD-accelerated decompression of the uv download. ([#628](https://github.com/heroku/buildpacks-python/pull/628))
-- Fixed the Python/uv runtime downloads not honouring `HTTP_PROXY`/`HTTPS_PROXY`. ([#631](https://github.com/heroku/buildpacks-python/pull/631))
+- The Python and uv runtime downloads now honour `HTTP_PROXY`/`HTTPS_PROXY`/`ALL_PROXY` (and `NO_PROXY`), instead of always connecting directly. ([#631](https://github.com/heroku/buildpacks-python/pull/631))
 
 ## [6.7.0] - 2026-10-02
 

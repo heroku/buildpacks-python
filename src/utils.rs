@@ -2,7 +2,7 @@ use crate::python_version::PythonVersion;
 use flate2::read::GzDecoder;
 use std::path::{Path, PathBuf};
 use std::process::{Command, ExitStatus, Output};
-use std::{fs, io};
+use std::{env, fs, io};
 use tar::Archive;
 use zstd::Decoder as ZstdDecoder;
 
@@ -83,7 +83,8 @@ pub(crate) fn download_and_unpack_zstd_archive(
 ) -> Result<(), DownloadUnpackArchiveError> {
     // TODO: (W-12613141) Add a timeout: https://docs.rs/ureq/latest/ureq/struct.AgentBuilder.html?search=timeout
     // TODO: (W-12613168) Add retries for certain failure modes, e.g.: https://github.com/algesten/ureq/blob/05b9a82a380af013338c4f42045811fc15689a6b/src/error.rs#L39-L63
-    let response = ureq::get(uri)
+    let response = http_agent(uri)
+        .get(uri)
         .call()
         .map_err(DownloadUnpackArchiveError::Request)?;
     let zstd_decoder =
@@ -105,7 +106,8 @@ pub(crate) fn download_and_unpack_nested_gzip_archive(
     destination: &Path,
     strip_components: usize,
 ) -> Result<(), DownloadUnpackArchiveError> {
-    let response = ureq::get(uri)
+    let response = http_agent(uri)
+        .get(uri)
         .call()
         .map_err(DownloadUnpackArchiveError::Request)?;
     let gzip_decoder = GzDecoder::new(response.into_reader());
@@ -132,6 +134,44 @@ pub(crate) fn download_and_unpack_nested_gzip_archive(
     }
 
     Ok(())
+}
+
+/// Create an HTTP agent that honours the standard `ALL_PROXY`/`HTTPS_PROXY`/`HTTP_PROXY` env vars,
+/// for build environments whose only public egress is an explicit HTTP proxy. ureq 2 doesn't
+/// support `NO_PROXY` itself, so it's applied here: matching hosts connect directly.
+fn http_agent(uri: &str) -> ureq::Agent {
+    let no_proxy = env::var("NO_PROXY")
+        .or_else(|_| env::var("no_proxy"))
+        .unwrap_or_default();
+    let bypass_proxy = uri_host(uri).is_some_and(|host| is_no_proxy_host(host, &no_proxy));
+    ureq::AgentBuilder::new()
+        .try_proxy_from_env(!bypass_proxy)
+        .build()
+}
+
+fn uri_host(uri: &str) -> Option<&str> {
+    let authority = uri.split_once("://")?.1.split('/').next()?;
+    let host = authority
+        .rsplit_once('@')
+        .map_or(authority, |(_, host)| host);
+    host.split(':').next().filter(|host| !host.is_empty())
+}
+
+/// Whether `host` matches a `NO_PROXY` entry: `*`, the domain itself, or any of its subdomains
+/// (with or without a leading `.`). CIDR entries never match, since we only connect by hostname.
+fn is_no_proxy_host(host: &str, no_proxy: &str) -> bool {
+    let host = host.to_ascii_lowercase();
+    no_proxy
+        .split(',')
+        .map(|entry| entry.trim().trim_start_matches('.').to_ascii_lowercase())
+        .filter(|entry| !entry.is_empty())
+        .any(|entry| {
+            entry == "*"
+                || host == entry
+                || host
+                    .strip_suffix(&entry)
+                    .is_some_and(|prefix| prefix.ends_with('.'))
+        })
 }
 
 /// Errors that can occur when downloading and unpacking an archive.
@@ -273,6 +313,34 @@ pub(crate) fn environment_as_sorted_vector(environment: &libcnb::Env) -> Vec<(&s
 #[cfg(test)]
 mod tests {
     use super::*;
+
+    #[test]
+    fn uri_host_parsing() {
+        assert_eq!(
+            uri_host("https://example.com/foo/bar.tar.zst"),
+            Some("example.com")
+        );
+        assert_eq!(
+            uri_host("https://user:pass@example.com:8443/foo"),
+            Some("example.com")
+        );
+        assert_eq!(uri_host("example.com/foo"), None);
+    }
+
+    #[test]
+    fn no_proxy_host_matching() {
+        let host = "heroku-buildpack-python.s3.dualstack.us-east-1.amazonaws.com";
+        assert!(!is_no_proxy_host(host, ""));
+        assert!(!is_no_proxy_host(
+            host,
+            "localhost,10.0.0.0/8,.aliyuncs.com"
+        ));
+        assert!(!is_no_proxy_host(host, "zonaws.com"));
+        assert!(is_no_proxy_host(host, "*"));
+        assert!(is_no_proxy_host(host, "localhost, .amazonaws.com"));
+        assert!(is_no_proxy_host(host, "AMAZONAWS.COM"));
+        assert!(is_no_proxy_host(host, host));
+    }
 
     #[test]
     fn file_exists_valid_file() {
