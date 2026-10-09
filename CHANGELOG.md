@@ -7,6 +7,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Added
+
+- Added support for Python 3.15. ([#633](https://github.com/heroku/buildpacks-python/pull/633))
+
 ### Changed
 
 - Updated libcnb to 0.32.0, which includes OpenTelemetry crate upgrades. ([#629](https://github.com/heroku/buildpacks-python/pull/629))

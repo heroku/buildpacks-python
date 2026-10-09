@@ -17,7 +17,7 @@ pub(crate) const DEFAULT_PYTHON_VERSION: RequestedPythonVersion = RequestedPytho
 pub(crate) const DEFAULT_PYTHON_FULL_VERSION: PythonVersion = LATEST_PYTHON_3_14;
 
 pub(crate) const OLDEST_SUPPORTED_PYTHON_3_MINOR_VERSION: u16 = 10;
-pub(crate) const NEWEST_SUPPORTED_PYTHON_3_MINOR_VERSION: u16 = 14;
+pub(crate) const NEWEST_SUPPORTED_PYTHON_3_MINOR_VERSION: u16 = 15;
 pub(crate) const NEXT_UNRELEASED_PYTHON_3_MINOR_VERSION: u16 =
     NEWEST_SUPPORTED_PYTHON_3_MINOR_VERSION + 1;
 
@@ -26,6 +26,7 @@ pub(crate) const LATEST_PYTHON_3_11: PythonVersion = PythonVersion::new(3, 11, 1
 pub(crate) const LATEST_PYTHON_3_12: PythonVersion = PythonVersion::new(3, 12, 15);
 pub(crate) const LATEST_PYTHON_3_13: PythonVersion = PythonVersion::new(3, 13, 16);
 pub(crate) const LATEST_PYTHON_3_14: PythonVersion = PythonVersion::new(3, 14, 8);
+pub(crate) const LATEST_PYTHON_3_15: PythonVersion = PythonVersion::new(3, 15, 0);
 
 /// The Python version that was requested for a project.
 #[derive(Clone, Debug, PartialEq)]
@@ -177,6 +178,7 @@ pub(crate) fn resolve_python_version(
         (3, 12, None) => Ok(LATEST_PYTHON_3_12),
         (3, 13, None) => Ok(LATEST_PYTHON_3_13),
         (3, 14, None) => Ok(LATEST_PYTHON_3_14),
+        (3, 15, None) => Ok(LATEST_PYTHON_3_15),
         (major, minor, Some(patch)) => Ok(PythonVersion::new(major, minor, patch)),
     }
 }
