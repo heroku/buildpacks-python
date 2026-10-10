@@ -92,7 +92,7 @@ pub(crate) fn install_python(
                     //
                     // TODO: Remove this once versions are validated against a manifest (at which point
                     // all HTTP 403s/404s can be treated as an internal error).
-                    DownloadUnpackArchiveError::Request(ureq::Error::Status(403 | 404, _))
+                    DownloadUnpackArchiveError::Request(ureq::Error::StatusCode(403 | 404))
                         if requested_python_version.patch.is_some() =>
                     {
                         PythonLayerError::PythonArchiveNotAvailable(
