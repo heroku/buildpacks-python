@@ -7,6 +7,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Changed
+
+- Updated `ureq` from 2 to 3. As a side effect, the Python and uv runtime downloads now honour `HTTP_PROXY`/`HTTPS_PROXY`/`ALL_PROXY` and `NO_PROXY`, which `ureq` 2 never did regardless of configuration. ([#637](https://github.com/heroku/buildpacks-python/pull/637))
+
 ## [6.8.0] - 2026-10-09
 
 ### Added
