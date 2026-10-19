@@ -86,8 +86,8 @@ pub(crate) fn download_and_unpack_zstd_archive(
     let response = ureq::get(uri)
         .call()
         .map_err(DownloadUnpackArchiveError::Request)?;
-    let zstd_decoder =
-        ZstdDecoder::new(response.into_reader()).map_err(DownloadUnpackArchiveError::Unpack)?;
+    let zstd_decoder = ZstdDecoder::new(response.into_body().into_reader())
+        .map_err(DownloadUnpackArchiveError::Unpack)?;
     Archive::new(zstd_decoder)
         .unpack(destination)
         .map_err(DownloadUnpackArchiveError::Unpack)
@@ -108,7 +108,7 @@ pub(crate) fn download_and_unpack_nested_gzip_archive(
     let response = ureq::get(uri)
         .call()
         .map_err(DownloadUnpackArchiveError::Request)?;
-    let gzip_decoder = GzDecoder::new(response.into_reader());
+    let gzip_decoder = GzDecoder::new(response.into_body().into_reader());
 
     fs::create_dir_all(destination).map_err(DownloadUnpackArchiveError::Unpack)?;
 
@@ -273,6 +273,90 @@ pub(crate) fn environment_as_sorted_vector(environment: &libcnb::Env) -> Vec<(&s
 #[cfg(test)]
 mod tests {
     use super::*;
+    use std::io::{BufRead, BufReader, Write};
+    use std::net::{TcpListener, TcpStream};
+    use std::sync::mpsc;
+    use std::time::Duration;
+
+    /// Starts a bare-bones HTTP server on an OS-assigned loopback port that accepts exactly one
+    /// connection, reads its request line, sends back a minimal 200 response, and reports the
+    /// request line (e.g. `"GET http://127.0.0.2:1234/foo HTTP/1.1"`) over the returned channel.
+    /// Used to observe, at the socket level, which address a request actually landed on --
+    /// whether that's the real target (no proxy in the way) or a proxy (forwarded, full-URI
+    /// request line, per RFC 7230 section 5.3.2).
+    fn spawn_observer() -> (std::net::SocketAddr, mpsc::Receiver<String>) {
+        let listener = TcpListener::bind("127.0.0.1:0").unwrap();
+        let addr = listener.local_addr().unwrap();
+        let (tx, rx) = mpsc::channel();
+        std::thread::spawn(move || {
+            let (stream, _) = listener.accept().unwrap();
+            let mut reader = BufReader::new(stream.try_clone().unwrap());
+            let mut request_line = String::new();
+            reader.read_line(&mut request_line).unwrap();
+            tx.send(request_line.trim_end().to_string()).unwrap();
+            write_minimal_response(stream);
+        });
+        (addr, rx)
+    }
+
+    fn write_minimal_response(mut stream: TcpStream) {
+        let _ = stream.write_all(b"HTTP/1.1 200 OK\r\ncontent-length: 0\r\n\r\n");
+    }
+
+    /// Proves, at the socket level, that a plain `ureq::get(uri).call()` (the same call the
+    /// Python/uv downloads in this file make) honours `HTTP_PROXY`/`NO_PROXY` on ureq 3 with no
+    /// buildpack-side proxy-handling code at all -- unlike ureq 2, where this same call ignores
+    /// both entirely (see #630/#631).
+    ///
+    /// Not safe to run concurrently with other tests that touch these env vars, hence
+    /// `--test-threads=1` (or a `#[serial]`-style guard, if this were merged for real).
+    #[test]
+    #[allow(unsafe_code)]
+    fn ureq_default_agent_honours_http_proxy_and_no_proxy() {
+        let (proxy_addr, proxy_rx) = spawn_observer();
+        let (direct_addr, direct_rx) = spawn_observer();
+
+        // SAFETY: this test doesn't spawn threads of its own that read these vars concurrently;
+        // the two request/response round trips below are strictly sequential.
+        unsafe {
+            std::env::set_var("HTTP_PROXY", format!("http://{proxy_addr}"));
+            // Exact-IP entry: 127.0.0.1's own requests bypass the proxy. The proxy observer
+            // above is deliberately also bound to 127.0.0.1 -- that's the proxy's *own* address,
+            // which is never matched against NO_PROXY; only a request's *target* host is.
+            std::env::set_var("NO_PROXY", "127.0.0.1");
+        }
+
+        // Target A: a different loopback address, not covered by NO_PROXY -- expect this
+        // request to go to the proxy. ureq 3 tunnels every proxied request via CONNECT
+        // (RFC 7231 section 4.3.6), even for a plain http:// target, rather than the older
+        // full-URI GET-to-proxy style -- so the proxy sees a CONNECT to the target's host:port.
+        let target_host_port = format!("127.0.0.2:{}", direct_addr.port());
+        let target_a = format!("http://{target_host_port}/via-proxy");
+        let _ = ureq::get(&target_a).call();
+        let proxy_request_line = proxy_rx.recv_timeout(Duration::from_secs(5)).unwrap();
+        assert_eq!(
+            proxy_request_line,
+            format!("CONNECT {target_host_port} HTTP/1.1")
+        );
+
+        // Target B: 127.0.0.1, covered by NO_PROXY -- expect this request to land directly on
+        // the target listener, with an origin-form request line (no scheme/host), and for
+        // nothing to arrive at the proxy a second time.
+        let target_b = format!("http://{direct_addr}/no-proxy");
+        let _ = ureq::get(&target_b).call();
+        let direct_request_line = direct_rx.recv_timeout(Duration::from_secs(5)).unwrap();
+        assert_eq!(direct_request_line, "GET /no-proxy HTTP/1.1");
+        assert!(
+            proxy_rx.recv_timeout(Duration::from_millis(200)).is_err(),
+            "the NO_PROXY'd request should never have reached the proxy"
+        );
+
+        // SAFETY: same reasoning as above -- no concurrent readers in this test.
+        unsafe {
+            std::env::remove_var("HTTP_PROXY");
+            std::env::remove_var("NO_PROXY");
+        }
+    }
 
     #[test]
     fn file_exists_valid_file() {
