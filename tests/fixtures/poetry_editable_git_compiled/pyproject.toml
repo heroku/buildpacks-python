@@ -5,7 +5,7 @@ package-mode = false
 python = "^3.14"
 
 # This requirement uses a VCS URL and `develop = true` in order to test that:
-#  - Git from the stack image can be found (ie: the system PATH has been correctly propagated to Poetry).
+#  - Git from the stack image can be found (i.e. the system PATH has been correctly propagated to Poetry).
 #  - The editable mode repository clone is saved into the dependencies layer.
 #
 # A C-based package is used instead of a pure Python package, in order to test that the

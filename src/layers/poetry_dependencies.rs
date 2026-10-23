@@ -75,6 +75,9 @@ pub(crate) fn install_dependencies(
             match cause {
                 EmptyLayerCause::InvalidMetadataAction { .. }
                 | EmptyLayerCause::RestoredLayerAction { .. } => {
+                    // We don't go into more details as to why the virtual environment has been
+                    // discarded, since the reasons will overlap with those already logged during
+                    // the earlier Python and Poetry layers.
                     log_info("Discarding cached virtual environment");
                 }
                 EmptyLayerCause::NewlyCreated => {}
@@ -107,6 +110,8 @@ pub(crate) fn install_dependencies(
     layer_env = layer.read_env()?;
     env.clone_from(&layer_env.apply(Scope::Build, env));
 
+    // We only display the most relevant command args here, to improve the signal to noise ratio.
+    // TODO: Generate the visible args list dynamically like we do for uv.
     log_info("Running 'poetry sync --only main'");
     utils::run_command_and_stream_output(
         Command::new("poetry")
