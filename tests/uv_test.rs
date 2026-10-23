@@ -204,7 +204,7 @@ fn uv_cache_previous_buildpack_version() {
 
 // This tests that:
 //  - Installing the current project in editable mode using the uv-build buildpack works.
-//  - Git from the stack image can be found (ie: the system PATH has been correctly propagated to uv).
+//  - Git from the stack image can be found (i.e. the system PATH has been correctly propagated to uv).
 //  - Building/compiling a source distribution package (as opposed to a pre-built wheel) works.
 //  - The Python headers can be found in the `include/pythonX.Y/` directory of the Python layer.
 #[test]

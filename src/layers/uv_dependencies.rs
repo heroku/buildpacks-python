@@ -79,6 +79,9 @@ pub(crate) fn install_dependencies(
             match cause {
                 EmptyLayerCause::InvalidMetadataAction { .. }
                 | EmptyLayerCause::RestoredLayerAction { .. } => {
+                    // We don't go into more details as to why the virtual environment has been
+                    // discarded, since the reasons will overlap with those already logged during
+                    // the earlier Python and uv layers.
                     log_info("Discarding cached virtual environment");
                 }
                 EmptyLayerCause::NewlyCreated => {}
@@ -134,7 +137,7 @@ pub(crate) fn install_dependencies(
             .args([
                 "--color",
                 "always",
-                // Compiling Python bytecode up front improves app boot times (pip does this by default).
+                // Compile Python bytecode up front to improve app boot times (pip does this by default).
                 "--compile-bytecode",
                 "--no-progress",
             ])

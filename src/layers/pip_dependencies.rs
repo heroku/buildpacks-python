@@ -54,7 +54,7 @@ pub(crate) fn install_dependencies(
     .map_err(PipDependenciesLayerError::CreateVenvCommand)?;
 
     let mut layer_env = LayerEnv::new()
-        // pip is installed in a separate build-only layer, we have to explicitly tell it to
+        // Since pip is installed in a separate build-only layer, we have to explicitly tell it to
         // perform operations against this venv instead of the global Python install.
         // https://pip.pypa.io/en/stable/cli/pip/#cmdoption-python
         .chainable_insert(
@@ -76,6 +76,8 @@ pub(crate) fn install_dependencies(
     layer_env = layer.read_env()?;
     env.clone_from(&layer_env.apply(Scope::Build, env));
 
+    // We only display the most relevant command args here, to improve the signal to noise ratio.
+    // TODO: Generate the visible args list dynamically like we do for uv.
     log_info("Running 'pip install -r requirements.txt'");
     utils::run_command_and_stream_output(
         Command::new("pip")
