@@ -25,8 +25,9 @@ $ pack build sample-app --builder heroku/builder:26
 ```
 
 Then run the image:
+
 ```bash
-docker run --rm -it -e "PORT=8080" -p 8080:8080 sample-app
+$ docker run --rm -it -e "PORT=8080" -p 8080:8080 sample-app
 ```
 
 ## Application Requirements
@@ -39,7 +40,7 @@ When using the package manager [uv](https://docs.astral.sh/uv/) a `.python-versi
 
 ### Python Version
 
-If a `.python-version` file isn't found, the buildpack will install the latest version of Python 3.14.
+If a `.python-version` file isn't found, the buildpack will install the latest version of Python 3.14. (The exception is when using uv, where a `.python-version` file is required, as noted above.)
 
 To install a different version, add a `.python-version` file to your app's root directory that declares the version number to use:
 

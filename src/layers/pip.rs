@@ -14,7 +14,7 @@ use serde::{Deserialize, Serialize};
 use std::path::Path;
 use std::process::Command;
 
-/// Creates a layer containing pip.
+/// Creates a build-only layer containing pip.
 pub(crate) fn install_pip(
     context: &BuildContext<PythonBuildpack>,
     env: &mut Env,

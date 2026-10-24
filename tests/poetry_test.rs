@@ -191,7 +191,7 @@ fn poetry_cache_previous_buildpack_version() {
 }
 
 // This tests that:
-//  - Git from the stack image can be found (ie: the system PATH has been correctly propagated to Poetry).
+//  - Git from the stack image can be found (i.e. the system PATH has been correctly propagated to Poetry).
 //  - The editable mode repository clone is saved into the dependencies layer not the app dir.
 //  - Building/compiling a source distribution package (as opposed to a pre-built wheel) works.
 //  - The Python headers can be found in the `include/pythonX.Y/` directory of the Python layer.
@@ -293,7 +293,7 @@ fn poetry_mismatched_python_version() {
                 Creating virtual environment
                 Running 'poetry sync --only main'
 
-                Current Python version ({LATEST_PYTHON_3_13}) is not allowed by the project (3.12.*).
+                Current Python version ({LATEST_PYTHON_3_13}) is not allowed by the project (==3.12.*).
                 Please change python executable via the "env use" command.
                 
                 [Error: Unable to install dependencies using Poetry]

@@ -12,7 +12,8 @@ use libherokubuildpack::log::log_info;
 use serde::{Deserialize, Serialize};
 
 /// Creates a build-only layer for pip's cache of HTTP requests/downloads and built package wheels.
-// See: https://pip.pypa.io/en/stable/topics/caching/
+///
+/// See: <https://pip.pypa.io/en/stable/topics/caching/>
 pub(crate) fn prepare_pip_cache(
     context: &BuildContext<PythonBuildpack>,
     env: &mut Env,
@@ -73,6 +74,10 @@ pub(crate) fn prepare_pip_cache(
     Ok(())
 }
 
+// The cache holds built wheels for the app's dependencies, some of which contain compiled
+// components and so are platform-specific. As such we have to take arch and distro into account
+// for cache invalidation (unlike for the pip tool layer, which holds only pure Python packages).
+//
 // Timestamp based cache invalidation isn't used here since the Python and pip versions will
 // change often enough that it isn't worth the added complexity. Ideally pip would support
 // cleaning up its own cache: https://github.com/pypa/pip/issues/6956
