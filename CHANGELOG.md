@@ -9,6 +9,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Changed
 
+- Deprecated support for Python 3.11. ([#651](https://github.com/heroku/buildpacks-python/pull/651))
 - Updated the Python 3.10 deprecation warning to reflect that it has now reached upstream end-of-life. ([#650](https://github.com/heroku/buildpacks-python/pull/650))
 
 ## [6.9.3] - 2026-10-26
