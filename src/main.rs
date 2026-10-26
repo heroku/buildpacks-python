@@ -117,6 +117,30 @@ impl Buildpack for PythonBuildpack {
                     https://devcenter.heroku.com/articles/python-support#supported-python-versions
                 "},
             );
+        } else if let RequestedPythonVersion {
+            major: 3,
+            minor: 11,
+            origin,
+            ..
+        } = &requested_python_version
+        {
+            log_warning(
+                "Support for Python 3.11 is deprecated",
+                formatdoc! {"
+                    Python 3.11 will reach its upstream end-of-life in October 2027,
+                    at which point it will no longer receive security updates:
+                    https://devguide.python.org/versions/#supported-versions
+
+                    As such, support for Python 3.11 will be removed from this
+                    buildpack on 5th January 2028.
+
+                    Upgrade to a newer Python version as soon as possible, by
+                    changing the version in your {origin} file.
+
+                    For more information, see:
+                    https://devcenter.heroku.com/articles/python-support#supported-python-versions
+                "},
+            );
         }
 
         log_header("Installing Python");
