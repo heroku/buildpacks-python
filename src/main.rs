@@ -103,8 +103,8 @@ impl Buildpack for PythonBuildpack {
             log_warning(
                 "Support for Python 3.10 is deprecated",
                 formatdoc! {"
-                    Python 3.10 will reach its upstream end-of-life in October 2026,
-                    at which point it will no longer receive security updates:
+                    Python 3.10 reached its upstream end-of-life on 1st October 2026,
+                    and so no longer receives security updates:
                     https://devguide.python.org/versions/#supported-versions
 
                     As such, support for Python 3.10 will be removed from this

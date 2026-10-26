@@ -240,8 +240,8 @@ fn pip_oldest_python() {
                 Using Python version 3.10.0 specified in .python-version
                 
                 [Warning: Support for Python 3.10 is deprecated]
-                Python 3.10 will reach its upstream end-of-life in October 2026,
-                at which point it will no longer receive security updates:
+                Python 3.10 reached its upstream end-of-life on 1st October 2026,
+                and so no longer receives security updates:
                 https://devguide.python.org/versions/#supported-versions
                 
                 As such, support for Python 3.10 will be removed from this
