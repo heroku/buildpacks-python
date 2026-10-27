@@ -47,15 +47,15 @@ discuss it first instead.
 ### Dependencies
 
 This buildpack relies on [heroku/libcnb.rs][libcnb] to compile buildpacks. All
-[libcnb.rs dependencies][libcnb-deps] will need to be setup prior to building
+[libcnb.rs dependencies][libcnb-deps] will need to be set up prior to building
 or testing this buildpack.
 
 ### Building
 
 1. Run `cargo check` to download dependencies and ensure there are no
    compilation issues.
-1. Build the buildpack with `cargo libcnb package`.
-1. Use the buildpack to build an app: `pack build sample-app --buildpack packaged/x86_64-unknown-linux-musl/debug/heroku_python --path /path/to/sample-app`
+1. Build the buildpack with `cargo libcnb package`, which prints the path to the packaged buildpack.
+1. Use the buildpack to build an app, passing that path to `--buildpack`: `pack build sample-app --buildpack packaged/<target-triple>/debug/heroku_python --path /path/to/sample-app` (the `<target-triple>` directory is `aarch64-unknown-linux-musl` on arm64 hosts or `x86_64-unknown-linux-musl` on amd64 hosts)
 
 ### Testing
 
@@ -63,9 +63,11 @@ or testing this buildpack.
 - `cargo test -- --ignored` performs all integration tests.
 
 ## Code of Conduct
+
 Please follow our [Code of Conduct](CODE_OF_CONDUCT.md).
 
 ## License
+
 By contributing your code, you agree to license your contribution under the
 terms of our project [LICENSE](LICENSE) and to sign the
 [Salesforce CLA](https://cla.salesforce.com/sign-cla).

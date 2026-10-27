@@ -7,7 +7,7 @@ use libcnb::layer_env::{LayerEnv, ModificationBehavior, Scope};
 
 /// Creates an uncached build-only layer for uv's cache.
 //
-// We don't need to persist uv's cache between builds, since we cache site-packages instead.
+// We don't need to persist uv's cache between builds, since we cache the virtual environment instead.
 // However, we must make uv write its cache into the same filesystem mount as the venv layer,
 // otherwise uv can't use hardlinks when installing and will fall back to slower file copies.
 // The easiest way to do this is via a temporary uncached, build-only layer.

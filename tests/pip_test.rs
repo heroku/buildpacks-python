@@ -204,8 +204,8 @@ fn pip_cache_previous_buildpack_version() {
 }
 
 // This tests that:
-//  - Requirements file env var interpolation works (ie: user-provided env vars have been propagated to pip).
-//  - Git from the stack image can be found (ie: the system PATH has been correctly propagated to pip).
+//  - Requirements file env var interpolation works (i.e. user-provided env vars have been propagated to pip).
+//  - Git from the stack image can be found (i.e. the system PATH has been correctly propagated to pip).
 //  - The editable mode repository clone is saved into the dependencies layer not the app dir.
 //  - Building/compiling a source distribution package (as opposed to a pre-built wheel) works.
 //  - The Python headers can be found in the `include/pythonX.Y/` directory of the Python layer.

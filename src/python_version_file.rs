@@ -13,8 +13,8 @@ pub(crate) fn parse(contents: &str) -> Result<RequestedPythonVersion, ParsePytho
             if trimmed_line.is_empty() || trimmed_line.starts_with('#') {
                 None
             } else {
-                // ASCII control characters and Unicode are replaced to make the error messages
-                // easier to understand when non-visible characters are present in the file.
+                // ASCII control characters and non-ASCII characters are replaced to make the error
+                // messages easier to understand when non-visible characters are present in the file.
                 // We can't use `escape_default()` here because it also escapes quotes.
                 Some(trimmed_line.replace(|c: char| c.is_ascii_control() || !c.is_ascii(), "�"))
             }
