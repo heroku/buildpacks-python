@@ -1,0 +1,11 @@
+[project]
+name = "pip-editable-git-compiled"
+version = "0.0.0"
+requires-python = ">=3.15"
+
+[project.scripts]
+project-entrypoint = "pip_editable_git_compiled:main"
+
+[build-system]
+requires = ["setuptools"]
+build-backend = "setuptools.build_meta"

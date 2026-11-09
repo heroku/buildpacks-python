@@ -43,6 +43,8 @@ fn uv_basic_install_and_cache_reuse() {
                  \\+ typing-extensions==4.16.0
                 
                 ## Testing buildpack ##
+
+                Build-time env vars:
                 CPATH=/layers/heroku_python/venv/include:/layers/heroku_python/python/include/python3.15:/layers/heroku_python/python/include
                 LD_LIBRARY_PATH=/layers/heroku_python/venv/lib:/layers/heroku_python/python/lib
                 LIBRARY_PATH=/layers/heroku_python/venv/lib:/layers/heroku_python/python/lib
@@ -56,42 +58,48 @@ fn uv_basic_install_and_cache_reuse() {
                 UV_PROJECT_ENVIRONMENT=/layers/heroku_python/venv
                 UV_PYTHON_DOWNLOADS=never
                 VIRTUAL_ENV=/layers/heroku_python/venv
-                
+
+                Python sys.path:
                 \\['',
                  '/layers/heroku_python/python/lib/python315.zip',
                  '/layers/heroku_python/python/lib/python3.15',
                  '/layers/heroku_python/python/lib/python3.15/lib-dynload',
                  '/layers/heroku_python/venv/lib/python3.15/site-packages'\\]
-                
+
+                Package manager version and installed packages:
                 uv {UV_VERSION} \\({ARCH}-unknown-linux-gnu\\)
                 Using Python {DEFAULT_PYTHON_FULL_VERSION} environment at: /layers/heroku_python/venv
                 Package           Version
                 ----------------- -------
                 typing-extensions 4.16.0
-                <module 'typing_extensions' from '/layers/heroku_python/venv/lib/python3.15/site-packages/typing_extensions.py'>
+
+                typing_extensions imported from: /layers/heroku_python/venv/lib/python3.15/site-packages/typing_extensions.py
             "}
         );
 
-        // Check that at run-time:
+        // Check that at launch-time:
         // - The correct env vars are set.
         // - uv isn't available.
         // - Python can find the typing-extensions package.
         let command_output = context.run_shell_command(
-            indoc! {"
+            indoc! {r#"
                 set -euo pipefail
+                echo 'Launch-time env vars:'
                 printenv | sort | grep -vE '^(_|HOME|HOSTNAME|OLDPWD|PWD|SHLVL)='
                 ! command -v uv > /dev/null || { echo 'uv unexpectedly found!' && exit 1; }
-                python -c 'import typing_extensions'
-            "}
+                python -c 'import typing_extensions; print(f"typing_extensions imported from: {typing_extensions.__file__}")'
+            "#}
         );
         assert_empty!(command_output.stderr);
         assert_eq!(
             command_output.stdout,
             formatdoc! {"
+                Launch-time env vars:
                 LD_LIBRARY_PATH=/layers/heroku_python/venv/lib:/layers/heroku_python/python/lib
                 PATH=/layers/heroku_python/venv/bin:/layers/heroku_python/python/bin:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin
                 PYTHONUNBUFFERED=1
                 VIRTUAL_ENV=/layers/heroku_python/venv
+                typing_extensions imported from: /layers/heroku_python/venv/lib/python3.15/site-packages/typing_extensions.py
             "}
         );
 
@@ -203,10 +211,12 @@ fn uv_cache_previous_buildpack_version() {
 }
 
 // This tests that:
-//  - Installing the current project in editable mode using the uv-build buildpack works.
-//  - Git from the stack image can be found (i.e. the system PATH has been correctly propagated to uv).
+//  - Installing the current project in editable mode using the uv_build build backend works.
+//  - Git from the base image can be found (i.e. the system PATH has been correctly propagated to uv).
 //  - Building/compiling a source distribution package (as opposed to a pre-built wheel) works.
 //  - The Python headers can be found in the `include/pythonX.Y/` directory of the Python layer.
+//  - At launch-time, the editable project's entrypoint script is on PATH and the VCS package can
+//    be imported.
 #[test]
 #[ignore = "integration test"]
 fn uv_editable_git_compiled() {
@@ -225,8 +235,22 @@ fn uv_editable_git_compiled() {
                 Prepared 2 packages in .+s
                 Installed 2 packages in .+s
                 Bytecode compiled 0 files in .+s
-                 \\+ extension-dist==0.1 \\(from git\\+https://github.com/pypa/wheel.git@7bb46d7727e6e89fe56b3c78297b3af2672bbbe2#subdirectory=tests/testdata/extension.dist\\)
+                 \\+ extension-dist==0.1 \\(from git\\+https://github.com/pypa/wheel.git@7855525de4093257e7bfb434877265e227356566#subdirectory=tests/testdata/extension.dist\\)
                  \\+ uv-editable-git-compiled==0.0.0 \\(from file:///workspace\\)
+            "}
+        );
+
+        let command_output = context.run_shell_command(indoc! {r#"
+            set -euo pipefail
+            project-entrypoint
+            python -c 'import extension; print(f"extension imported from: {extension.__file__}")'
+        "#});
+        assert_empty!(command_output.stderr);
+        assert_eq!(
+            command_output.stdout,
+            formatdoc! {"
+                project-entrypoint ran from: /workspace/src/uv_editable_git_compiled/__init__.py
+                extension imported from: /layers/heroku_python/venv/lib/python3.15/site-packages/extension.cpython-315-{ARCH}-linux-gnu.so
             "}
         );
     });
