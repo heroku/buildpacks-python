@@ -19,9 +19,7 @@ fn pip_basic_install_and_cache_reuse() {
             context.pack_stdout,
             &formatdoc! {"
                 [Determining Python version]
-                No Python version specified, using the current default of Python {DEFAULT_PYTHON_VERSION}.
-                We recommend setting an explicit version. In the root of your app create
-                a '.python-version' file, containing a Python version like '{DEFAULT_PYTHON_VERSION}'.
+                Using Python version {DEFAULT_PYTHON_VERSION} specified in .python-version
                 
                 [Installing Python]
                 Installing Python {DEFAULT_PYTHON_FULL_VERSION}
@@ -32,14 +30,14 @@ fn pip_basic_install_and_cache_reuse() {
                 [Installing dependencies using pip]
                 Creating virtual environment
                 Running 'pip install -r requirements.txt'
-                Collecting typing-extensions==4.15.0 (from -r requirements.txt (line 2))
-                  Downloading typing_extensions-4.15.0-py3-none-any.whl.metadata (3.3 kB)
-                Downloading typing_extensions-4.15.0-py3-none-any.whl (44 kB)
+                Collecting typing-extensions==4.16.0 (from -r requirements.txt (line 2))
+                  Downloading typing_extensions-4.16.0-py3-none-any.whl.metadata (3.3 kB)
+                Downloading typing_extensions-4.16.0-py3-none-any.whl (45 kB)
                 Installing collected packages: typing-extensions
-                Successfully installed typing-extensions-4.15.0
+                Successfully installed typing-extensions-4.16.0
                 
                 ## Testing buildpack ##
-                CPATH=/layers/heroku_python/venv/include:/layers/heroku_python/python/include/python3.14:/layers/heroku_python/python/include
+                CPATH=/layers/heroku_python/venv/include:/layers/heroku_python/python/include/python3.15:/layers/heroku_python/python/include
                 LD_LIBRARY_PATH=/layers/heroku_python/venv/lib:/layers/heroku_python/python/lib:/layers/heroku_python/pip/lib
                 LIBRARY_PATH=/layers/heroku_python/venv/lib:/layers/heroku_python/python/lib:/layers/heroku_python/pip/lib
                 PATH=/layers/heroku_python/venv/bin:/layers/heroku_python/python/bin:/layers/heroku_python/pip/bin:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin
@@ -53,16 +51,16 @@ fn pip_basic_install_and_cache_reuse() {
                 VIRTUAL_ENV=/layers/heroku_python/venv
                 
                 ['',
-                 '/layers/heroku_python/python/lib/python314.zip',
-                 '/layers/heroku_python/python/lib/python3.14',
-                 '/layers/heroku_python/python/lib/python3.14/lib-dynload',
-                 '/layers/heroku_python/venv/lib/python3.14/site-packages']
+                 '/layers/heroku_python/python/lib/python315.zip',
+                 '/layers/heroku_python/python/lib/python3.15',
+                 '/layers/heroku_python/python/lib/python3.15/lib-dynload',
+                 '/layers/heroku_python/venv/lib/python3.15/site-packages']
                 
-                pip {PIP_VERSION} from /layers/heroku_python/pip/lib/python3.14/site-packages/pip (python 3.14)
+                pip {PIP_VERSION} from /layers/heroku_python/pip/lib/python3.15/site-packages/pip (python 3.15)
                 Package           Version
                 ----------------- -------
-                typing_extensions 4.15.0
-                <module 'typing_extensions' from '/layers/heroku_python/venv/lib/python3.14/site-packages/typing_extensions.py'>
+                typing_extensions 4.16.0
+                <module 'typing_extensions' from '/layers/heroku_python/venv/lib/python3.15/site-packages/typing_extensions.py'>
             "}
         );
 
@@ -95,9 +93,7 @@ fn pip_basic_install_and_cache_reuse() {
                 rebuild_context.pack_stdout,
                 &formatdoc! {"
                     [Determining Python version]
-                    No Python version specified, using the current default of Python {DEFAULT_PYTHON_VERSION}.
-                    We recommend setting an explicit version. In the root of your app create
-                    a '.python-version' file, containing a Python version like '{DEFAULT_PYTHON_VERSION}'.
+                    Using Python version {DEFAULT_PYTHON_VERSION} specified in .python-version
                     
                     [Installing Python]
                     Using cached Python {DEFAULT_PYTHON_FULL_VERSION}
@@ -109,11 +105,11 @@ fn pip_basic_install_and_cache_reuse() {
                     Using cached pip download/wheel cache
                     Creating virtual environment
                     Running 'pip install -r requirements.txt'
-                    Collecting typing-extensions==4.15.0 (from -r requirements.txt (line 2))
-                      Using cached typing_extensions-4.15.0-py3-none-any.whl.metadata (3.3 kB)
-                    Using cached typing_extensions-4.15.0-py3-none-any.whl (44 kB)
+                    Collecting typing-extensions==4.16.0 (from -r requirements.txt (line 2))
+                      Using cached typing_extensions-4.16.0-py3-none-any.whl.metadata (3.3 kB)
+                    Using cached typing_extensions-4.16.0-py3-none-any.whl (45 kB)
                     Installing collected packages: typing-extensions
-                    Successfully installed typing-extensions-4.15.0
+                    Successfully installed typing-extensions-4.16.0
                 "}
             );
         });
@@ -133,9 +129,7 @@ fn pip_cache_invalidation_package_manager_changed() {
                 rebuild_context.pack_stdout,
                 &formatdoc! {"
                     [Determining Python version]
-                    No Python version specified, using the current default of Python {DEFAULT_PYTHON_VERSION}.
-                    We recommend setting an explicit version. In the root of your app create
-                    a '.python-version' file, containing a Python version like '{DEFAULT_PYTHON_VERSION}'.
+                    Using Python version {DEFAULT_PYTHON_VERSION} specified in .python-version
                     
                     [Installing Python]
                     Using cached Python {DEFAULT_PYTHON_FULL_VERSION}
@@ -146,11 +140,11 @@ fn pip_cache_invalidation_package_manager_changed() {
                     [Installing dependencies using pip]
                     Creating virtual environment
                     Running 'pip install -r requirements.txt'
-                    Collecting typing-extensions==4.15.0 (from -r requirements.txt (line 2))
-                      Downloading typing_extensions-4.15.0-py3-none-any.whl.metadata (3.3 kB)
-                    Downloading typing_extensions-4.15.0-py3-none-any.whl (44 kB)
+                    Collecting typing-extensions==4.16.0 (from -r requirements.txt (line 2))
+                      Downloading typing_extensions-4.16.0-py3-none-any.whl.metadata (3.3 kB)
+                    Downloading typing_extensions-4.16.0-py3-none-any.whl (45 kB)
                     Installing collected packages: typing-extensions
-                    Successfully installed typing-extensions-4.15.0
+                    Successfully installed typing-extensions-4.16.0
                 "}
             );
         });
@@ -164,7 +158,7 @@ fn pip_cache_invalidation_package_manager_changed() {
 fn pip_cache_previous_buildpack_version() {
     let mut config = default_build_config("tests/fixtures/pip_basic");
     config.buildpacks([BuildpackReference::Other(
-        "docker://docker.io/heroku/buildpack-python:6.4.0".to_string(),
+        "docker://docker.io/heroku/buildpack-python:6.8.0".to_string(),
     )]);
     let rebuild_config = default_build_config("tests/fixtures/pip_basic");
 
@@ -175,28 +169,26 @@ fn pip_cache_previous_buildpack_version() {
                 rebuild_context.pack_stdout,
                 &formatdoc! {"
                     [Determining Python version]
-                    No Python version specified, using the current default of Python {DEFAULT_PYTHON_VERSION}.
-                    We recommend setting an explicit version. In the root of your app create
-                    a '.python-version' file, containing a Python version like '{DEFAULT_PYTHON_VERSION}'.
+                    Using Python version {DEFAULT_PYTHON_VERSION} specified in .python-version
                     
                     [Installing Python]
-                    Discarding cached Python 3.14.4 since:
-                     - The Python version has changed from 3.14.4 to {DEFAULT_PYTHON_FULL_VERSION}
+                    Discarding cached Python 3.15.0 since:
+                     - The Python version has changed from 3.15.0 to {DEFAULT_PYTHON_FULL_VERSION}
                     Installing Python {DEFAULT_PYTHON_FULL_VERSION}
                     
                     [Installing pip]
-                    Discarding cached pip 26.0.1
+                    Discarding cached pip 26.2.1
                     Installing pip {PIP_VERSION}
                     
                     [Installing dependencies using pip]
                     Discarding cached pip download/wheel cache
                     Creating virtual environment
                     Running 'pip install -r requirements.txt'
-                    Collecting typing-extensions==4.15.0 (from -r requirements.txt (line 2))
-                      Downloading typing_extensions-4.15.0-py3-none-any.whl.metadata (3.3 kB)
-                    Downloading typing_extensions-4.15.0-py3-none-any.whl (44 kB)
+                    Collecting typing-extensions==4.16.0 (from -r requirements.txt (line 2))
+                      Downloading typing_extensions-4.16.0-py3-none-any.whl.metadata (3.3 kB)
+                    Downloading typing_extensions-4.16.0-py3-none-any.whl (45 kB)
                     Installing collected packages: typing-extensions
-                    Successfully installed typing-extensions-4.15.0
+                    Successfully installed typing-extensions-4.16.0
                 "}
             );
         });
@@ -263,11 +255,11 @@ fn pip_oldest_python() {
                 [Installing dependencies using pip]
                 Creating virtual environment
                 Running 'pip install -r requirements.txt'
-                Collecting typing-extensions==4.15.0 (from -r requirements.txt (line 1))
-                  Downloading typing_extensions-4.15.0-py3-none-any.whl.metadata (3.3 kB)
-                Downloading typing_extensions-4.15.0-py3-none-any.whl (44 kB)
+                Collecting typing-extensions==4.16.0 (from -r requirements.txt (line 1))
+                  Downloading typing_extensions-4.16.0-py3-none-any.whl.metadata (3.3 kB)
+                Downloading typing_extensions-4.16.0-py3-none-any.whl (45 kB)
                 Installing collected packages: typing-extensions
-                Successfully installed typing-extensions-4.15.0
+                Successfully installed typing-extensions-4.16.0
             "}
         );
     });
