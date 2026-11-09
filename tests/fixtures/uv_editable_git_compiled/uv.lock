@@ -5,7 +5,7 @@ requires-python = ">=3.15"
 [[package]]
 name = "extension-dist"
 version = "0.1"
-source = { git = "https://github.com/pypa/wheel.git?subdirectory=tests%2Ftestdata%2Fextension.dist&tag=0.44.0#7bb46d7727e6e89fe56b3c78297b3af2672bbbe2" }
+source = { git = "https://github.com/pypa/wheel.git?subdirectory=tests%2Ftestdata%2Fextension.dist&tag=0.45.1#7855525de4093257e7bfb434877265e227356566" }
 
 [[package]]
 name = "uv-editable-git-compiled"
@@ -16,4 +16,4 @@ dependencies = [
 ]
 
 [package.metadata]
-requires-dist = [{ name = "extension-dist", git = "https://github.com/pypa/wheel.git?subdirectory=tests%2Ftestdata%2Fextension.dist&tag=0.44.0" }]
+requires-dist = [{ name = "extension-dist", git = "https://github.com/pypa/wheel.git?subdirectory=tests%2Ftestdata%2Fextension.dist&tag=0.45.1" }]

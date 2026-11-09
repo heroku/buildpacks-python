@@ -13,11 +13,11 @@ develop = true
 [package.source]
 type = "git"
 url = "https://github.com/pypa/wheel.git"
-reference = "0.44.0"
-resolved_reference = "7bb46d7727e6e89fe56b3c78297b3af2672bbbe2"
+reference = "0.45.1"
+resolved_reference = "7855525de4093257e7bfb434877265e227356566"
 subdirectory = "tests/testdata/extension.dist"
 
 [metadata]
 lock-version = "2.1"
-python-versions = "^3.15"
-content-hash = "1fa4dff0e178658a6611b95dc26dd2f722fc31670f9d3f6c5b3f151d4d022d01"
+python-versions = ">=3.15"
+content-hash = "28b0cf32b6d088e3a2785ca54d6e6bad9378054ea3f12853c4436417443f7d3e"

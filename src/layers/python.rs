@@ -217,7 +217,7 @@ fn generate_layer_env(layer_path: &Path, python_version: &PythonVersion) -> Laye
         // exports layers it resets the timestamps on all files to a fixed value:
         // https://buildpacks.io/docs/for-app-developers/concepts/reproducibility/#consequences-and-caveats
         //
-        // At run-time, this means the `.pyc`'s embedded timestamps no longer match the timestamps
+        // At launch-time, this means the `.pyc`'s embedded timestamps no longer match the timestamps
         // of the original `.py` files, causing Python to regenerate the bytecode, and so losing any
         // benefit of having kept the `.pyc` files (at the cost of a larger app image).
         //

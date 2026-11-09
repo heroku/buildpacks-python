@@ -143,7 +143,7 @@ fn builds_with_python_version(fixture_path: &str, python_version: &PythonVersion
         // There's no sensible default process type we can set for Python apps.
         assert_contains!(context.pack_stdout, "no default process type");
 
-        // Validate that the Python install works as expected at run-time.
+        // Validate that the Python install works as expected at launch-time.
         let command_output = context.run_shell_command(
             indoc! {r#"
                 set -euo pipefail

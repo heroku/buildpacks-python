@@ -1,11 +1,13 @@
-# This requirement uses a VCS URL and `-e` in order to test that:
-#  - Git from the stack image can be found (i.e. the system PATH has been correctly propagated to pip).
-#  - The editable mode repository clone is saved into the dependencies layer.
+# This installs the current project in editable mode, using setuptools with a src layout.
+--editable .
+
+# We use a VCS dependency installed in editable mode in order to test that:
+#  - Git from the base image can be found (i.e. the system PATH has been correctly propagated to pip).
+#  - The editable mode repository clone is saved into the dependencies layer not the app dir.
 #
 # A C-based package is used instead of a pure Python package, in order to test that the
 # Python headers can be found in the `include/pythonX.Y/` directory of the Python layer.
 #
 # The URL to the package is specified via env var, to test that user-provided env vars
 # are propagated to pip for use by its env var interpolation feature.
-
--e git+${WHEEL_PACKAGE_URL}@0.44.0#egg=extension.dist&subdirectory=tests/testdata/extension.dist
+--editable git+${WHEEL_PACKAGE_URL}@0.45.1#egg=extension.dist&subdirectory=tests/testdata/extension.dist

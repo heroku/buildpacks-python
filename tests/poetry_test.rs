@@ -4,7 +4,11 @@ use crate::python_version::{
 };
 use crate::tests::default_build_config;
 use indoc::{formatdoc, indoc};
-use libcnb_test::{BuildpackReference, PackResult, TestRunner, assert_contains, assert_empty};
+use libcnb_test::{
+    BuildpackReference, PackResult, TestRunner, assert_contains, assert_contains_match,
+    assert_empty,
+};
+use std::env::consts::ARCH;
 
 #[test]
 #[ignore = "integration test"]
@@ -39,6 +43,8 @@ fn poetry_basic_install_and_cache_reuse() {
                   - Installing typing-extensions (4.16.0)
                 
                 ## Testing buildpack ##
+
+                Build-time env vars:
                 CPATH=/layers/heroku_python/venv/include:/layers/heroku_python/python/include/python3.15:/layers/heroku_python/python/include
                 LD_LIBRARY_PATH=/layers/heroku_python/venv/lib:/layers/heroku_python/python/lib:/layers/heroku_python/poetry/lib
                 LIBRARY_PATH=/layers/heroku_python/venv/lib:/layers/heroku_python/python/lib:/layers/heroku_python/poetry/lib
@@ -48,39 +54,45 @@ fn poetry_basic_install_and_cache_reuse() {
                 PYTHONUSERBASE=/layers/heroku_python/poetry
                 SOURCE_DATE_EPOCH=315532801
                 VIRTUAL_ENV=/layers/heroku_python/venv
-                
+
+                Python sys.path:
                 ['',
                  '/layers/heroku_python/python/lib/python315.zip',
                  '/layers/heroku_python/python/lib/python3.15',
                  '/layers/heroku_python/python/lib/python3.15/lib-dynload',
                  '/layers/heroku_python/venv/lib/python3.15/site-packages']
-                
+
+                Package manager version and installed packages:
                 Poetry (version {POETRY_VERSION})
                 typing-extensions 4.16.0 Backported and Experimental Type Hints for Python ...
-                <module 'typing_extensions' from '/layers/heroku_python/venv/lib/python3.15/site-packages/typing_extensions.py'>
+
+                typing_extensions imported from: /layers/heroku_python/venv/lib/python3.15/site-packages/typing_extensions.py
             "}
         );
 
-        // Check that at run-time:
+        // Check that at launch-time:
         // - The correct env vars are set.
         // - Poetry isn't available.
         // - Python can find the typing-extensions package.
         let command_output = context.run_shell_command(
-            indoc! {"
+            indoc! {r#"
                 set -euo pipefail
+                echo 'Launch-time env vars:'
                 printenv | sort | grep -vE '^(_|HOME|HOSTNAME|OLDPWD|PWD|SHLVL)='
                 ! command -v poetry > /dev/null || { echo 'Poetry unexpectedly found!' && exit 1; }
-                python -c 'import typing_extensions'
-            "}
+                python -c 'import typing_extensions; print(f"typing_extensions imported from: {typing_extensions.__file__}")'
+            "#}
         );
         assert_empty!(command_output.stderr);
         assert_eq!(
             command_output.stdout,
             formatdoc! {"
+                Launch-time env vars:
                 LD_LIBRARY_PATH=/layers/heroku_python/venv/lib:/layers/heroku_python/python/lib
                 PATH=/layers/heroku_python/venv/bin:/layers/heroku_python/python/bin:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin
                 PYTHONUNBUFFERED=1
                 VIRTUAL_ENV=/layers/heroku_python/venv
+                typing_extensions imported from: /layers/heroku_python/venv/lib/python3.15/site-packages/typing_extensions.py
             "}
         );
 
@@ -191,10 +203,13 @@ fn poetry_cache_previous_buildpack_version() {
 }
 
 // This tests that:
-//  - Git from the stack image can be found (i.e. the system PATH has been correctly propagated to Poetry).
+//  - Installing the current project in editable mode using the poetry-core build backend works.
+//  - Git from the base image can be found (i.e. the system PATH has been correctly propagated to Poetry).
 //  - The editable mode repository clone is saved into the dependencies layer not the app dir.
 //  - Building/compiling a source distribution package (as opposed to a pre-built wheel) works.
 //  - The Python headers can be found in the `include/pythonX.Y/` directory of the Python layer.
+//  - At launch-time, the editable project's entrypoint script is on PATH and the editable VCS
+//    package can be imported.
 #[test]
 #[ignore = "integration test"]
 fn poetry_editable_git_compiled() {
@@ -202,26 +217,46 @@ fn poetry_editable_git_compiled() {
 
     TestRunner::default().build(config, |context| {
         assert_empty!(context.pack_stderr);
-        assert_contains!(
+        // As of pyproject-hooks 1.3, Poetry displays warnings emitted by build backends, and setuptools
+        // emits an informational warning for every flat-layout package installed in editable mode.
+        assert_contains_match!(
             context.pack_stdout,
-            indoc! {"
-                [Installing dependencies using Poetry]
+            indoc! {r#"
+                \[Installing dependencies using Poetry\]
                 Creating virtual environment
                 Running 'poetry sync --only main'
                 Installing dependencies from lock file
-                
+
                 Package operations: 1 install, 0 updates, 0 removals
-                
-                  - Installing extension-dist (0.1 7bb46d7)
-            "}
+
+                  - Installing extension-dist \(0.1 7855525\)
+                /tmp/tmp.+/setuptools/command/editable_wheel.py:\d+: BuildBackendWarning: Editable installation.
+                !!
+
+                        \*+
+                        Please be careful with folders in your working directory with the same
+                        name as your package as they may take precedence during imports.
+                        \*+
+
+                !!
+                  with strategy, WheelFile\(wheel_path, "w"\) as wheel_obj:
+
+                Installing the current project: poetry-editable-git-compiled \(0.0.0\)
+            "#}
         );
 
-        let command_output =
-            context.run_shell_command("python -c 'import extension; print(extension)'");
+        let command_output = context.run_shell_command(indoc! {r#"
+            set -euo pipefail
+            project-entrypoint
+            python -c 'import extension; print(f"extension imported from: {extension.__file__}")'
+        "#});
         assert_empty!(command_output.stderr);
-        assert_contains!(
+        assert_eq!(
             command_output.stdout,
-            "<module 'extension' from '/layers/heroku_python/venv/src/wheel/"
+            formatdoc! {"
+                project-entrypoint ran from: /workspace/src/poetry_editable_git_compiled/__init__.py
+                extension imported from: /layers/heroku_python/venv/src/wheel/tests/testdata/extension.dist/extension.cpython-315-{ARCH}-linux-gnu.so
+            "}
         );
     });
 }

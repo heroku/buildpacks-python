@@ -3,6 +3,7 @@ use crate::python_version::{DEFAULT_PYTHON_FULL_VERSION, DEFAULT_PYTHON_VERSION}
 use crate::tests::default_build_config;
 use indoc::{formatdoc, indoc};
 use libcnb_test::{BuildpackReference, PackResult, TestRunner, assert_contains, assert_empty};
+use std::env::consts::ARCH;
 
 #[test]
 #[ignore = "integration test"]
@@ -37,6 +38,8 @@ fn pip_basic_install_and_cache_reuse() {
                 Successfully installed typing-extensions-4.16.0
                 
                 ## Testing buildpack ##
+
+                Build-time env vars:
                 CPATH=/layers/heroku_python/venv/include:/layers/heroku_python/python/include/python3.15:/layers/heroku_python/python/include
                 LD_LIBRARY_PATH=/layers/heroku_python/venv/lib:/layers/heroku_python/python/lib:/layers/heroku_python/pip/lib
                 LIBRARY_PATH=/layers/heroku_python/venv/lib:/layers/heroku_python/python/lib:/layers/heroku_python/pip/lib
@@ -49,41 +52,47 @@ fn pip_basic_install_and_cache_reuse() {
                 PYTHONUSERBASE=/layers/heroku_python/pip
                 SOURCE_DATE_EPOCH=315532801
                 VIRTUAL_ENV=/layers/heroku_python/venv
-                
+
+                Python sys.path:
                 ['',
                  '/layers/heroku_python/python/lib/python315.zip',
                  '/layers/heroku_python/python/lib/python3.15',
                  '/layers/heroku_python/python/lib/python3.15/lib-dynload',
                  '/layers/heroku_python/venv/lib/python3.15/site-packages']
-                
+
+                Package manager version and installed packages:
                 pip {PIP_VERSION} from /layers/heroku_python/pip/lib/python3.15/site-packages/pip (python 3.15)
                 Package           Version
                 ----------------- -------
                 typing_extensions 4.16.0
-                <module 'typing_extensions' from '/layers/heroku_python/venv/lib/python3.15/site-packages/typing_extensions.py'>
+
+                typing_extensions imported from: /layers/heroku_python/venv/lib/python3.15/site-packages/typing_extensions.py
             "}
         );
 
-        // Check that at run-time:
+        // Check that at launch-time:
         // - The correct env vars are set.
         // - pip isn't available.
         // - Python can find the typing-extensions package.
         let command_output = context.run_shell_command(
-            indoc! {"
+            indoc! {r#"
                 set -euo pipefail
+                echo 'Launch-time env vars:'
                 printenv | sort | grep -vE '^(_|HOME|HOSTNAME|OLDPWD|PWD|SHLVL)='
                 ! command -v pip > /dev/null || { echo 'pip unexpectedly found!' && exit 1; }
-                python -c 'import typing_extensions'
-            "}
+                python -c 'import typing_extensions; print(f"typing_extensions imported from: {typing_extensions.__file__}")'
+            "#}
         );
         assert_empty!(command_output.stderr);
         assert_eq!(
             command_output.stdout,
             formatdoc! {"
+                Launch-time env vars:
                 LD_LIBRARY_PATH=/layers/heroku_python/venv/lib:/layers/heroku_python/python/lib
                 PATH=/layers/heroku_python/venv/bin:/layers/heroku_python/python/bin:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin
                 PYTHONUNBUFFERED=1
                 VIRTUAL_ENV=/layers/heroku_python/venv
+                typing_extensions imported from: /layers/heroku_python/venv/lib/python3.15/site-packages/typing_extensions.py
             "}
         );
 
@@ -196,11 +205,14 @@ fn pip_cache_previous_buildpack_version() {
 }
 
 // This tests that:
+//  - Installing the current project in editable mode using the setuptools build backend works.
 //  - Requirements file env var interpolation works (i.e. user-provided env vars have been propagated to pip).
-//  - Git from the stack image can be found (i.e. the system PATH has been correctly propagated to pip).
+//  - Git from the base image can be found (i.e. the system PATH has been correctly propagated to pip).
 //  - The editable mode repository clone is saved into the dependencies layer not the app dir.
 //  - Building/compiling a source distribution package (as opposed to a pre-built wheel) works.
 //  - The Python headers can be found in the `include/pythonX.Y/` directory of the Python layer.
+//  - At launch-time, the editable project's entrypoint script is on PATH and the editable VCS
+//    package can be imported.
 #[test]
 #[ignore = "integration test"]
 fn pip_editable_git_compiled() {
@@ -211,7 +223,21 @@ fn pip_editable_git_compiled() {
         assert_empty!(context.pack_stderr);
         assert_contains!(
             context.pack_stdout,
-            "Cloning https://github.com/pypa/wheel.git (to revision 0.44.0) to /layers/heroku_python/venv/src/extension-dist"
+            "Cloning https://github.com/pypa/wheel.git (to revision 0.45.1) to /layers/heroku_python/venv/src/extension-dist"
+        );
+
+        let command_output = context.run_shell_command(indoc! {r#"
+            set -euo pipefail
+            project-entrypoint
+            python -c 'import extension; print(f"extension imported from: {extension.__file__}")'
+        "#});
+        assert_empty!(command_output.stderr);
+        assert_eq!(
+            command_output.stdout,
+            formatdoc! {"
+                project-entrypoint ran from: /workspace/src/pip_editable_git_compiled/__init__.py
+                extension imported from: /layers/heroku_python/venv/src/extension-dist/tests/testdata/extension.dist/extension.cpython-315-{ARCH}-linux-gnu.so
+            "}
         );
     });
 }
