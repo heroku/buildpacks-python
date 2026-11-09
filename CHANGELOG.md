@@ -7,6 +7,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [7.0.0] - 2026-11-09
+
 ### Changed
 
 - Updated the default Python version from 3.14 to 3.15. ([#658](https://github.com/heroku/buildpacks-python/pull/658))
@@ -787,7 +789,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - Initial implementation. ([#3](https://github.com/heroku/buildpacks-python/pull/3))
 
-[unreleased]: https://github.com/heroku/buildpacks-python/compare/v6.10.1...HEAD
+[unreleased]: https://github.com/heroku/buildpacks-python/compare/v7.0.0...HEAD
+[7.0.0]: https://github.com/heroku/buildpacks-python/compare/v6.10.1...v7.0.0
 [6.10.1]: https://github.com/heroku/buildpacks-python/compare/v6.10.0...v6.10.1
 [6.10.0]: https://github.com/heroku/buildpacks-python/compare/v6.9.3...v6.10.0
 [6.9.3]: https://github.com/heroku/buildpacks-python/compare/v6.9.2...v6.9.3
