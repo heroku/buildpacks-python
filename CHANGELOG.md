@@ -10,6 +10,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Changed
 
 - Updated libcnb to 0.32.2, which fixes OpenTelemetry events emitted during error handling being dropped. ([#662](https://github.com/heroku/buildpacks-python/pull/662))
+- Updated pip from 26.2.2 to 26.3. ([#663](https://github.com/heroku/buildpacks-python/pull/663))
+- Updated uv from 0.13.6 to 0.13.9. ([#663](https://github.com/heroku/buildpacks-python/pull/663))
 
 ## [7.0.0] - 2026-11-09
 
