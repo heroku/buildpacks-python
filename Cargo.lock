@@ -719,9 +719,9 @@ dependencies = [
 
 [[package]]
 name = "libherokubuildpack"
-version = "0.32.0"
+version = "0.32.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "d901522104822d8b137fcdb193efae9830759f7f9dcfd4feebd17d39d4b0f826"
+checksum = "4d6cabdd384d407a4fc0f45d2945e6f47ea24a1d62bb22066800ba5fb88f2079"
 dependencies = [
  "termcolor",
 ]
@@ -1266,7 +1266,7 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "32497e9a4c7b38532efcdebeef879707aa9f794296a4f0244f6f69e9bc8574bd"
 dependencies = [
  "fastrand",
- "getrandom 0.3.4",
+ "getrandom 0.4.3",
  "once_cell",
  "rustix",
  "windows-sys 0.61.2",
