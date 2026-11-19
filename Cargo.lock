@@ -68,9 +68,9 @@ checksum = "87a0cf66fd1eb2fb7b822cb78370d82303750809bc6ba855f3f58e517d3238db"
 
 [[package]]
 name = "bytes"
-version = "1.12.1"
+version = "1.12.2"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "fc652a48c352aef3ea3aed32080501cf3ef6ed5da78602a020c991775b0aff04"
+checksum = "776dfebd015e2d8732c684a2c71003674ccb49457b539b9e82151ba38e96dd7c"
 
 [[package]]
 name = "camino"
@@ -239,9 +239,9 @@ dependencies = [
 
 [[package]]
 name = "fancy-regex"
-version = "0.19.2"
+version = "0.20.2"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "d301f5bf187b3c295fce6468d3875037a0bccc5f6b151c63cac2f85babf21912"
+checksum = "0a2e16b9a584b602f1e0e5e22c30ca0906786088c27500653e432d086def8b53"
 dependencies = [
  "bit-set",
  "regex-automata",
@@ -256,9 +256,9 @@ checksum = "da7c62ceae207dd37ea5b845da6a0696c799f85e97da1ab5b7910be3c1c80223"
 
 [[package]]
 name = "filetime"
-version = "0.2.29"
+version = "0.2.30"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "5c287a33c7f0a620c38e641e7f60827713987b3c0f26e8ddc9462cc69cf75759"
+checksum = "e1255e7a9f1902190d4c10a75f2f7f495d3d3ce13e9ba26e6c48683a0f4dbed7"
 dependencies = [
  "cfg-if",
  "libc",
@@ -580,9 +580,9 @@ dependencies = [
 
 [[package]]
 name = "itertools"
-version = "0.14.0"
+version = "0.15.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "2b192c782037fadd9cfa75548310488aabdbf3d2da73885b31bd0abd03351285"
+checksum = "8b4baf93f58d4425749ca49a51c50ebab072c5df6994d08fed93541c331481dc"
 dependencies = [
  "either",
 ]
@@ -628,9 +628,9 @@ checksum = "65cd87c9a6d60536580b316ad985726104730a5151c99845f2490428ef91240a"
 
 [[package]]
 name = "libcnb"
-version = "0.32.0"
+version = "0.32.2"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "9dcb2222bacbf8024b8f9f29042af1402bb6e0b7659286072f660e3ea8ea81c2"
+checksum = "80dcc36c02b5d0b0ffac0692ae55b10ece86c85e5a744ce052ff87b87d2fe621"
 dependencies = [
  "libcnb-common",
  "libcnb-data",
@@ -649,9 +649,9 @@ dependencies = [
 
 [[package]]
 name = "libcnb-common"
-version = "0.32.0"
+version = "0.32.2"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "b0a588d63fe3cca231aabc105723e3168ce300de8ecc894c5dc650fa31cf1eae"
+checksum = "26c5393baee051f3ec08584bd31832ba0036c27ee7bde874a00e56cf9c663368"
 dependencies = [
  "serde",
  "thiserror",
@@ -660,9 +660,9 @@ dependencies = [
 
 [[package]]
 name = "libcnb-data"
-version = "0.32.0"
+version = "0.32.2"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "69958e1d6e6fa4e57e4dd1e2d640faf1b19d347d970f5fb19a75352adb8a7bfa"
+checksum = "37e961e27286968c5f2a78f981bb8bebc77edfb4e8e9c9d2dd94feb5f3e0ec56"
 dependencies = [
  "fancy-regex",
  "libcnb-proc-macros",
@@ -674,9 +674,9 @@ dependencies = [
 
 [[package]]
 name = "libcnb-package"
-version = "0.32.0"
+version = "0.32.2"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "4af381edd5e18aac7aee0b31d32909de99a81c59b1a05035e8b1c7e1dfc39d6e"
+checksum = "41c27afe6b02a719a6b155937dc6cf9e1f9fd33aacc570665e6d5a3394ecc474"
 dependencies = [
  "cargo_metadata",
  "ignore",
@@ -691,9 +691,9 @@ dependencies = [
 
 [[package]]
 name = "libcnb-proc-macros"
-version = "0.32.0"
+version = "0.32.2"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "cb625338870ddb19dc5a239f69113ffeb402ed3825d757787545f4897f2694d8"
+checksum = "85aebeb2eb1701433e78f9b4adc7105abd1d333ba3ec4a7f9154e2342cd04926"
 dependencies = [
  "cargo_metadata",
  "fancy-regex",
@@ -703,9 +703,9 @@ dependencies = [
 
 [[package]]
 name = "libcnb-test"
-version = "0.32.0"
+version = "0.32.2"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "47b23bb5a3357fa343c18afa3ea61c43570f092e6812cc7e29119143896acaf6"
+checksum = "cdd74ba31a0a9144a87bd4a3df450fb09fc995d497a0f56688e5e14f9769e8ac"
 dependencies = [
  "fastrand",
  "fs_extra",
@@ -719,9 +719,9 @@ dependencies = [
 
 [[package]]
 name = "libherokubuildpack"
-version = "0.32.0"
+version = "0.32.2"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "d901522104822d8b137fcdb193efae9830759f7f9dcfd4feebd17d39d4b0f826"
+checksum = "ed4759ca3fe2189da36709f63724c2075f467e091ae5bf8c279934c8ecb79654"
 dependencies = [
  "termcolor",
 ]
@@ -1011,9 +1011,9 @@ dependencies = [
 
 [[package]]
 name = "regex"
-version = "1.13.1"
+version = "1.13.2"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "f020237b6c8eed93db2e2cb53c00c60a8e1bc73da7d073199a1180401450218d"
+checksum = "9807af0e638c12e753aa1b4e601791bf2a8f71274023c8bbeec12fc149950857"
 dependencies = [
  "aho-corasick",
  "memchr",
@@ -1023,9 +1023,9 @@ dependencies = [
 
 [[package]]
 name = "regex-automata"
-version = "0.4.18"
+version = "0.4.19"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "ad8553b9b26413251cbf30e620595c7a41b3887f03da04579c0e6b0d6a06b4b2"
+checksum = "41d60ef07df457506a0a1a2073112eb4aae5733dbd2813c3da77d1b0fd441158"
 dependencies = [
  "aho-corasick",
  "memchr",
@@ -1034,9 +1034,9 @@ dependencies = [
 
 [[package]]
 name = "regex-syntax"
-version = "0.8.11"
+version = "0.8.12"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "d6f6ff9a378485b298a5286656da665ba74413d36db0979633275d2e708145d4"
+checksum = "d902046e6a28a1e4c3cab97258a0ce11e994903f01c2d97a9447a0b3df85f4f6"
 
 [[package]]
 name = "ring"
@@ -1266,7 +1266,7 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "32497e9a4c7b38532efcdebeef879707aa9f794296a4f0244f6f69e9bc8574bd"
 dependencies = [
  "fastrand",
- "getrandom 0.3.4",
+ "getrandom 0.4.3",
  "once_cell",
  "rustix",
  "windows-sys 0.61.2",
@@ -1795,9 +1795,9 @@ dependencies = [
 
 [[package]]
 name = "zeroize"
-version = "1.9.1"
+version = "1.9.2"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "e13084392c5e4bc371903e2935a5eaeed24905a7511356b883835e18a78f6879"
+checksum = "85ccff8a4805aba1eaa4cd4afcd49f7557dd2cf5fd79ffc37f8959466effc5aa"
 
 [[package]]
 name = "zerotrie"
